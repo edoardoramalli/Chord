@@ -9,6 +9,8 @@ import java.net.Socket;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import static java.lang.System.out;
+
 public class SocketNodeListener implements Runnable, Serializable {
     private int socketPort = 8000;
     private transient Node node;
@@ -24,6 +26,7 @@ public class SocketNodeListener implements Runnable, Serializable {
 
             while (true) {
                 Socket socketIn = serverSocket.accept();
+                out.println("ACCETTATO");
                 executors.submit(new SocketNode(node, socketIn));
                 if (false)
                     break;

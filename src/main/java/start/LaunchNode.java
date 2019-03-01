@@ -1,7 +1,10 @@
 package start;
 
+import exceptions.ConnectionErrorException;
+import exceptions.UnexpectedBehaviourException;
 import node.Node;
 
+import java.io.IOException;
 import java.util.Scanner;
 
 import static java.lang.System.out;
@@ -17,7 +20,7 @@ public class LaunchNode {
 
     public static void main(String[] args){
         out.println("Insert ip address");
-        node = new Node(in.nextLine().toLowerCase());
+        node = new Node(in.nextLine().toLowerCase()); //TODO andrebbero fatti dei controlli sugli inserimenti
         boolean exit = false;
         while (!exit){
             out.println("Select create or join");
@@ -28,7 +31,17 @@ public class LaunchNode {
                     exit = true;
                     break;
                 case JOIN_COMMAND:
-                    node.join(new Node("aa")); //Qui va modificato
+                    out.println("Insert ip address of node");
+                    String ipAddress = in.nextLine().toLowerCase();
+                    out.println("Insert socket port of node");
+                    int socketPort = Integer.parseInt(in.nextLine().toLowerCase());
+                    try {
+                        node.join(ipAddress, socketPort); //Qui va modificato
+                    } catch (ConnectionErrorException e) {
+                        out.println("Wrong ip address or port");
+                    } catch (IOException e) {
+                        throw new UnexpectedBehaviourException();
+                    }
                     exit = true;
                     break;
                 default:

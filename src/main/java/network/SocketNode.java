@@ -14,7 +14,7 @@ public class SocketNode implements Runnable, Serializable {
     private Node node;
     private transient ObjectOutputStream socketOutput;
     private transient ObjectInputStream socketInput;
-    private MessageHandler messageHandler;
+    private transient MessageHandler messageHandler;
 
     SocketNode(Node node, Socket socketIn){
         this.node = node;
@@ -25,7 +25,6 @@ public class SocketNode implements Runnable, Serializable {
         } catch (IOException e) {
             this.close();
         }
-        //TODO forse qua ci vuole un setSocket per Node
     }
 
     @Override
@@ -40,7 +39,7 @@ public class SocketNode implements Runnable, Serializable {
         }
     }
 
-    public String getMessage() {
+    private String getMessage() {
         try {
             return ((String) socketInput.readObject());
         } catch (IOException e) {

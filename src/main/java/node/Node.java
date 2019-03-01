@@ -1,20 +1,26 @@
 package node;
 
+import exceptions.ConnectionErrorException;
+import network.NodeCommunicator;
+import network.SocketNode;
 import network.SocketNodeListener;
 
+import java.io.IOException;
+import java.net.Socket;
 import java.util.HashMap;
 
 import java.util.Map;
 import java.util.concurrent.Executors;
 
-public class Node {
+import static java.lang.System.out;
+
+public class Node implements NodeInterface{
     private String ipAddress;
     private int nodeId;
     private Node successor;
     private Node predecessor;
     private Map<Integer, Node> fingerTable;
-
-    public static final int DIM_FINGER_TABLE = 4;
+    private static final int DIM_FINGER_TABLE = 4; //questo poi potremmo metterlo variabile scelto nella create
 
     public Node(String ipAddress){
         this.ipAddress = ipAddress;
@@ -24,62 +30,69 @@ public class Node {
         this.fingerTable = new HashMap<>();
     }
 
-    public int getNodeId() {
-        return nodeId;
-    }
-
     public void create(){
         successor = this;
         predecessor = null;
         startSocketListener();
     }
 
-    public void join (Node n){
+    public void join (String ipAddress, int socketPort) throws ConnectionErrorException, IOException {
+        NodeCommunicator node = new NodeCommunicator(ipAddress, socketPort);
         predecessor = null;
-        successor=n.find_successor(this.nodeId);
+        successor = node.findSuccessor(this.nodeId);
+        node.close();//TODO questo serve? magari con qualche condizione
+        out.println("Gol di Pavoletti");
     }
 
+    @Override
     public void stabilize(){
 
     }
 
-    public Node find_successor(int id){
+    @Override
+    public Node findSuccessor(int id){
         Node next;
         if(id > this.getNodeId() && id <= this.successor.getNodeId())
             return this.successor;
         else {
-            next = closest_preceding_node(id);
-            return next.find_successor(id);
+            next = closestPrecedingNode(id);
+            return next.findSuccessor(id);
         }
     }
 
-    public Node closest_preceding_node(int id){
+    @Override
+    public Node closestPrecedingNode(int id){
         int nodeIndex;
         for (int i=DIM_FINGER_TABLE; i > 1; i--){
             nodeIndex=  fingerTable.get(i).getNodeId();
             if ( nodeIndex < id && nodeIndex > this.getNodeId())
                 return  fingerTable.get(i);
         }
-
         return this;
-
     }
 
+    @Override
     public void notify(Node n){
 
     }
 
-    public void fix_fingers(){
+    @Override
+    public void fixFingers(){
 
     }
 
-    public void check_predecessor() {
+    @Override
+    public void checkPredecessor() {
 
     }
 
     private void startSocketListener(){
         SocketNodeListener socketNodeListener = new SocketNodeListener(this);
         Executors.newCachedThreadPool().submit(socketNodeListener);
+    }
+
+    private int getNodeId() {
+        return nodeId;
     }
 
 }
