@@ -1,6 +1,9 @@
 package node;
 
+import network.SocketNodeListener;
+
 import java.util.List;
+import java.util.concurrent.Executors;
 
 public class Node {
     private String ipAddress;
@@ -18,6 +21,7 @@ public class Node {
     public void create(){
         successor = this;
         predecessor = null;
+        startSocketListener();
     }
 
     public void join (Node n){
@@ -36,7 +40,13 @@ public class Node {
 
     }
 
-    public void check_predecessor(){
+    public void check_predecessor() {
 
     }
+
+    private void startSocketListener(){
+        SocketNodeListener socketNodeListener = new SocketNodeListener(this);
+        Executors.newCachedThreadPool().submit(socketNodeListener);
+    }
+
 }
