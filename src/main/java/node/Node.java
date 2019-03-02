@@ -16,11 +16,15 @@ import static java.lang.System.out;
 
 public class Node implements NodeInterface{
     private String ipAddress;
-    private int nodeId;
-    private Node successor;
-    private Node predecessor;
-    private Map<Integer, Node> fingerTable;
+    private long nodeId;
+    private NodeInterface successor;
+    private NodeInterface predecessor;
+    private Map<Integer, NodeInterface> fingerTable;
     private static final int DIM_FINGER_TABLE = 4; //questo poi potremmo metterlo variabile scelto nella create
+
+    private int next;
+
+
 
     public Node(String ipAddress){
         this.ipAddress = ipAddress;
@@ -28,10 +32,23 @@ public class Node implements NodeInterface{
         this.successor = null;
         this.predecessor = null;
         this.fingerTable = new HashMap<>();
+        this.next=1;
+    }
+
+    public long getNodeId() {
+        return nodeId;
+    }
+
+    public NodeInterface getSuccessor() {
+        return successor;
+    }
+
+    public NodeInterface getPredecessor() {
+        return predecessor;
     }
 
     public void create(){
-        successor = this;
+        //successor = this;
         predecessor = null;
         startSocketListener();
     }
@@ -46,12 +63,19 @@ public class Node implements NodeInterface{
 
     @Override
     public void stabilize(){
+        NodeInterface x = this.getSuccessor().getPredecessor();
+        long  nodeIndex = x.getNodeId();
+        long oldSucID = this.successor.getNodeId();
+        if ( nodeIndex < oldSucID && nodeIndex > this.getNodeId())
+            this.successor = x;
+
+        this.successor.notify(this);
 
     }
 
     @Override
-    public Node findSuccessor(int id){
-        Node next;
+    public NodeInterface findSuccessor(long id){
+        NodeInterface next;
         if(id > this.getNodeId() && id <= this.successor.getNodeId())
             return this.successor;
         else {
@@ -61,8 +85,8 @@ public class Node implements NodeInterface{
     }
 
     @Override
-    public Node closestPrecedingNode(int id){
-        int nodeIndex;
+    public NodeInterface closestPrecedingNode(long id){
+        long nodeIndex;
         for (int i=DIM_FINGER_TABLE; i > 1; i--){
             nodeIndex=  fingerTable.get(i).getNodeId();
             if ( nodeIndex < id && nodeIndex > this.getNodeId())
@@ -73,11 +97,21 @@ public class Node implements NodeInterface{
 
     @Override
     public void notify(Node n){
-
+        long nIndex = n.getNodeId();
+        long predIndex = this.predecessor.getNodeId();
+        if (this.predecessor == null || (nIndex > predIndex && nIndex < this.getNodeId()) )
+            this.predecessor=  n;
     }
 
     @Override
     public void fixFingers(){
+        long idToFind;
+        next = next + 1;
+        if(next > DIM_FINGER_TABLE)
+            next=1;
+        //fix cast
+        idToFind=this.getNodeId() + ((long) Math.pow(2, next-1));
+        fingerTable.replace(next,findSuccessor(idToFind));
 
     }
 
@@ -91,8 +125,6 @@ public class Node implements NodeInterface{
         Executors.newCachedThreadPool().submit(socketNodeListener);
     }
 
-    private int getNodeId() {
-        return nodeId;
-    }
+
 
 }

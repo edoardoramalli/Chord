@@ -1,5 +1,7 @@
 package node;
 
+import network.NodeCommunicator;
+
 public interface NodeInterface {
 
     public void stabilize();
@@ -10,7 +12,14 @@ public interface NodeInterface {
 
     public void checkPredecessor();
 
-    public Node findSuccessor(int id);
+    public NodeInterface findSuccessor(long id);
 
-    public Node closestPrecedingNode(int id);
+    public NodeInterface closestPrecedingNode(long id);
+
+    public NodeInterface getPredecessor();
+
+    public NodeInterface getSuccessor();
+
+    public  long getNodeId();
+
 }

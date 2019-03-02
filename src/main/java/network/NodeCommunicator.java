@@ -14,6 +14,7 @@ public class NodeCommunicator implements NodeInterface, Serializable {
     private transient Socket joinNodeSocket;
     private transient ObjectOutputStream out;
     private transient ObjectInputStream in;
+    private transient long nodeId;
 
     public NodeCommunicator(String ipAddress, int socketPort) throws ConnectionErrorException, IOException {
         try {
@@ -52,12 +53,27 @@ public class NodeCommunicator implements NodeInterface, Serializable {
     }
 
     @Override
-    public Node findSuccessor(int id) {
+    public NodeInterface findSuccessor(long id) {
         return null;
     }
 
     @Override
-    public Node closestPrecedingNode(int id) {
+    public NodeInterface closestPrecedingNode(long id) {
         return null;
+    }
+
+    @Override
+    public NodeInterface getPredecessor() {
+        return null;
+    }
+
+    @Override
+    public NodeInterface getSuccessor() {
+        return null;
+    }
+
+    @Override
+    public long getNodeId() {
+        return this.nodeId;
     }
 }
