@@ -19,6 +19,11 @@ public class SocketNodeListener implements Runnable, Serializable {
         this.node = node;
     }
 
+    public SocketNodeListener(Node node, int n){
+        this.node = node;
+        this.socketPort = this.socketPort + n;
+    }
+
     @Override
     public void run() {
         try (ServerSocket serverSocket = new ServerSocket(socketPort)) {
@@ -33,6 +38,7 @@ public class SocketNodeListener implements Runnable, Serializable {
             }
         }
         catch (IOException e) {
+            out.println("ERRORE SL");
             e.printStackTrace();
         }
     }

@@ -5,6 +5,8 @@ import exceptions.UnexpectedBehaviourException;
 import node.Node;
 
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Scanner;
 
 import static java.lang.System.out;
@@ -19,8 +21,12 @@ public class LaunchNode {
     private static Node node;
 
     public static void main(String[] args){
-        out.println("Insert ip address");
-        node = new Node(in.nextLine().toLowerCase()); //TODO andrebbero fatti dei controlli sugli inserimenti
+        //TODO andrebbero fatti dei controlli sugli inserimenti
+        try {
+            node = new Node(InetAddress.getLocalHost().getHostAddress());
+        } catch (UnknownHostException e) {
+            throw new UnexpectedBehaviourException();
+        }
         boolean exit = false;
         while (!exit){
             out.println("Select create or join");
@@ -37,12 +43,12 @@ public class LaunchNode {
                     int socketPort = Integer.parseInt(in.nextLine().toLowerCase());
                     try {
                         node.join(ipAddress, socketPort); //Qui va modificato
+                        exit = true;
                     } catch (ConnectionErrorException e) {
                         out.println("Wrong ip address or port");
                     } catch (IOException e) {
                         throw new UnexpectedBehaviourException();
                     }
-                    exit = true;
                     break;
                 default:
                     out.println("Command not valid or empty. Insert new command");

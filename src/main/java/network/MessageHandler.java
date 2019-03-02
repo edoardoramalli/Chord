@@ -1,15 +1,17 @@
 package network;
 
-import node.Node;
+import node.NodeInterface;
+
+import static java.lang.System.out;
 
 class MessageHandler {
-    private Node node;
+    private NodeInterface node;
 
-    MessageHandler(Node node) {
+    MessageHandler(NodeInterface node) {
         this.node = node;
     }
 
     void handle(String message){
-
+        out.println("Arrivato: " + message);
     }
 }

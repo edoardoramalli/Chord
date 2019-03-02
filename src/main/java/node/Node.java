@@ -2,11 +2,9 @@ package node;
 
 import exceptions.ConnectionErrorException;
 import network.NodeCommunicator;
-import network.SocketNode;
 import network.SocketNodeListener;
 
 import java.io.IOException;
-import java.net.Socket;
 import java.util.HashMap;
 
 import java.util.Map;
@@ -21,10 +19,7 @@ public class Node implements NodeInterface{
     private NodeInterface predecessor;
     private Map<Integer, NodeInterface> fingerTable;
     private static final int DIM_FINGER_TABLE = 4; //questo poi potremmo metterlo variabile scelto nella create
-
     private int next;
-
-
 
     public Node(String ipAddress){
         this.ipAddress = ipAddress;
@@ -35,22 +30,10 @@ public class Node implements NodeInterface{
         this.next=1;
     }
 
-    public long getNodeId() {
-        return nodeId;
-    }
-
-    public NodeInterface getSuccessor() {
-        return successor;
-    }
-
-    public NodeInterface getPredecessor() {
-        return predecessor;
-    }
-
     public void create(){
         //successor = this;
         predecessor = null;
-        startSocketListener();
+        startSocketListener(0);
     }
 
     public void join (String ipAddress, int socketPort) throws ConnectionErrorException, IOException {
@@ -59,6 +42,7 @@ public class Node implements NodeInterface{
         successor = node.findSuccessor(this.nodeId);
         node.close();//TODO questo serve? magari con qualche condizione
         out.println("Gol di Pavoletti");
+        startSocketListener(1);
     }
 
     @Override
@@ -74,7 +58,7 @@ public class Node implements NodeInterface{
     }
 
     @Override
-    public NodeInterface findSuccessor(long id){
+    public NodeInterface findSuccessor(long id) throws IOException {
         NodeInterface next;
         if(id > this.getNodeId() && id <= this.successor.getNodeId())
             return this.successor;
@@ -104,7 +88,7 @@ public class Node implements NodeInterface{
     }
 
     @Override
-    public void fixFingers(){
+    public void fixFingers() throws IOException {
         long idToFind;
         next = next + 1;
         if(next > DIM_FINGER_TABLE)
@@ -120,11 +104,21 @@ public class Node implements NodeInterface{
 
     }
 
-    private void startSocketListener(){
-        SocketNodeListener socketNodeListener = new SocketNodeListener(this);
+    private void startSocketListener(int n){ //TODO devo cercare di togliere questo n
+        SocketNodeListener socketNodeListener = new SocketNodeListener(this, n);
         Executors.newCachedThreadPool().submit(socketNodeListener);
     }
 
+    public long getNodeId() {
+        return nodeId;
+    }
 
+    public NodeInterface getSuccessor() {
+        return successor;
+    }
+
+    public NodeInterface getPredecessor() {
+        return predecessor;
+    }
 
 }

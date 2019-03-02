@@ -12,9 +12,8 @@ import java.net.Socket;
 
 public class NodeCommunicator implements NodeInterface, Serializable {
     private transient Socket joinNodeSocket;
-    private transient ObjectOutputStream out;
-    private transient ObjectInputStream in;
     private transient long nodeId;
+    private SocketNode socketNode;
 
     public NodeCommunicator(String ipAddress, int socketPort) throws ConnectionErrorException, IOException {
         try {
@@ -22,14 +21,14 @@ public class NodeCommunicator implements NodeInterface, Serializable {
         } catch (IOException e) {
             throw new ConnectionErrorException();
         }
-        out = new ObjectOutputStream(joinNodeSocket.getOutputStream());
-        in = new ObjectInputStream(joinNodeSocket.getInputStream());
-
+        ObjectOutputStream out = new ObjectOutputStream(joinNodeSocket.getOutputStream());
+        ObjectInputStream in = new ObjectInputStream(joinNodeSocket.getInputStream());
+        this.socketNode = new SocketNode(in, out);
     }
 
     public void close() throws IOException {
-        in.close();
-        out.close();
+        socketNode.sendMessage("Chiudi");
+        socketNode.close();
         joinNodeSocket.close();
     }
     @Override
@@ -53,7 +52,8 @@ public class NodeCommunicator implements NodeInterface, Serializable {
     }
 
     @Override
-    public NodeInterface findSuccessor(long id) {
+    public NodeInterface findSuccessor(long id) throws IOException {
+        socketNode.sendMessage("Find successor");
         return null;
     }
 
