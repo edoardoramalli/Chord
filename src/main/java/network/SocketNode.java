@@ -40,9 +40,7 @@ public class SocketNode implements Runnable, Serializable {
     @Override
     public void run() {
         while (connected){
-            out.println("IN ATTESA");
             String message = getMessage();
-            out.println("DOPO GET");
             if(!connected)
                 break;
             Executors.newCachedThreadPool().execute(() -> {
