@@ -34,6 +34,7 @@ public class Node implements NodeInterface {
         successor = this;
         predecessor = null;
         //startSocketListener(0);
+        createFingerTable();
     }
 
     public void join(String ipAddress, int socketPort) throws ConnectionErrorException, IOException {
@@ -154,8 +155,7 @@ public class Node implements NodeInterface {
         Node node2 = new Node(2);
 
         node1.create();
-        node1.createFingerTable();
-        node2.join(node1);
+
 
     }
 }
