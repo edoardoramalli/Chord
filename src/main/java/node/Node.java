@@ -10,7 +10,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Executors;
 
-import static java.lang.System.in;
 import static java.lang.System.out;
 
 public class Node implements NodeInterface {
@@ -63,11 +62,15 @@ public class Node implements NodeInterface {
     @Override
     public NodeInterface findSuccessor(long id) throws IOException {
         NodeInterface next;
-        if (checkInterval(nodeId, id, successor.getNodeId()))
+        if (checkInterval(nodeId, id, successor.getNodeId())) {
+            out.println(id);
             return this.successor;
+        }
         else {
             next = closestPrecedingNode(id);
             out.println(id);
+            if(this == next)
+                return successor;
             return next.findSuccessor(id);
         }
     }
@@ -77,7 +80,7 @@ public class Node implements NodeInterface {
         long nodeIndex;
         for (int i = DIM_FINGER_TABLE-1; i >= 0; i--) {
             nodeIndex = fingerTable.get(i).getNodeId();
-            if (nodeIndex < id && nodeIndex > this.getNodeId())
+            if (checkInterval(nodeIndex, id, nodeId))
                 return fingerTable.get(i);
         }
         return this;
@@ -95,18 +98,14 @@ public class Node implements NodeInterface {
         }
     }
 
-    public boolean checkInterval(long pred, long index, long succ){
+    private boolean checkInterval(long pred, long index, long succ){
         if(pred == succ)
             return true;
         if(pred > succ){
-            if((index > pred && index < Math.pow(2,DIM_FINGER_TABLE) - 1) || (index > 0 && index < succ))
-                return true;
-            return false;
+            return (index > pred && index < Math.pow(2, DIM_FINGER_TABLE) - 1) || (index > 0 && index < succ);
         }
         else{
-            if(index > pred && index < succ)
-                return true;
-            return false;
+            return index > pred && index < succ;
         }
     }
 
@@ -118,9 +117,7 @@ public class Node implements NodeInterface {
             next = 0;
         //fix cast
         idToFind = (nodeId + ((long) Math.pow(2, next - 1))) % (long) Math.pow(2,DIM_FINGER_TABLE);
-
         fingerTable.replace(next -1, findSuccessor(idToFind));
-
     }
 
     @Override
@@ -133,7 +130,7 @@ public class Node implements NodeInterface {
         Executors.newCachedThreadPool().submit(socketNodeListener);
     }
 
-    public void createFingerTable(){
+    private void createFingerTable(){
         for(int i = 0; i <= DIM_FINGER_TABLE-1; i++){
             fingerTable.put(i, this);
         }
@@ -162,7 +159,7 @@ public class Node implements NodeInterface {
         this.successor = null;
         this.predecessor = null;
         this.fingerTable = new HashMap<>();
-        this.next = 1;
+        this.next = 0;
     }
 
     public void join(Node node) throws IOException {
@@ -215,7 +212,7 @@ public class Node implements NodeInterface {
         out.println(node5.getSuccessor().getNodeId());
         out.println("\n\nFINGER TABLE");
 
-        for(int i = 0; i<1; i++) {
+        for(int i = 0; i<10; i++) {
             node0.fixFingers();
             node0.fixFingers();
             node0.fixFingers();
@@ -240,9 +237,5 @@ public class Node implements NodeInterface {
         out.println(node5.getFingerTable().get(0).getNodeId());
         out.println(node5.getFingerTable().get(1).getNodeId());
         out.println(node5.getFingerTable().get(2).getNodeId());
-
-
-
-
     }
 }
