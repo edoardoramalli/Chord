@@ -52,6 +52,11 @@ public class NodeCommunicator implements NodeInterface, Serializable {
     }
 
     @Override
+    public String getIpAddress (){
+        return  "";
+    }
+
+    @Override
     public NodeInterface findSuccessor(long id) throws IOException {
         socketNode.sendMessage("Find successor");
         return null;
