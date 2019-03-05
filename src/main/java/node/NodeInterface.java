@@ -22,6 +22,8 @@ public interface NodeInterface {
 
     public NodeInterface getSuccessor();
 
+    public String getIpAddress();
+
     public  long getNodeId();
 
 }

@@ -1,12 +1,12 @@
 package node;
 
 import exceptions.ConnectionErrorException;
-import network.NodeCommunicator;
 import network.SocketNodeListener;
 
 import java.io.IOException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
-
 import java.util.Map;
 import java.util.concurrent.Executors;
 
@@ -52,7 +52,7 @@ public class Node implements NodeInterface {
         NodeInterface x = successor.getPredecessor();
         long nodeIndex = x.getNodeId();
         long oldSucID = successor.getNodeId();
-        if (checkInterval(getNodeId(),nodeIndex,oldSucID))
+        if (checkInterval(getNodeId(), nodeIndex, oldSucID))
             successor = x;
 
         this.successor.notify(this);
@@ -63,13 +63,10 @@ public class Node implements NodeInterface {
     public NodeInterface findSuccessor(long id) throws IOException {
         NodeInterface next;
         if (checkInterval(nodeId, id, successor.getNodeId())) {
-            out.println(id);
             return this.successor;
-        }
-        else {
+        } else {
             next = closestPrecedingNode(id);
-            out.println(id);
-            if(this == next)
+            if (this == next)
                 return successor;
             return next.findSuccessor(id);
         }
@@ -78,7 +75,7 @@ public class Node implements NodeInterface {
     @Override
     public NodeInterface closestPrecedingNode(long id) {
         long nodeIndex;
-        for (int i = DIM_FINGER_TABLE-1; i >= 0; i--) {
+        for (int i = DIM_FINGER_TABLE - 1; i >= 0; i--) {
             nodeIndex = fingerTable.get(i).getNodeId();
             if (checkInterval(nodeIndex, id, nodeId))
                 return fingerTable.get(i);
@@ -88,7 +85,7 @@ public class Node implements NodeInterface {
 
     @Override
     public void notify(Node n) {
-        if(predecessor == null)
+        if (predecessor == null)
             predecessor = n;
         else {
             long index = n.getNodeId();
@@ -98,13 +95,12 @@ public class Node implements NodeInterface {
         }
     }
 
-    private boolean checkInterval(long pred, long index, long succ){
-        if(pred == succ)
+    private boolean checkInterval(long pred, long index, long succ) {
+        if (pred == succ)
             return true;
-        if(pred > succ){
+        if (pred > succ) {
             return (index > pred && index < Math.pow(2, DIM_FINGER_TABLE) - 1) || (index > 0 && index < succ);
-        }
-        else{
+        } else {
             return index > pred && index < succ;
         }
     }
@@ -116,8 +112,8 @@ public class Node implements NodeInterface {
         if (next > DIM_FINGER_TABLE)
             next = 0;
         //fix cast
-        idToFind = (nodeId + ((long) Math.pow(2, next - 1))) % (long) Math.pow(2,DIM_FINGER_TABLE);
-        fingerTable.replace(next -1, findSuccessor(idToFind));
+        idToFind = (nodeId + ((long) Math.pow(2, next - 1))) % (long) Math.pow(2, DIM_FINGER_TABLE);
+        fingerTable.replace(next - 1, findSuccessor(idToFind));
     }
 
     @Override
@@ -130,11 +126,37 @@ public class Node implements NodeInterface {
         Executors.newCachedThreadPool().submit(socketNodeListener);
     }
 
-    private void createFingerTable(){
-        for(int i = 0; i <= DIM_FINGER_TABLE-1; i++){
+    private void createFingerTable() {
+        for (int i = 0; i <= DIM_FINGER_TABLE - 1; i++) {
             fingerTable.put(i, this);
         }
     }
+
+    private String lookup(long id) {
+        if (id == successor.getNodeId()) {
+            return successor.getIpAddress();
+        } else if (id == predecessor.getNodeId()) {
+            return predecessor.getIpAddress();
+        } else {
+            return closestPrecedingNode(id).getIpAddress();
+        }
+    }
+
+    static String sha1(String input) throws NoSuchAlgorithmException {
+        MessageDigest mDigest = MessageDigest.getInstance("SHA1");
+        byte[] result = mDigest.digest(input.getBytes());
+        StringBuffer sb = new StringBuffer();
+        for (int i = 0; i < result.length; i++) {
+            sb.append(Integer.toString((result[i] & 0xff) + 0x100, 16).substring(1));
+        }
+
+        return sb.toString();
+    }
+
+    private String hash(String ipAddress) {
+        return "";
+    }
+
 
     @Override
     public long getNodeId() {
@@ -149,6 +171,11 @@ public class Node implements NodeInterface {
     @Override
     public NodeInterface getPredecessor() {
         return predecessor;
+    }
+
+    @Override
+    public String getIpAddress() {
+        return ipAddress;
     }
 
     //------------------- cose
@@ -212,7 +239,7 @@ public class Node implements NodeInterface {
         out.println(node5.getSuccessor().getNodeId());
         out.println("\n\nFINGER TABLE");
 
-        for(int i = 0; i<10; i++) {
+        for (int i = 0; i < 10; i++) {
             node0.fixFingers();
             node0.fixFingers();
             node0.fixFingers();
