@@ -191,6 +191,14 @@ public class Node implements NodeInterface {
         return result;
     }
 
+    public Map<Integer, NodeInterface> getFingerTable() {
+        return fingerTable;
+    }
+
+    public void handleMessage (String msg){
+        //check if the destinatary of the msg it is node itself, otherwise send it to the correct node.
+    }
+
     //------------------- cose
 
 
@@ -209,9 +217,7 @@ public class Node implements NodeInterface {
         out.println("Gol di Pavoletti");
     }
 
-    public Map<Integer, NodeInterface> getFingerTable() {
-        return fingerTable;
-    }
+
 
     public static void main(String[] args) throws IOException, NoSuchAlgorithmException {
 
