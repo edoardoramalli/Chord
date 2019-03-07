@@ -26,4 +26,6 @@ public interface NodeInterface {
 
     public  long getNodeId();
 
+    public void receive(MessageEdo m);
+
 }

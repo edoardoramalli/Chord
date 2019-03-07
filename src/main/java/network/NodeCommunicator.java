@@ -3,6 +3,8 @@ package network;
 import exceptions.ConnectionErrorException;
 import node.Node;
 import node.NodeInterface;
+import node.MessageEdo;
+import sun.plugin2.message.Message;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -55,6 +57,10 @@ public class NodeCommunicator implements NodeInterface, Serializable {
     public String getIpAddress (){
         return  "";
     }
+
+    @Override
+    public void receive (MessageEdo m){}
+
 
     @Override
     public NodeInterface findSuccessor(long id) throws IOException {
