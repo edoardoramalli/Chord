@@ -24,7 +24,7 @@ public class Node implements NodeInterface {
     private NodeInterface successor; //TODO questi dovrebbero essere NodeCommunicator
     private NodeInterface predecessor;
     private Map<Integer, NodeInterface> fingerTable;
-    private static final int DIM_FINGER_TABLE = 3; //questo poi potremmo metterlo variabile scelto nella create
+    private static final int DIM_FINGER_TABLE = 4; //questo poi potremmo metterlo variabile scelto nella create
     private int next;
 
     public Node(String ipAddress) {
@@ -65,6 +65,8 @@ public class Node implements NodeInterface {
 
     }
 
+
+
     @Override
     public NodeInterface findSuccessor(long id) throws IOException {
         NodeInterface next;
@@ -72,9 +74,9 @@ public class Node implements NodeInterface {
             return this.successor;
         } else {
             next = closestPrecedingNode(id);
-
+            //non ritorniamo più successor ma this
             if (this == next)
-                return successor;
+                return this;
 
             return next.findSuccessor(id);
         }
@@ -85,7 +87,7 @@ public class Node implements NodeInterface {
         long nodeIndex;
         for (int i = DIM_FINGER_TABLE - 1; i >= 0; i--) {
             nodeIndex = fingerTable.get(i).getNodeId();
-            if (checkInterval(nodeIndex, id, nodeId))
+            if (checkInterval3(nodeIndex, id, nodeId))
                 return fingerTable.get(i);
         }
         return this;
@@ -103,23 +105,39 @@ public class Node implements NodeInterface {
         }
     }
 
+
     private boolean checkInterval(long pred, long index, long succ) {
         if (pred == succ)
             return true;
         if (pred > succ) {
-            return (index > pred && index < Math.pow(2, DIM_FINGER_TABLE) ) || (index > 0 && index < succ);
+            return (index > pred && index < Math.pow(2, DIM_FINGER_TABLE) ) || (index >= 0 && index < succ);
         } else {
             return index > pred && index < succ;
         }
     }
 
+    //Check che nell'intervallo comprende anche l'estremo superiore succ
+    //Necessaria in find successor
     private boolean checkIntervalEquivalence(long pred, long index, long succ) {
         if (pred == succ)
             return true;
         if (pred > succ) {
-            return (index > pred && index < Math.pow(2, DIM_FINGER_TABLE) ) || (index > 0 && index <= succ);
+            return (index > pred && index < Math.pow(2, DIM_FINGER_TABLE) ) || (index >= 0 && index <= succ);
         } else {
             return index > pred && index <= succ;
+        }
+    }
+
+    //Ritorna FALSE in caso di pred e succ uguali
+    //Chiamato solo in closestPrecedingNode per evitare loop infinito
+    private boolean checkInterval3(long pred, long index, long succ) {
+        if (pred == succ)
+            return false;
+        if (pred > succ) {
+            //controllate se il >=0 ha senso, l'ho messo in tutte e 3 le check
+            return (index > pred && index < Math.pow(2, DIM_FINGER_TABLE) ) || (index >= 0 && index < succ);
+        } else {
+            return index > pred && index < succ;
         }
     }
 
@@ -293,7 +311,7 @@ public class Node implements NodeInterface {
 
         out.println("AAAAAAAAAAAAA " + node0.findSuccessor(node1.getNodeId()).getNodeId());
 
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < 10; i++) {
             node0.fixFingers();
             node0.fixFingers();
             node0.fixFingers();
@@ -301,18 +319,15 @@ public class Node implements NodeInterface {
             node1.fixFingers();
             node1.fixFingers();
             node1.fixFingers();
+            node1.fixFingers();
             node2.fixFingers();
             node2.fixFingers();
             node2.fixFingers();
-            node2.fixFingers();
-            node2.fixFingers();
-            node2.fixFingers();
+
             node3.fixFingers();
             node3.fixFingers();
             node3.fixFingers();
-            node3.fixFingers();
-            node3.fixFingers();
-            node3.fixFingers();
+
             node4.fixFingers();
             node4.fixFingers();
             node4.fixFingers();
