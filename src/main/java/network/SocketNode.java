@@ -1,6 +1,8 @@
 package network;
 
 import exceptions.UnexpectedBehaviourException;
+import network.message.Message;
+import network.message.MessageHandler;
 import node.NodeInterface;
 
 import java.io.IOException;
@@ -10,18 +12,16 @@ import java.io.Serializable;
 import java.net.Socket;
 import java.util.concurrent.Executors;
 
-import static java.lang.System.out;
-
 public class SocketNode implements Runnable, Serializable {
     private NodeInterface node;
     private transient ObjectOutputStream socketOutput;
     private transient ObjectInputStream socketInput;
-    private transient MessageHandler messageHandler;
+    private transient MessageHandler messageHandler; //
     private transient volatile boolean connected;
 
     SocketNode(NodeInterface node, Socket socketIn){
         this.node = node;
-        this.messageHandler = new MessageHandler(node);
+        //this.messageHandler = new MessageHandler(node);
         try {
             this.socketInput = new ObjectInputStream(socketIn.getInputStream());
             this.socketOutput = new ObjectOutputStream(socketIn.getOutputStream());
@@ -40,31 +40,40 @@ public class SocketNode implements Runnable, Serializable {
     @Override
     public void run() {
         while (connected){
-            String message = getMessage();
+            Message message = getMessage();
             if(!connected)
                 break;
             Executors.newCachedThreadPool().execute(() -> {
-                out.println("ARRIVATO");
-                messageHandler.handle(message);
+                try {
+                    message.handle(new MessageHandler() {
+                        @Override
+                        public int hashCode() {
+                            return super.hashCode();
+                        }
+                    });
+                } catch (IOException e) {
+                    throw new UnexpectedBehaviourException();
+                }
             });
             if(false)
                 break;
         }
     }
 
-    private String getMessage() {
+    private Message getMessage() {
         try {
-            return socketInput.readUTF();
+            return (Message) socketInput.readObject();
         } catch (IOException e) {
             connected = false;
             this.close();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
         }
         return null;
     }
 
-    void sendMessage(String message) throws IOException {
-        socketOutput.writeUTF(message);
-        out.println("INVIATO:" + message);
+    void sendMessage(Message message) throws IOException {
+        socketOutput.writeObject(message);
         socketOutput.flush();
     }
 

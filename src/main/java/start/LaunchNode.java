@@ -31,9 +31,12 @@ public class LaunchNode {
         while (!exit){
             out.println("Select create or join");
             String choice = in.nextLine().toLowerCase();
+            out.println("Select port"); //poi aggiungo controllo
+            int mySocketPort =  Integer.parseInt(in.nextLine());
             switch (choice){
                 case CREATE_COMMAND:
-                    node.create();
+                    out.println("Insert value of m:");
+                    node.create(mySocketPort, Integer.parseInt(in.nextLine()));
                     exit = true;
                     break;
                 case JOIN_COMMAND:
@@ -42,7 +45,7 @@ public class LaunchNode {
                     out.println("Insert socket port of node");
                     int socketPort = Integer.parseInt(in.nextLine().toLowerCase());
                     try {
-                        node.join(ipAddress, socketPort); //Qui va modificato
+                        node.join(mySocketPort, ipAddress, socketPort);
                         exit = true;
                     } catch (ConnectionErrorException e) {
                         out.println("Wrong ip address or port");
@@ -56,7 +59,7 @@ public class LaunchNode {
         }
         exit = false;
         while (!exit){
-            out.println("Select lookup or addKey");
+            out.println("Select lookup or addKey or exit" );
             String choice = in.nextLine().toLowerCase();
             switch (choice) {
                 case LOOKUP_COMMAND:

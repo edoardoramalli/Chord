@@ -1,16 +1,18 @@
 package network;
 
 import exceptions.ConnectionErrorException;
+import network.message.Message;
+import network.message.MessageHandler;
 import node.Node;
 import node.NodeInterface;
-import node.MessageEdo;
-import sun.plugin2.message.Message;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.net.Socket;
+
+import static java.lang.System.out;
 
 public class NodeCommunicator implements NodeInterface, Serializable {
     private transient Socket joinNodeSocket;
@@ -29,7 +31,12 @@ public class NodeCommunicator implements NodeInterface, Serializable {
     }
 
     public void close() throws IOException {
-        socketNode.sendMessage("Chiudi");
+        socketNode.sendMessage(new Message() {
+            @Override
+            public void handle(MessageHandler messageHandler) throws IOException {
+
+            }
+        });
         socketNode.close();
         joinNodeSocket.close();
     }
@@ -59,12 +66,13 @@ public class NodeCommunicator implements NodeInterface, Serializable {
     }
 
     @Override
-    public void receive (MessageEdo m){}
-
-
-    @Override
     public NodeInterface findSuccessor(long id) throws IOException {
-        socketNode.sendMessage("Find successor");
+        socketNode.sendMessage(new Message() {
+            @Override
+            public void handle(MessageHandler messageHandler) throws IOException {
+
+            }
+        });
         return null;
     }
 

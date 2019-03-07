@@ -12,16 +12,12 @@ import java.util.concurrent.Executors;
 import static java.lang.System.out;
 
 public class SocketNodeListener implements Runnable, Serializable {
-    private int socketPort = 8000;
+    private int socketPort;
     private transient Node node;
 
-    public SocketNodeListener(Node node){
+    public SocketNodeListener(Node node, int socketPort){
         this.node = node;
-    }
-
-    public SocketNodeListener(Node node, int n){
-        this.node = node;
-        this.socketPort = this.socketPort + n;
+        this.socketPort = socketPort;
     }
 
     @Override
