@@ -1,20 +1,14 @@
 package node;
 
 import exceptions.ConnectionErrorException;
-import network.NodeCommunicator;
 import network.SocketNodeListener;
-
-import java.io.*;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.logging.*;
-
 
 import java.io.IOException;
 import java.util.HashMap;
 
 import java.util.Map;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import static java.lang.System.out;
 
@@ -60,9 +54,7 @@ public class Node implements NodeInterface {
         long oldSucID = successor.getNodeId();
         if (checkInterval(getNodeId(), nodeIndex, oldSucID))
             successor = x;
-
-        this.successor.notify(this);
-
+        successor.notify(this);
     }
 
 
@@ -71,13 +63,12 @@ public class Node implements NodeInterface {
     public NodeInterface findSuccessor(long id) throws IOException {
         NodeInterface next;
         if (checkIntervalEquivalence(nodeId, id, successor.getNodeId())) {
-            return this.successor;
+            return successor;
         } else {
             next = closestPrecedingNode(id);
             //non ritorniamo più successor ma this
             if (this == next)
                 return this;
-
             return next.findSuccessor(id);
         }
     }
@@ -243,41 +234,54 @@ public class Node implements NodeInterface {
     public void join(Node node) throws IOException {
         predecessor = null;
         successor = node.findSuccessor(this.nodeId);
+        successor.notify(this); //serve per settare il predecessore nel successore del nodo
         createFingerTable();
         out.println("Gol di Pavoletti");
     }
 
-    public void printFingerTable(){
-        System.out.println("FINGER TABLE: " + nodeId);
+    private void printFingerTable(){
+        out.println("FINGER TABLE: " + nodeId);
         for (int i=0; i<DIM_FINGER_TABLE; i++)
         {
-            System.out.println(fingerTable.get(i).getNodeId());
-
+            out.println(fingerTable.get(i).getNodeId());
         }
+    }
 
+    private void printPredecessorAndSuccessor(){
+        out.println(nodeId + ":----------------------");
+        out.println(predecessor.getNodeId());
+        out.println(successor.getNodeId());
     }
 
 
 
-    public static void main(String[] args) throws IOException, NoSuchAlgorithmException {
+    public static void main(String[] args) throws IOException {
 
         Node node0 = new Node("192.168.1.0");
         Node node1 = new Node("192.168.1.1");
         Node node2 = new Node("192.168.1.2");
         Node node3 = new Node("192.168.1.3");
         Node node4 = new Node("192.168.1.4");
+        Node node7 = new Node("192.168.1.7");
 
         node0.create();
         node1.join(node0);
         node4.join(node1);
-        node3.join(node4);
         node2.join(node4);
+        node3.join(node4);
+        node7.join(node2);
 
+
+
+        /* non servono più
         node0.notify(node4);
         node1.notify(node0);
         node2.notify(node1);
         node3.notify(node2);
         node4.notify(node4);
+        node0.notify(node7);
+        node7.notify(node4);
+*/
 
         for (int i =0 ; i< 10 ;i++){
             node0.stabilize();
@@ -285,29 +289,17 @@ public class Node implements NodeInterface {
             node2.stabilize();
             node3.stabilize();
             node4.stabilize();
+            node7.stabilize();
         }
 
         out.println("PREDECESSORE\nSUCCESSORE");
 
-        out.println("0:----------------------");
-        out.println(node0.getPredecessor().getNodeId());
-        out.println(node0.getSuccessor().getNodeId());
-
-        out.println("1:-----------------------");
-        out.println(node1.getPredecessor().getNodeId());
-        out.println(node1.getSuccessor().getNodeId());
-
-        out.println("2:-----------------------");
-        out.println(node2.getPredecessor().getNodeId());
-        out.println(node2.getSuccessor().getNodeId());
-
-        out.println("3:-----------------------");
-        out.println(node3.getPredecessor().getNodeId());
-        out.println(node3.getSuccessor().getNodeId());
-
-        out.println("4:-----------------------");
-        out.println(node4.getPredecessor().getNodeId());
-        out.println(node4.getSuccessor().getNodeId());
+        node0.printPredecessorAndSuccessor();
+        node1.printPredecessorAndSuccessor();
+        node2.printPredecessorAndSuccessor();
+        node3.printPredecessorAndSuccessor();
+        node4.printPredecessorAndSuccessor();
+        node7.printPredecessorAndSuccessor();
 
         out.println("AAAAAAAAAAAAA " + node0.findSuccessor(node1.getNodeId()).getNodeId());
 
@@ -319,7 +311,7 @@ public class Node implements NodeInterface {
             node1.fixFingers();
             node1.fixFingers();
             node1.fixFingers();
-            node1.fixFingers();
+
             node2.fixFingers();
             node2.fixFingers();
             node2.fixFingers();
@@ -332,14 +324,18 @@ public class Node implements NodeInterface {
             node4.fixFingers();
             node4.fixFingers();
 
+            node7.fixFingers();
+            node7.fixFingers();
+            node7.fixFingers();
         }
+
 
         node0.printFingerTable();
         node1.printFingerTable();
         node2.printFingerTable();
         node3.printFingerTable();
         node4.printFingerTable();
+        node7.printFingerTable();
 
-        out.println(node0.lookup(3));
     }
 }
