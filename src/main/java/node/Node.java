@@ -15,10 +15,10 @@ import static java.lang.System.out;
 public class Node implements NodeInterface {
     private String ipAddress;
     private long nodeId;
-    private NodeInterface successor; //TODO questi dovrebbero essere NodeCommunicator
-    private NodeInterface predecessor;
-    private Map<Integer, NodeInterface> fingerTable;
-    private static final int DIM_FINGER_TABLE = 4; //questo poi potremmo metterlo variabile scelto nella create
+    private volatile NodeInterface successor; //TODO questi dovrebbero essere NodeCommunicator
+    private volatile NodeInterface predecessor;
+    private volatile Map<Integer, NodeInterface> fingerTable;
+    private int DIM_FINGER_TABLE = 4; //questo poi potremmo metterlo variabile scelto nella create
     private int next;
 
     public Node(String ipAddress) {
@@ -35,6 +35,7 @@ public class Node implements NodeInterface {
         predecessor = null;
         //startSocketListener(0);
         createFingerTable();
+        Executors.newCachedThreadPool().submit(new UpdateNode(this));
     }
 
     public void join(String ipAddress, int socketPort) throws ConnectionErrorException, IOException {
@@ -175,7 +176,6 @@ public class Node implements NodeInterface {
         return ipNumber%numberNodes;
     }
 
-
     @Override
     public long getNodeId() {
         return nodeId;
@@ -237,6 +237,7 @@ public class Node implements NodeInterface {
         successor.notify(this); //serve per settare il predecessore nel successore del nodo
         createFingerTable();
         out.println("Gol di Pavoletti");
+        Executors.newCachedThreadPool().submit(new UpdateNode(this));
     }
 
     private void printFingerTable(){
@@ -271,8 +272,6 @@ public class Node implements NodeInterface {
         node3.join(node4);
         node7.join(node2);
 
-
-
         /* non servono più
         node0.notify(node4);
         node1.notify(node0);
@@ -281,7 +280,7 @@ public class Node implements NodeInterface {
         node4.notify(node4);
         node0.notify(node7);
         node7.notify(node4);
-*/
+
 
         for (int i =0 ; i< 10 ;i++){
             node0.stabilize();
@@ -291,7 +290,7 @@ public class Node implements NodeInterface {
             node4.stabilize();
             node7.stabilize();
         }
-
+*/
         out.println("PREDECESSORE\nSUCCESSORE");
 
         node0.printPredecessorAndSuccessor();
@@ -303,6 +302,7 @@ public class Node implements NodeInterface {
 
         out.println("AAAAAAAAAAAAA " + node0.findSuccessor(node1.getNodeId()).getNodeId());
 
+        /*
         for (int i = 0; i < 10; i++) {
             node0.fixFingers();
             node0.fixFingers();
@@ -328,7 +328,7 @@ public class Node implements NodeInterface {
             node7.fixFingers();
             node7.fixFingers();
         }
-
+        */
 
         node0.printFingerTable();
         node1.printFingerTable();
@@ -336,6 +336,5 @@ public class Node implements NodeInterface {
         node3.printFingerTable();
         node4.printFingerTable();
         node7.printFingerTable();
-
     }
 }
