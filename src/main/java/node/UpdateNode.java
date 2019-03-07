@@ -1,11 +1,12 @@
 package node;
 
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 public class UpdateNode implements Runnable {
     private Node node;
 
-    public UpdateNode(Node node){
+    UpdateNode(Node node){
         this.node = node;
     }
 
@@ -15,15 +16,16 @@ public class UpdateNode implements Runnable {
             try {
                 node.stabilize();
                 node.fixFingers();
-                node.getFingerTable().get(0).notify(node);
             } catch (IOException e) {
-                e.printStackTrace();
+                e.printStackTrace(); //qui poi devo gestire la disconnessione
             }
             try {
-                wait(20);
+                TimeUnit.MILLISECONDS.sleep(5);
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                Thread.currentThread().interrupt();
             }
+            if(false)
+                break;
         }
     }
 }
