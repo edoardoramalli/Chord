@@ -107,7 +107,7 @@ public class Node implements NodeInterface {
         if (pred == succ)
             return true;
         if (pred > succ) {
-            return (index > pred && index < Math.pow(2, DIM_FINGER_TABLE) - 1) || (index > 0 && index < succ);
+            return (index > pred && index < Math.pow(2, DIM_FINGER_TABLE) ) || (index > 0 && index < succ);
         } else {
             return index > pred && index < succ;
         }
@@ -117,7 +117,7 @@ public class Node implements NodeInterface {
         if (pred == succ)
             return true;
         if (pred > succ) {
-            return (index > pred && index < Math.pow(2, DIM_FINGER_TABLE) - 1) || (index > 0 && index <= succ);
+            return (index > pred && index < Math.pow(2, DIM_FINGER_TABLE) ) || (index > 0 && index <= succ);
         } else {
             return index > pred && index <= succ;
         }
@@ -128,7 +128,7 @@ public class Node implements NodeInterface {
         long idToFind;
         next = next + 1;
         if (next > DIM_FINGER_TABLE)
-            next = 0;
+            next = 1;
         //fix cast
         idToFind = (nodeId + ((long) Math.pow(2, next - 1))) % (long) Math.pow(2, DIM_FINGER_TABLE);
         fingerTable.replace(next - 1, findSuccessor(idToFind));
@@ -293,17 +293,25 @@ public class Node implements NodeInterface {
 
         out.println("AAAAAAAAAAAAA " + node0.findSuccessor(node1.getNodeId()).getNodeId());
 
-        for (int i = 0; i < 7; i++) {
+        for (int i = 0; i < 5; i++) {
             node0.fixFingers();
             node0.fixFingers();
             node0.fixFingers();
-            node1.fixFingers();
-            node1.fixFingers();
-            node1.fixFingers();
-            node2.fixFingers();
-            node2.fixFingers();
-            node2.fixFingers();
 
+            node1.fixFingers();
+            node1.fixFingers();
+            node1.fixFingers();
+            node2.fixFingers();
+            node2.fixFingers();
+            node2.fixFingers();
+            node2.fixFingers();
+            node2.fixFingers();
+            node2.fixFingers();
+            node3.fixFingers();
+            node3.fixFingers();
+            node3.fixFingers();
+            node3.fixFingers();
+            node3.fixFingers();
             node3.fixFingers();
             node4.fixFingers();
             node4.fixFingers();
