@@ -281,7 +281,7 @@ public class Node implements NodeInterface {
     public void leaveNetowrk (){
         createMessage(successor.getNodeId(), "£Leave");
         createMessage(predecessor.getNodeId(),"£Leave");
-        //TODO Il nodo in qualche modo si deve davvero distruggere...tipo delete object
+        //TODO Il nodo in qualche modo si deve davvero distruggere...tipo delete object oppure usare node.close()?
     }
 
 
