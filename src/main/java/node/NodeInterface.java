@@ -3,8 +3,9 @@ package node;
 import network.NodeCommunicator;
 
 import java.io.IOException;
+import java.io.Serializable;
 
-public interface NodeInterface {
+public interface NodeInterface extends Serializable {
 
     public void stabilize();
 
@@ -14,9 +15,9 @@ public interface NodeInterface {
 
     public void checkPredecessor();
 
-    public NodeInterface findSuccessor(long id) throws IOException;
+    public NodeInterface findSuccessor(Long id) throws IOException;
 
-    public NodeInterface closestPrecedingNode(long id);
+    public NodeInterface closestPrecedingNode(Long id);
 
     public NodeInterface getPredecessor();
 

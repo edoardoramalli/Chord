@@ -12,26 +12,27 @@ import java.io.Serializable;
 import java.net.Socket;
 import java.util.concurrent.Executors;
 
+import static java.lang.System.out;
+
 public class SocketNode implements Runnable, Serializable {
-    private NodeInterface node;
     private transient ObjectOutputStream socketOutput;
     private transient ObjectInputStream socketInput;
-    private transient MessageHandler messageHandler; //
+    private transient MessageHandler messageHandler;
     private transient volatile boolean connected;
 
     SocketNode(NodeInterface node, Socket socketIn){
-        this.node = node;
-        //this.messageHandler = new MessageHandler(node);
         try {
             this.socketInput = new ObjectInputStream(socketIn.getInputStream());
             this.socketOutput = new ObjectOutputStream(socketIn.getOutputStream());
         } catch (IOException e) {
             this.close();
         }
+        this.messageHandler = new NodeCommunicator(this, node);
         this.connected = true;
     }
 
-    public SocketNode(ObjectInputStream socketInput, ObjectOutputStream socketOutput){
+    public SocketNode(ObjectInputStream socketInput, ObjectOutputStream socketOutput, MessageHandler messageHandler){
+        this.messageHandler = messageHandler;
         this.socketInput = socketInput;
         this.socketOutput = socketOutput;
         this.connected = true;
@@ -41,16 +42,12 @@ public class SocketNode implements Runnable, Serializable {
     public void run() {
         while (connected){
             Message message = getMessage();
+            out.println("FFFFFFIIIIIII");
             if(!connected)
                 break;
             Executors.newCachedThreadPool().execute(() -> {
                 try {
-                    message.handle(new MessageHandler() {
-                        @Override
-                        public int hashCode() {
-                            return super.hashCode();
-                        }
-                    });
+                    message.handle(messageHandler);
                 } catch (IOException e) {
                     throw new UnexpectedBehaviourException();
                 }
@@ -74,7 +71,7 @@ public class SocketNode implements Runnable, Serializable {
 
     void sendMessage(Message message) throws IOException {
         socketOutput.writeObject(message);
-        socketOutput.flush();
+        socketOutput.reset();
     }
 
     void close() {

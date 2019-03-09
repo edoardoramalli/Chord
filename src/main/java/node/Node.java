@@ -5,6 +5,7 @@ import network.NodeCommunicator;
 import network.SocketNodeListener;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.HashMap;
 
 import java.util.Map;
@@ -13,8 +14,7 @@ import java.util.concurrent.Executors;
 import static java.lang.System.out;
 
 
-
-public class Node implements NodeInterface {
+public class Node implements NodeInterface, Serializable {
     private String ipAddress;
     private long nodeId;
     private volatile NodeInterface successor;
@@ -42,10 +42,13 @@ public class Node implements NodeInterface {
     }
 
     public void join(int mySocketPort, String ipAddress, int socketPort) throws ConnectionErrorException, IOException {
-        NodeCommunicator node = new NodeCommunicator(ipAddress, socketPort);
+        NodeCommunicator node = new NodeCommunicator(ipAddress, socketPort, this);
+        out.println("QUII");
         predecessor = null;
         successor = node.findSuccessor(this.nodeId);
+        out.println("PRIMA DI NOTIFY");
         successor.notify(this); //serve per settare il predecessore nel successore del nodo
+        out.println("PRIMA DI CLOSE");
         node.close();
         startSocketListener(mySocketPort);
         createFingerTable();
@@ -63,10 +66,8 @@ public class Node implements NodeInterface {
         successor.notify(this);
     }
 
-
-
     @Override
-    public NodeInterface findSuccessor(long id) throws IOException {
+    public NodeInterface findSuccessor(Long id) throws IOException {
         NodeInterface next;
         if (checkIntervalEquivalence(nodeId, id, successor.getNodeId())) {
             return successor;
@@ -80,7 +81,7 @@ public class Node implements NodeInterface {
     }
 
     @Override
-    public NodeInterface closestPrecedingNode(long id) {
+    public NodeInterface closestPrecedingNode(Long id) {
         long nodeIndex;
         for (int i = dimFingerTable - 1; i >= 0; i--) {
             nodeIndex = fingerTable.get(i).getNodeId();
@@ -101,7 +102,6 @@ public class Node implements NodeInterface {
                 predecessor = n;
         }
     }
-
 
     private boolean checkInterval(long pred, long index, long succ) {
         if (pred == succ)
@@ -180,7 +180,6 @@ public class Node implements NodeInterface {
         long numberNodes = (long)Math.pow(2, dimFingerTable);
         return ipNumber%numberNodes;
     }
-
 
     @Override
     public long getNodeId() {
