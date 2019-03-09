@@ -22,6 +22,8 @@ public class Node implements NodeInterface {
     private NodeInterface successor; //TODO questi dovrebbero essere NodeCommunicator
     private NodeInterface predecessor;
     private Map<Integer, NodeInterface> fingerTable;
+    private List<NodeInterface> listOfSuccessor = new ArrayList<>();
+    private static final int DIM_LIST_SUCC = 3;
     private static final int DIM_FINGER_TABLE = 4; //questo poi potremmo metterlo variabile scelto nella create
     private int next;
 
@@ -37,9 +39,27 @@ public class Node implements NodeInterface {
         this.next = 0;
     }
 
-    public void createMessage(int dest){
+    public void createMessage(long dest){
         MessageEdo m = new MessageEdo(0,nodeId,dest,"Juve Merda");
         send(m);
+    }
+
+    public void createMessage(long dest, String text){
+        MessageEdo m = new MessageEdo(0,nodeId,dest,text);
+        send(m);
+    }
+
+    public void updateListSuccessor(){
+        listOfSuccessor.clear();
+        listOfSuccessor.add(successor);
+        for (int i = 1;i<DIM_LIST_SUCC;i++){
+            listOfSuccessor.add(listOfSuccessor.get(i-1).getSuccessor());
+        }
+
+        out.println("Node "+ nodeId+" -----");
+        for (int i = 0;i<DIM_LIST_SUCC;i++){
+            out.println(listOfSuccessor.get(i).getNodeId());
+        }
     }
 
     @Override
@@ -51,6 +71,13 @@ public class Node implements NodeInterface {
             send(m);
         }
         else {
+            if(m.getPayload()=="£Leave"){
+                if (successor.getNodeId() == m.getSource()){
+                    successor = listOfSuccessor.get(1);
+                    updateListSuccessor();
+                }
+                updateListSuccessor();
+            }
             out.println("Node "+nodeId + " ha ricevuto un msg contenente : "+m.getPayload());
         }
     }
@@ -249,6 +276,14 @@ public class Node implements NodeInterface {
         return fingerTable;
     }
 
+    //quando un nodo sta per uscire fa la cortesia di avvertire con uno speciale messaggio quello prima e quello dopo
+    //in ogni caso la rete dovrebbe accorgenese e tutto si aggiusta con la stabilize
+    public void leaveNetowrk (){
+        createMessage(successor.getNodeId(), "£Leave");
+        createMessage(predecessor.getNodeId(),"£Leave");
+        //TODO Il nodo in qualche modo si deve davvero distruggere...tipo delete object
+    }
+
 
 
     //------------------- cose
@@ -348,41 +383,78 @@ public class Node implements NodeInterface {
             node0.fixFingers();
             node0.fixFingers();
             node0.fixFingers();
+            node0.fixFingers();
 
             node1.fixFingers();
             node1.fixFingers();
             node1.fixFingers();
+            node1.fixFingers();
+
 
             node2.fixFingers();
             node2.fixFingers();
             node2.fixFingers();
+            node2.fixFingers();
+
 
             node3.fixFingers();
             node3.fixFingers();
             node3.fixFingers();
+            node3.fixFingers();
+
 
             node4.fixFingers();
             node4.fixFingers();
             node4.fixFingers();
+            node4.fixFingers();
+
 
             node6.fixFingers();
             node6.fixFingers();
             node6.fixFingers();
+            node6.fixFingers();
+
 
             node7.fixFingers();
             node7.fixFingers();
             node7.fixFingers();
+            node7.fixFingers();
+
         }
 
+        node0.updateListSuccessor();
+        node1.updateListSuccessor();
+        node2.updateListSuccessor();
+        node3.updateListSuccessor();
+        node4.updateListSuccessor();
+        node6.updateListSuccessor();
+        node7.updateListSuccessor();
 
-       node0.printFingerTable();
-      /*  node1.printFingerTable();
+
+
+       /*node0.printFingerTable();
+        node1.printFingerTable();
         node2.printFingerTable();
         node3.printFingerTable();
         node4.printFingerTable();
         node7.printFingerTable();*/
 
         node0.createMessage(6);
+
+        node4.leaveNetowrk();
+
+        node3.printFingerTable();
+
+        for (int i=0;i<10;i++) {
+            node3.fixFingers();
+            node3.fixFingers();
+            node3.fixFingers();
+            node3.fixFingers();
+        }
+
+
+        node3.printFingerTable();
+
 
     }
 }
