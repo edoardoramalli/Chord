@@ -1,10 +1,7 @@
 package network;
 
 import exceptions.ConnectionErrorException;
-import network.message.FindSuccessorRequest;
-import network.message.FindSuccessorResponse;
-import network.message.Message;
-import network.message.MessageHandler;
+import network.message.*;
 import node.Node;
 import node.NodeInterface;
 
@@ -53,13 +50,17 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
         this.node = node;
     }
 
+    @Override
     public void close() throws IOException {
-        socketNode.sendMessage(new Message() {
-            @Override
-            public void handle(MessageHandler messageHandler) throws IOException {
-
+        Long lockId = createLock();
+        synchronized (lockList.get(lockId)) {
+            socketNode.sendMessage(new CloseMessage(lockId));
+            try {
+                lockList.get(lockId).wait();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
             }
-        });
+        }
         socketNode.close();
         joinNodeSocket.close();
     }
@@ -69,8 +70,16 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
     }
 
     @Override
-    public void notify(Node n) {
-
+    public void notify(NodeInterface node) throws IOException {
+        Long lockId = createLock();
+        synchronized (lockList.get(lockId)){
+            socketNode.sendMessage(new NotifyRequest(node, lockId));
+            try {
+                lockList.get(lockId).wait();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
     }
 
     @Override
@@ -127,7 +136,7 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
     }
 
     @Override
-    public long getNodeId() {
+    public Long getNodeId() {
         return this.nodeId;
     }
 
@@ -147,5 +156,24 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
             returnedNode = findSuccessorResponse.getNode();
             lockList.get(findSuccessorResponse.getLockId()).notifyAll();
         }
+    }
+
+    @Override
+    public void handle(NotifyRequest notifyRequest) throws IOException {
+        node.notify(notifyRequest.getNode());
+        socketNode.sendMessage(new TerminatedMethodMessage(notifyRequest.getLockId()));
+    }
+
+    @Override
+    public void handle(TerminatedMethodMessage terminatedMethodMessage) throws IOException {
+        synchronized (lockList.get(terminatedMethodMessage.getLockId())){
+            lockList.get(terminatedMethodMessage.getLockId()).notifyAll();
+        }
+    }
+
+    @Override
+    public void handle(CloseMessage closeMessage) throws IOException {
+        socketNode.sendMessage(new TerminatedMethodMessage(closeMessage.getLockId()));
+        socketNode.close();
     }
 }

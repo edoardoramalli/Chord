@@ -1,15 +1,13 @@
 package node;
 
-import network.NodeCommunicator;
-
 import java.io.IOException;
 import java.io.Serializable;
 
 public interface NodeInterface extends Serializable {
 
-    public void stabilize();
+    public void stabilize() throws IOException;
 
-    public void notify(Node n);
+    public void notify(NodeInterface node) throws IOException;
 
     public void fixFingers() throws IOException;
 
@@ -25,6 +23,8 @@ public interface NodeInterface extends Serializable {
 
     public String getIpAddress();
 
-    public  long getNodeId();
+    public Long getNodeId();
+
+    public void close() throws IOException;
 
 }

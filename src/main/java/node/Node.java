@@ -16,7 +16,7 @@ import static java.lang.System.out;
 
 public class Node implements NodeInterface, Serializable {
     private String ipAddress;
-    private long nodeId;
+    private Long nodeId;
     private volatile NodeInterface successor;
     private volatile NodeInterface predecessor;
     private volatile Map<Integer, NodeInterface> fingerTable;
@@ -56,7 +56,7 @@ public class Node implements NodeInterface, Serializable {
     }
 
     @Override
-    public void stabilize() {
+    public void stabilize() throws IOException {
         //controllo su null predecess
         NodeInterface x = successor.getPredecessor();
         long nodeIndex = x.getNodeId();
@@ -67,16 +67,21 @@ public class Node implements NodeInterface, Serializable {
     }
 
     @Override
+    public void close() throws IOException{
+
+    }
+
+    @Override
     public NodeInterface findSuccessor(Long id) throws IOException {
-        NodeInterface next;
+        NodeInterface nextNode;
         if (checkIntervalEquivalence(nodeId, id, successor.getNodeId())) {
             return successor;
         } else {
-            next = closestPrecedingNode(id);
+            nextNode = closestPrecedingNode(id);
             //non ritorniamo più successor ma this
-            if (this == next)
+            if (this == nextNode)
                 return this;
-            return next.findSuccessor(id);
+            return nextNode.findSuccessor(id);
         }
     }
 
@@ -92,7 +97,7 @@ public class Node implements NodeInterface, Serializable {
     }
 
     @Override
-    public void notify(Node n) {
+    public void notify(NodeInterface n) throws IOException{
         if (predecessor == null)
             predecessor = n;
         else {
@@ -175,14 +180,14 @@ public class Node implements NodeInterface, Serializable {
         }
     }
 
-    private long hash(String ipAddress) {
-        long ipNumber = ipToLong(ipAddress);
-        long numberNodes = (long)Math.pow(2, dimFingerTable);
+    private Long hash(String ipAddress) {
+        Long ipNumber = ipToLong(ipAddress);
+        Long numberNodes = (long)Math.pow(2, dimFingerTable);
         return ipNumber%numberNodes;
     }
 
     @Override
-    public long getNodeId() {
+    public Long getNodeId() {
         return nodeId;
     }
 
@@ -201,7 +206,7 @@ public class Node implements NodeInterface, Serializable {
         return ipAddress;
     }
 
-    public long ipToLong(String ipAddress) {
+    private long ipToLong(String ipAddress) {
 
         String[] ipAddressInArray = ipAddress.split("\\.");
 
@@ -244,8 +249,6 @@ public class Node implements NodeInterface, Serializable {
             return closestPrecedingNode(id);
         }
     }
-
-
 
     /*public static void main(String[] args) throws IOException {
 
