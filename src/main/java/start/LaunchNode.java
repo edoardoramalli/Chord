@@ -16,6 +16,8 @@ public class LaunchNode {
     private static final String JOIN_COMMAND = "join";
     private static final String LOOKUP_COMMAND = "lookup";
     private static final String ADDKEY_COMMAND = "addkey";
+    private static final String PRINT_SUCCESSOR_PREDECESSOR_COMMAND = "printps";
+    private static final String PRINT_FINGERTABLE_COMMAND = "printft";
     private static final String EXIT_COMMAND = "exit";
     private static Scanner in = new Scanner(System.in);
 
@@ -59,7 +61,7 @@ public class LaunchNode {
         }
         exit = false;
         while (!exit){
-            out.println("Select lookup or addKey or exit" );
+            out.println("Select 'lookup', 'addKey', 'printps', 'printft' or 'exit'" );
             String choice = in.nextLine().toLowerCase();
             switch (choice) {
                 case LOOKUP_COMMAND:
@@ -67,6 +69,20 @@ public class LaunchNode {
                     break;
                 case ADDKEY_COMMAND:
                     //TODO da fare
+                    break;
+                case PRINT_SUCCESSOR_PREDECESSOR_COMMAND:
+                    try {
+                        node.printPredecessorAndSuccessor();
+                    } catch (IOException e) {
+                        throw new UnexpectedBehaviourException();
+                    }
+                    break;
+                case PRINT_FINGERTABLE_COMMAND:
+                    try {
+                        node.printFingerTable();
+                    } catch (IOException e) {
+                        throw new UnexpectedBehaviourException();
+                    }
                     break;
                 case EXIT_COMMAND:
                     exit = true;

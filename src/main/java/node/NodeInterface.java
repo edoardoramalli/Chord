@@ -11,15 +11,15 @@ public interface NodeInterface extends Serializable {
 
     NodeInterface findSuccessor(Long id) throws IOException;
 
-    NodeInterface closestPrecedingNode(Long id);
+    NodeInterface closestPrecedingNode(Long id) throws IOException;
 
-    NodeInterface getPredecessor();
+    NodeInterface getPredecessor() throws IOException;
 
     NodeInterface getSuccessor();
 
     String getIpAddress();
 
-    Long getNodeId();
+    Long getNodeId() throws IOException;
 
     void close() throws IOException;
 

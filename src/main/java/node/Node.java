@@ -45,6 +45,7 @@ public class Node implements NodeInterface, Serializable {
         NodeCommunicator node = new NodeCommunicator(ipAddress, socketPort, this);
         predecessor = null;
         successor = node.findSuccessor(this.nodeId);
+        //TODO qui devo modificare e aprire il socket verso il successore
         successor.notify(this); //serve per settare il predecessore nel successore del nodo
         node.close();
         startSocketListener(mySocketPort);
@@ -82,7 +83,7 @@ public class Node implements NodeInterface, Serializable {
     }
 
     @Override
-    public NodeInterface closestPrecedingNode(Long id) {
+    public NodeInterface closestPrecedingNode(Long id) throws IOException {
         long nodeIndex;
         for (int i = dimFingerTable - 1; i >= 0; i--) {
             nodeIndex = fingerTable.get(i).getNodeId();
@@ -139,7 +140,7 @@ public class Node implements NodeInterface, Serializable {
         }
     }
 
-    public void fixFingers() throws IOException {
+    void fixFingers() throws IOException {
         long idToFind;
         next = next + 1;
         if (next > dimFingerTable)
@@ -165,7 +166,7 @@ public class Node implements NodeInterface, Serializable {
         }
     }
 
-    private String lookup(long id) {
+    private String lookup(long id) throws IOException {
         if (id == successor.getNodeId()) {
             return successor.getIpAddress();
         } else if (id == predecessor.getNodeId()) {
@@ -189,7 +190,7 @@ public class Node implements NodeInterface, Serializable {
     @Override
     public NodeInterface getSuccessor() {
         return successor;
-    }
+    } //TODO questo serve?
 
     @Override
     public NodeInterface getPredecessor() {
@@ -221,7 +222,7 @@ public class Node implements NodeInterface, Serializable {
         return fingerTable;
     }
 
-    private void printFingerTable(){
+    public void printFingerTable() throws IOException {
         out.println("FINGER TABLE: " + nodeId);
         for (int i = 0; i< dimFingerTable; i++)
         {
@@ -229,13 +230,13 @@ public class Node implements NodeInterface, Serializable {
         }
     }
 
-    private void printPredecessorAndSuccessor(){
+    public void printPredecessorAndSuccessor() throws IOException {
         out.println(nodeId + ":----------------------");
         out.println(predecessor.getNodeId());
         out.println(successor.getNodeId());
     }
 
-    private NodeInterface lookup2(long id) {
+    private NodeInterface lookup2(long id) throws IOException {
         if (id == successor.getNodeId()) {
             return successor;
         } else if (id == predecessor.getNodeId()) {

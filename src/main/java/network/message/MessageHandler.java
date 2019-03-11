@@ -13,4 +13,12 @@ public interface MessageHandler {
     void handle(TerminatedMethodMessage terminatedMethodMessage) throws IOException;
 
     void handle(CloseMessage closeMessage) throws IOException;
+
+    void handle(GetPredecessorRequest getPredecessorRequest) throws IOException;
+
+    void handle(GetPredecessorResponse getPredecessorResponse) throws IOException;
+
+    void handle(GetNodeIdRequest getNodeIdRequest) throws IOException;
+
+    void handle(GetNodeIdResponse getNodeIdResponse) throws IOException;
 }
