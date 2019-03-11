@@ -18,9 +18,9 @@ public class LaunchNode {
     private static final String ADDKEY_COMMAND = "addkey";
     private static final String EXIT_COMMAND = "exit";
     private static Scanner in = new Scanner(System.in);
-    private static Node node;
 
     public static void main(String[] args){
+        Node node;
         //TODO andrebbero fatti dei controlli sugli inserimenti
         try {
             node = new Node(InetAddress.getLocalHost().getHostAddress());

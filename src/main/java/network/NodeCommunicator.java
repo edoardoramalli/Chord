@@ -1,8 +1,8 @@
 package network;
 
 import exceptions.ConnectionErrorException;
+import exceptions.UnexpectedBehaviourException;
 import network.message.*;
-import node.Node;
 import node.NodeInterface;
 
 import java.io.IOException;
@@ -12,8 +12,6 @@ import java.io.Serializable;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.concurrent.Executors;
-
-import static java.lang.System.out;
 
 public class NodeCommunicator implements NodeInterface, Serializable, MessageHandler {
     private transient Socket joinNodeSocket;
@@ -64,10 +62,6 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
         socketNode.close();
         joinNodeSocket.close();
     }
-    @Override
-    public void stabilize() {
-
-    }
 
     @Override
     public void notify(NodeInterface node) throws IOException {
@@ -83,11 +77,6 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
     }
 
     @Override
-    public void fixFingers() {
-
-    }
-
-    @Override
     public void checkPredecessor() {
 
     }
@@ -99,22 +88,19 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
 
     @Override
     public NodeInterface findSuccessor(Long id)  {
-        out.println("CHIAMATA FIND");
         Long lockId = createLock();
         synchronized (lockList.get(lockId)){
             try {
-                socketNode.sendMessage(new FindSuccessorRequest(id, lockId)); //ERRORE NELLA SEND
+                socketNode.sendMessage(new FindSuccessorRequest(id, lockId));
             } catch (IOException e) {
-                out.println("ERRORE QUI");
+                throw new UnexpectedBehaviourException();
             }
-            out.println("INVIATO MESSAGGIO");
             try {
                 lockList.get(lockId).wait();
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
         }
-        out.println("RISPOSTA RICEVUTA");
         NodeInterface nodeR = returnedNode;
         returnedNode = null;
         return nodeR;
@@ -137,21 +123,19 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
 
     @Override
     public Long getNodeId() {
-        return this.nodeId;
+        return nodeId;
     }
 
     //---------> Handling of Messages
 
     @Override
     public void handle(FindSuccessorRequest findSuccessorRequest) throws IOException {
-        out.println("FIND RICEVUTO");
-        socketNode.sendMessage(new FindSuccessorResponse(node.findSuccessor(findSuccessorRequest.getId()), findSuccessorRequest.getLockId()));
-        out.println("FIND RISPOSTO");
+        NodeInterface nodeInterface = node.findSuccessor(findSuccessorRequest.getId());
+        socketNode.sendMessage(new FindSuccessorResponse(nodeInterface, findSuccessorRequest.getLockId()));
     }
 
     @Override
     public void handle(FindSuccessorResponse findSuccessorResponse) throws IOException {
-        out.println("RESPONSE RICEVUTA");
         synchronized (lockList.get(findSuccessorResponse.getLockId())){
             returnedNode = findSuccessorResponse.getNode();
             lockList.get(findSuccessorResponse.getLockId()).notifyAll();

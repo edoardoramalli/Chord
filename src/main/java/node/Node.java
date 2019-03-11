@@ -43,20 +43,16 @@ public class Node implements NodeInterface, Serializable {
 
     public void join(int mySocketPort, String ipAddress, int socketPort) throws ConnectionErrorException, IOException {
         NodeCommunicator node = new NodeCommunicator(ipAddress, socketPort, this);
-        out.println("QUII");
         predecessor = null;
         successor = node.findSuccessor(this.nodeId);
-        out.println("PRIMA DI NOTIFY");
         successor.notify(this); //serve per settare il predecessore nel successore del nodo
-        out.println("PRIMA DI CLOSE");
         node.close();
         startSocketListener(mySocketPort);
         createFingerTable();
         Executors.newCachedThreadPool().submit(new UpdateNode(this));
     }
 
-    @Override
-    public void stabilize() throws IOException {
+    void stabilize() throws IOException {
         //controllo su null predecess
         NodeInterface x = successor.getPredecessor();
         long nodeIndex = x.getNodeId();
@@ -143,7 +139,6 @@ public class Node implements NodeInterface, Serializable {
         }
     }
 
-    @Override
     public void fixFingers() throws IOException {
         long idToFind;
         next = next + 1;
@@ -249,49 +244,4 @@ public class Node implements NodeInterface, Serializable {
             return closestPrecedingNode(id);
         }
     }
-
-    /*public static void main(String[] args) throws IOException {
-
-        int m = 3;
-        String ip0 = "192.168.1.0";
-        String ip0 = "192.168.1.0";
-        String ip0 = "192.168.1.0";
-        String ip0 = "192.168.1.0";
-        String ip0 = "192.168.1.0";
-
-        Node node0 = new Node("192.168.1.0");
-        Node node1 = new Node("192.168.1.1");
-        Node node2 = new Node("192.168.1.2");
-        Node node3 = new Node("192.168.1.3");
-        Node node4 = new Node("192.168.1.4");
-        Node node6 = new Node("192.168.1.6");
-        Node node7 = new Node("192.168.1.7");
-
-        node0.create(m);
-        node1.join(node0);
-        node6.join(node1);
-        node4.join(node1);
-        node2.join(node4);
-        node3.join(node4);
-        node7.join(node2);
-
-        out.println("PREDECESSORE\nSUCCESSORE");
-
-        node0.printPredecessorAndSuccessor();
-        node1.printPredecessorAndSuccessor();
-        node2.printPredecessorAndSuccessor();
-        node3.printPredecessorAndSuccessor();
-        node4.printPredecessorAndSuccessor();
-        node6.printPredecessorAndSuccessor();
-        node7.printPredecessorAndSuccessor();
-
-        node0.printFingerTable();
-        node1.printFingerTable();
-        node2.printFingerTable();
-        node3.printFingerTable();
-        node4.printFingerTable();
-        node6.printFingerTable();
-        node7.printFingerTable();
-    }
-    */
 }

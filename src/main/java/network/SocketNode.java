@@ -42,7 +42,6 @@ public class SocketNode implements Runnable, Serializable {
     public void run() {
         while (connected){
             Message message = getMessage();
-            out.println("FFFFFFIIIIIII");
             if(!connected)
                 break;
             Executors.newCachedThreadPool().execute(() -> {

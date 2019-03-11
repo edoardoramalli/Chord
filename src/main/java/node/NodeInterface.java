@@ -5,26 +5,22 @@ import java.io.Serializable;
 
 public interface NodeInterface extends Serializable {
 
-    public void stabilize() throws IOException;
+    void notify(NodeInterface node) throws IOException;
 
-    public void notify(NodeInterface node) throws IOException;
+    void checkPredecessor();
 
-    public void fixFingers() throws IOException;
+    NodeInterface findSuccessor(Long id) throws IOException;
 
-    public void checkPredecessor();
+    NodeInterface closestPrecedingNode(Long id);
 
-    public NodeInterface findSuccessor(Long id) throws IOException;
+    NodeInterface getPredecessor();
 
-    public NodeInterface closestPrecedingNode(Long id);
+    NodeInterface getSuccessor();
 
-    public NodeInterface getPredecessor();
+    String getIpAddress();
 
-    public NodeInterface getSuccessor();
+    Long getNodeId();
 
-    public String getIpAddress();
-
-    public Long getNodeId();
-
-    public void close() throws IOException;
+    void close() throws IOException;
 
 }
