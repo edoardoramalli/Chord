@@ -19,6 +19,8 @@ public interface NodeInterface extends Serializable {
 
     String getIpAddress();
 
+    int getSocketPort();
+
     Long getNodeId() throws IOException;
 
     void close() throws IOException;

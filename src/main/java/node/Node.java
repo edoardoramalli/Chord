@@ -16,6 +16,7 @@ import static java.lang.System.out;
 
 public class Node implements NodeInterface, Serializable {
     private String ipAddress;
+    private int socketPort;
     private Long nodeId;
     private volatile NodeInterface successor;
     private volatile NodeInterface predecessor;
@@ -33,6 +34,7 @@ public class Node implements NodeInterface, Serializable {
     }
 
     public void create(int mySocketPort, int m) {
+        this.socketPort = mySocketPort;
         successor = this;
         predecessor = null;
         dimFingerTable = m;
@@ -41,8 +43,9 @@ public class Node implements NodeInterface, Serializable {
         Executors.newCachedThreadPool().submit(new UpdateNode(this));
     }
 
-    public void join(int mySocketPort, String ipAddress, int socketPort) throws ConnectionErrorException, IOException {
-        NodeCommunicator node = new NodeCommunicator(ipAddress, socketPort, this);
+    public void join(int mySocketPort, String joinIpAddress, int joinSocketPort) throws ConnectionErrorException, IOException {
+        socketPort = mySocketPort;
+        NodeCommunicator node = new NodeCommunicator(joinIpAddress, joinSocketPort, this);
         predecessor = null;
         successor = node.findSuccessor(this.nodeId);
         //TODO qui devo modificare e aprire il socket verso il successore
@@ -200,6 +203,11 @@ public class Node implements NodeInterface, Serializable {
     @Override
     public String getIpAddress() {
         return ipAddress;
+    }
+
+    @Override
+    public int getSocketPort() {
+        return socketPort;
     }
 
     private long ipToLong(String ipAddress) {

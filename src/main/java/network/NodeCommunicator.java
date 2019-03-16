@@ -30,10 +30,10 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
         return lockID - 1;
     }
 
-    public NodeCommunicator(String ipAddress, int socketPort, NodeInterface node) throws ConnectionErrorException, IOException {
+    public NodeCommunicator(String joinIpAddress, int joinSocketPort, NodeInterface node) throws ConnectionErrorException, IOException {
         this.node = node;
         try {
-            joinNodeSocket = new Socket(ipAddress, socketPort);
+            joinNodeSocket = new Socket(joinIpAddress, joinSocketPort);
         } catch (IOException e) {
             throw new ConnectionErrorException();
         }
@@ -90,7 +90,12 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
 
     @Override
     public String getIpAddress (){
-        return  "";
+        return  node.getIpAddress();
+    }
+
+    @Override
+    public int getSocketPort() {
+        return node.getSocketPort();
     }
 
     @Override
