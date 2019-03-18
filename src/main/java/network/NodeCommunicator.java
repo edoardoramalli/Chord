@@ -207,7 +207,9 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
     @Override
     public void handle(NotifyRequest notifyRequest) throws IOException {
         node.notify(notifyRequest.getNode());
+        out.println("DOPO ELABORAZIONE");
         socketNode.sendMessage(new TerminatedMethodMessage(notifyRequest.getLockId()));
+        out.println("INVIATO");
     }
 
     @Override

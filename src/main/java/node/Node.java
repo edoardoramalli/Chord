@@ -17,12 +17,12 @@ import static java.lang.System.out;
 public class Node implements NodeInterface, Serializable {
     private String ipAddress;
     private int socketPort;
-    private Long nodeId;
-    private volatile NodeInterface successor;
-    private volatile NodeInterface predecessor;
-    private volatile Map<Integer, NodeInterface> fingerTable;
-    private int dimFingerTable = 3;
-    private int next;
+    private transient Long nodeId;
+    private transient volatile NodeInterface successor;
+    private transient volatile NodeInterface predecessor;
+    private transient volatile Map<Integer, NodeInterface> fingerTable;
+    private transient int dimFingerTable = 3;
+    private transient int next;
 
     public Node(String ipAddress, int sockeP) {
         this.ipAddress = ipAddress;
