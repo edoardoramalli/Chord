@@ -17,7 +17,7 @@ import static java.lang.System.out;
 public class Node implements NodeInterface, Serializable {
     private String ipAddress;
     private int socketPort;
-    private transient Long nodeId;
+    private Long nodeId;
     private transient volatile NodeInterface successor;
     private transient volatile NodeInterface predecessor;
     private transient volatile Map<Integer, NodeInterface> fingerTable;
@@ -49,22 +49,11 @@ public class Node implements NodeInterface, Serializable {
             out.println("NODE ID: " + nodeId);
         NodeCommunicator node = new NodeCommunicator(joinIpAddress, joinSocketPort, this);
         predecessor = null;
-            node.notify(this);
         NodeInterface successorNode = node.findSuccessor(this.nodeId);
         dimFingerTable = node.getDimFingerTable();
-            out.println("NODO SUCCESSORE: ------------------");
-            out.println("IP: " + successorNode.getIpAddress());
-            out.println("PORT: " + successorNode.getSocketPort());
-            out.println("FINE NODO SUCCESSORE: ------------------");
         node.close();
-            out.println("DOPO CLOSE");
         successor = new NodeCommunicator(successorNode.getIpAddress(), successorNode.getSocketPort(), this);
-            out.println("DOPO SUCCESSORE");
-            out.println(successor.getNodeId());
-            out.println(successor.getDimFingerTable());
-            //TODO MUORE QUI
         successor.notify(this); //serve per settare il predecessore nel successore del nodo
-            out.println("DOPO NOTIFY");
         startSocketListener(socketPort);
         createFingerTable();
         Executors.newCachedThreadPool().submit(new UpdateNode(this));

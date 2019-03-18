@@ -80,16 +80,13 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
     public void notify(NodeInterface node) throws IOException {
         Long lockId = createLock();
         synchronized (lockList.get(lockId)){
-            out.println("PRIMA INVIO NOTIFY");
             socketNode.sendMessage(new NotifyRequest(node, lockId));
-            out.println("DOPO INVIO NOTIFY");
             try {
                 lockList.get(lockId).wait();
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
         }
-        out.println("FINE NOTIFY");
     }
 
     @Override
@@ -207,9 +204,7 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
     @Override
     public void handle(NotifyRequest notifyRequest) throws IOException {
         node.notify(notifyRequest.getNode());
-        out.println("DOPO ELABORAZIONE");
         socketNode.sendMessage(new TerminatedMethodMessage(notifyRequest.getLockId()));
-        out.println("INVIATO");
     }
 
     @Override

@@ -69,9 +69,7 @@ public class SocketNode implements Runnable, Serializable {
     }
 
     void sendMessage(Message message) throws IOException {
-        out.println("PRIMA INVIO SOCKET");
         socketOutput.writeObject(message);
-        out.println("DOPO INVIO SOCKET");
         socketOutput.reset();
     }
 
