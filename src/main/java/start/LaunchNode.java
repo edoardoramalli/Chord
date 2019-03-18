@@ -22,23 +22,24 @@ public class LaunchNode {
     private static Scanner in = new Scanner(System.in);
 
     public static void main(String[] args){
-        Node node;
+        Node node = null;
         //TODO andrebbero fatti dei controlli sugli inserimenti
-        try {
-            node = new Node(InetAddress.getLocalHost().getHostAddress());
-        } catch (UnknownHostException e) {
-            throw new UnexpectedBehaviourException();
-        }
+
         boolean exit = false;
         while (!exit){
             out.println("Select create or join");
             String choice = in.nextLine().toLowerCase();
             out.println("Select port"); //poi aggiungo controllo
             int mySocketPort =  Integer.parseInt(in.nextLine());
+            try {
+                node = new Node(InetAddress.getLocalHost().getHostAddress(), mySocketPort);
+            } catch (UnknownHostException e) {
+                throw new UnexpectedBehaviourException();
+            }
             switch (choice){
                 case CREATE_COMMAND:
                     out.println("Insert value of m:");
-                    node.create(mySocketPort, Integer.parseInt(in.nextLine()));
+                    node.create(Integer.parseInt(in.nextLine()));
                     exit = true;
                     break;
                 case JOIN_COMMAND:
@@ -47,7 +48,7 @@ public class LaunchNode {
                     out.println("Insert socket port of node");
                     int socketPort = Integer.parseInt(in.nextLine().toLowerCase());
                     try {
-                        node.join(mySocketPort, ipAddress, socketPort);
+                        node.join(ipAddress, socketPort);
                         exit = true;
                     } catch (ConnectionErrorException e) {
                         out.println("Wrong ip address or port");

@@ -6,8 +6,6 @@ import network.SocketNodeListener;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.HashMap;
 
 import java.util.Map;
@@ -26,29 +24,29 @@ public class Node implements NodeInterface, Serializable {
     private int dimFingerTable = 3;
     private int next;
 
-    public Node(String ipAddress) {
+    public Node(String ipAddress, int sockeP) {
         this.ipAddress = ipAddress;
-        this.nodeId = hash(ipAddress);
         this.successor = null;
         this.predecessor = null;
         this.fingerTable = new HashMap<>();
+        this.socketPort = sockeP;
         this.next = 0;
+        this.nodeId = hash(ipAddress,socketPort);
+
     }
 
-    public void create(int mySocketPort, int m) {
-        this.socketPort = mySocketPort;
+    public void create(int m) {
         successor = this;
         predecessor = null;
         dimFingerTable = m;
             out.println("NODE ID: " + nodeId);
-        startSocketListener(mySocketPort);
+        startSocketListener(socketPort);
         createFingerTable();
         Executors.newCachedThreadPool().submit(new UpdateNode(this));
     }
 
-    public void join(int mySocketPort, String joinIpAddress, int joinSocketPort) throws ConnectionErrorException, IOException {
+    public void join(String joinIpAddress, int joinSocketPort) throws ConnectionErrorException, IOException {
             out.println("NODE ID: " + nodeId);
-        socketPort = mySocketPort;
         NodeCommunicator node = new NodeCommunicator(joinIpAddress, joinSocketPort, this);
         predecessor = null;
             node.notify(this);
@@ -67,7 +65,7 @@ public class Node implements NodeInterface, Serializable {
             //TODO MUORE QUI
         successor.notify(this); //serve per settare il predecessore nel successore del nodo
             out.println("DOPO NOTIFY");
-        startSocketListener(mySocketPort);
+        startSocketListener(socketPort);
         createFingerTable();
         Executors.newCachedThreadPool().submit(new UpdateNode(this));
     }
@@ -195,8 +193,8 @@ public class Node implements NodeInterface, Serializable {
         }
     }
 
-    public Long hash(String ipAddress) {
-        Long ipNumber = ipToLong(ipAddress);
+    public Long hash(String ipAddress, int socketP) {
+        Long ipNumber = ipToLong(ipAddress) + socketP;
         Long numberNodes = (long)Math.pow(2, dimFingerTable);
         return ipNumber%numberNodes;
     }
@@ -274,19 +272,5 @@ public class Node implements NodeInterface, Serializable {
         } else {
             return closestPrecedingNode(id);
         }
-    }
-
-
-    public static void main(String[] args){
-        Node node = new Node("192.168.1.1");
-        try {
-            out.println(node.hash(InetAddress.getLocalHost().getHostAddress()));
-        } catch (UnknownHostException e) {
-            e.printStackTrace();
-        }
-        out.println(node.hash("151.122.1.4"));
-        out.println(node.hash("191.34.1.2"));
-        out.println(node.hash("191.190.1.15"));
-        out.println(node.hash("191.186.187.112"));
     }
 }
