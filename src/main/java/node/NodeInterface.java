@@ -21,6 +21,8 @@ public interface NodeInterface extends Serializable {
 
     int getSocketPort();
 
+    int getDimFingerTable() throws IOException;
+
     Long getNodeId() throws IOException;
 
     void close() throws IOException;

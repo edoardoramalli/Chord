@@ -52,7 +52,7 @@ public class LaunchNode {
                     } catch (ConnectionErrorException e) {
                         out.println("Wrong ip address or port");
                     } catch (IOException e) {
-                        throw new UnexpectedBehaviourException();
+                        e.printStackTrace();
                     }
                     break;
                 default:

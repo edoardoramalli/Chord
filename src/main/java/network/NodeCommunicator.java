@@ -1,7 +1,6 @@
 package network;
 
 import exceptions.ConnectionErrorException;
-import exceptions.UnexpectedBehaviourException;
 import network.message.*;
 import node.NodeInterface;
 
@@ -13,9 +12,11 @@ import java.net.Socket;
 import java.util.HashMap;
 import java.util.concurrent.Executors;
 
+import static java.lang.System.out;
+
 public class NodeCommunicator implements NodeInterface, Serializable, MessageHandler {
     private transient Socket joinNodeSocket;
-    private transient NodeInterface node;
+    private transient NodeInterface node; //mio nodo
     private transient long nodeId; //questo è il "mio" nodeId //TODO andrebbe inizializzato da qualche parte
     private SocketNode socketNode;
     private volatile HashMap<Long, Object> lockList = new HashMap<>();
@@ -23,6 +24,7 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
 
     private transient volatile Long returnedNodeId;
     private transient volatile NodeInterface returnedNode;
+    private transient volatile Integer returnedInt;
 
     private synchronized Long createLock(){
         lockList.put(lockID, new Object());
@@ -42,8 +44,7 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
         this.socketNode = new SocketNode(in, out, this);
         Executors.newCachedThreadPool().submit(socketNode);
         //inizializzazione valori di ritorno
-        this.returnedNodeId = null;
-        this.returnedNode = null;
+        nullReturnValue();
     }
 
     //used by SocketNode, when StartSocketListener accepts a new connection
@@ -51,8 +52,13 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
         this.socketNode = socketNode;
         this.node = node;
         //inizializzazione valori di ritorno
+        nullReturnValue();
+    }
+
+    private void nullReturnValue(){
         this.returnedNodeId = null;
         this.returnedNode = null;
+        this.returnedInt = null;
     }
 
     @Override
@@ -74,13 +80,16 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
     public void notify(NodeInterface node) throws IOException {
         Long lockId = createLock();
         synchronized (lockList.get(lockId)){
+            out.println("PRIMA INVIO NOTIFY");
             socketNode.sendMessage(new NotifyRequest(node, lockId));
+            out.println("DOPO INVIO NOTIFY");
             try {
                 lockList.get(lockId).wait();
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
         }
+        out.println("FINE NOTIFY");
     }
 
     @Override
@@ -99,14 +108,26 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
     }
 
     @Override
-    public NodeInterface findSuccessor(Long id)  {
+    public int getDimFingerTable() throws IOException {
         Long lockId = createLock();
         synchronized (lockList.get(lockId)){
+            socketNode.sendMessage(new GetDimFingerTableRequest(lockId));
             try {
-                socketNode.sendMessage(new FindSuccessorRequest(id, lockId));
-            } catch (IOException e) {
-                throw new UnexpectedBehaviourException();
+                lockList.get(lockId).wait();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
             }
+        }
+        int dimFingerTable = returnedInt;
+        returnedInt = null;
+        return dimFingerTable;
+    }
+
+    @Override
+    public NodeInterface findSuccessor(Long id) throws IOException {
+        Long lockId = createLock();
+        synchronized (lockList.get(lockId)){
+            socketNode.sendMessage(new FindSuccessorRequest(id, lockId));
             try {
                 lockList.get(lockId).wait();
             } catch (InterruptedException e) {
@@ -239,6 +260,26 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
             }
             returnedNodeId = getNodeIdResponse.getNodeId();
             lockList.get(getNodeIdResponse.getLockId()).notifyAll();
+        }
+    }
+
+    @Override
+    public void handle(GetDimFingerTableRequest getDimFingerTableRequest) throws IOException {
+        socketNode.sendMessage(new GetDimFingerTableResponse(node.getDimFingerTable(), getDimFingerTableRequest.getLockId()));
+    }
+
+    @Override
+    public void handle(GetDimFingerTableResponse getDimFingerTableResponse) throws IOException {
+        synchronized (lockList.get(getDimFingerTableResponse.getLockId())){
+            while (returnedInt != null){
+                try {
+                    wait();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+            returnedInt = getDimFingerTableResponse.getDimFingerTable();
+            lockList.get(getDimFingerTableResponse.getLockId()).notifyAll();
         }
     }
 }

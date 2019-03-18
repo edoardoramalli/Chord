@@ -21,4 +21,8 @@ public interface MessageHandler {
     void handle(GetNodeIdRequest getNodeIdRequest) throws IOException;
 
     void handle(GetNodeIdResponse getNodeIdResponse) throws IOException;
+
+    void handle(GetDimFingerTableRequest getDimFingerTableRequest) throws IOException;
+
+    void handle(GetDimFingerTableResponse getDimFingerTableResponse) throws IOException;
 }
