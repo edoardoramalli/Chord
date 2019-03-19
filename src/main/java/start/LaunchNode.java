@@ -24,7 +24,6 @@ public class LaunchNode {
     public static void main(String[] args){
         Node node = null;
         //TODO andrebbero fatti dei controlli sugli inserimenti
-
         boolean exit = false;
         while (!exit){
             out.println("Select create or join");

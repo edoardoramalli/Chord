@@ -16,7 +16,7 @@ import static java.lang.System.out;
 
 public class NodeCommunicator implements NodeInterface, Serializable, MessageHandler {
     private transient Socket joinNodeSocket;
-    private transient NodeInterface node; //mio nodo
+    private NodeInterface node; //mio nodo
     private transient long nodeId; //questo è il "mio" nodeId //TODO andrebbe inizializzato da qualche parte
     private SocketNode socketNode;
     private volatile HashMap<Long, Object> lockList = new HashMap<>();
@@ -37,7 +37,7 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
         try {
             joinNodeSocket = new Socket(joinIpAddress, joinSocketPort);
         } catch (IOException e) {
-            throw new ConnectionErrorException();
+            e.printStackTrace();
         }
         ObjectOutputStream out = new ObjectOutputStream(joinNodeSocket.getOutputStream());
         ObjectInputStream in = new ObjectInputStream(joinNodeSocket.getInputStream());
@@ -61,7 +61,6 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
         this.returnedInt = null;
     }
 
-    @Override
     public void close() throws IOException {
         Long lockId = createLock();
         synchronized (lockList.get(lockId)) {
@@ -94,6 +93,7 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
 
     }
 
+    //TODO COSA SERVONO?????????
     @Override
     public String getIpAddress (){
         return  node.getIpAddress();
