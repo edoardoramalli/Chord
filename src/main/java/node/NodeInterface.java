@@ -17,9 +17,9 @@ public interface NodeInterface extends Serializable {
 
     NodeInterface getSuccessor();
 
-    String getIpAddress();
+    String getIpAddress() throws IOException;
 
-    int getSocketPort();
+    int getSocketPort() throws IOException;
 
     int getDimFingerTable() throws IOException;
 

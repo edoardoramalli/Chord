@@ -4,6 +4,8 @@ import java.io.IOException;
 
 public interface MessageHandler {
 
+    void addConnection() throws IOException;
+
     void handle (FindSuccessorRequest findSuccessorRequest) throws IOException;
 
     void handle (FindSuccessorResponse findSuccessorResponse) throws IOException;
@@ -25,4 +27,12 @@ public interface MessageHandler {
     void handle(GetDimFingerTableRequest getDimFingerTableRequest) throws IOException;
 
     void handle(GetDimFingerTableResponse getDimFingerTableResponse) throws IOException;
+
+    void handle(GetIpAddressRequest getIpAddressRequest) throws IOException;
+
+    void handle(GetIpAddressResponse getIpAddressResponse) throws IOException;
+
+    void handle(GetSocketPortRequest getSocketPortRequest) throws IOException;
+
+    void handle(GetSocketPortResponse getSocketPortResponse) throws IOException;
 }

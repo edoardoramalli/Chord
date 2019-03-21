@@ -27,8 +27,15 @@ public class SocketNode implements Runnable, Serializable {
         } catch (IOException e) {
             this.close();
         }
-        this.messageHandler = new NodeCommunicator(this, node);
+        out.println("PRIMA DI CREAZIONE CONNESSIONE IN");
         this.connected = true;
+        this.messageHandler = new NodeCommunicator(this, node);
+        try {
+            this.messageHandler.addConnection();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        out.println("DOPO CREAZIONE CONNESSIONE OUT");
     }
 
     public SocketNode(ObjectInputStream socketInput, ObjectOutputStream socketOutput, MessageHandler messageHandler){
@@ -48,7 +55,7 @@ public class SocketNode implements Runnable, Serializable {
                 try {
                     message.handle(messageHandler);
                 } catch (IOException e) {
-                    throw new UnexpectedBehaviourException();
+                    e.printStackTrace();
                 }
             });
             if(false)

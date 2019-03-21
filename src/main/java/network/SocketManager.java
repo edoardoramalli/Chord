@@ -1,6 +1,5 @@
 package network;
 
-import exceptions.ConnectionErrorException;
 import node.NodeInterface;
 
 import java.io.IOException;
@@ -9,19 +8,19 @@ import java.util.Map;
 
 import static java.lang.System.out;
 
-public class SocketManagement {
-    private static SocketManagement socketManagementInstance;
+public class SocketManager {
+    private static SocketManager socketManagerInstance;
     private Map<String, NodeCommunicator> nameSocket;
     private volatile NodeInterface node;
 
-    private SocketManagement(){
+    private SocketManager(){
         this.nameSocket = new HashMap<>();
     }
 
-    public static SocketManagement getInstance(){
-        if (socketManagementInstance == null)
-            socketManagementInstance = new SocketManagement();
-        return socketManagementInstance;
+    public static SocketManager getInstance(){
+        if (socketManagerInstance == null)
+            socketManagerInstance = new SocketManager();
+        return socketManagerInstance;
     }
 
     public void setNode(NodeInterface node) {
@@ -29,8 +28,8 @@ public class SocketManagement {
     }
 
     public static void clear(){
-        if (socketManagementInstance != null)
-            socketManagementInstance = null;
+        if (socketManagerInstance != null)
+            socketManagerInstance = null;
     }
 
     public NodeInterface createConnection(NodeInterface connectionNode) throws IOException {
@@ -40,20 +39,23 @@ public class SocketManagement {
         String key = nodeId.toString() + ipAddress + socketPort;
         NodeCommunicator searchedNode = nameSocket.get(key);
         if(searchedNode != null) {
-            out.println("DALLA LISTA");
+            out.println("DALLA LISTA: " + key);
             return searchedNode;
         }
         else{
-            out.println("NUOVO");
+            out.println("NUOVO: " + key);
             NodeCommunicator createdNode = null;
-            try {
-                createdNode = new NodeCommunicator(connectionNode.getIpAddress(), connectionNode.getSocketPort(), node);
-                nameSocket.put(key, createdNode);
-            } catch (ConnectionErrorException e) {
-                e.printStackTrace(); //TODO da fare qualcosa
-            }
+            createdNode = new NodeCommunicator(connectionNode.getIpAddress(), connectionNode.getSocketPort(), node);
+            nameSocket.put(key, createdNode);
             return createdNode;
         }
+    }
+
+    //called by startNodeListener, used to create first connection
+    void addConnection(Long nodeId, String ipAddress, int socketPort, NodeCommunicator node) throws IOException {
+        String key = nodeId.toString() + ipAddress + socketPort;
+        nameSocket.put(key, node);
+        out.println("AGGIUNTO: " + key);
     }
 
     public void closeCommunicator(NodeInterface node) throws IOException {

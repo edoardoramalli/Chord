@@ -2,7 +2,7 @@ package node;
 
 import exceptions.ConnectionErrorException;
 import network.NodeCommunicator;
-import network.SocketManagement;
+import network.SocketManager;
 import network.SocketNodeListener;
 
 import java.io.IOException;
@@ -34,7 +34,7 @@ public class Node implements NodeInterface, Serializable {
         this.next = 0;
         this.nodeId = hash(ipAddress, this.socketPort);
         out.println("NODE ID: " + nodeId);
-        SocketManagement.getInstance().setNode(this);
+        SocketManager.getInstance().setNode(this);
     }
 
     public void create(int m) {
@@ -50,10 +50,14 @@ public class Node implements NodeInterface, Serializable {
         NodeCommunicator node = new NodeCommunicator(joinIpAddress, joinSocketPort, this);
         predecessor = null;
         NodeInterface successorNode = node.findSuccessor(this.nodeId);
+        out.println("DOPO FIND");
         dimFingerTable = node.getDimFingerTable();
+        out.println("DOPO GETFINGER");
         node.close();
-        successor = SocketManagement.getInstance().createConnection(successorNode);
+        successor = SocketManager.getInstance().createConnection(successorNode);
+        out.println("DOPO CREAZIONE");
         successor.notify(this); //serve per settare il predecessore nel successore del nodo
+        out.println("DOPO NOTIFY");
         startSocketListener(socketPort);
         createFingerTable();
         Executors.newCachedThreadPool().submit(new UpdateNode(this));
@@ -65,7 +69,7 @@ public class Node implements NodeInterface, Serializable {
         long nodeIndex = x.getNodeId();
         long oldSucID = successor.getNodeId();
         if (checkInterval(getNodeId(), nodeIndex, oldSucID) && !x.getNodeId().equals(successor.getNodeId()))
-            successor = SocketManagement.getInstance().createConnection(x);
+            successor = SocketManager.getInstance().createConnection(x);
         successor.notify(this);
     }
 
@@ -100,13 +104,13 @@ public class Node implements NodeInterface, Serializable {
             err.println(n.getIpAddress());
             err.println(n.getSocketPort());
         if (predecessor == null)
-            predecessor = SocketManagement.getInstance().createConnection(n);
+            predecessor = SocketManager.getInstance().createConnection(n);
         else {
             long index = n.getNodeId();
             long predIndex = predecessor.getNodeId();
             if (checkInterval(predIndex, index, getNodeId()) && !(predecessor.getNodeId().equals(n.getNodeId()))) {
-                SocketManagement.getInstance().closeCommunicator(predecessor);
-                predecessor = SocketManagement.getInstance().createConnection(n);
+                SocketManager.getInstance().closeCommunicator(predecessor);
+                predecessor = SocketManager.getInstance().createConnection(n);
             }
         }
     }
@@ -153,9 +157,9 @@ public class Node implements NodeInterface, Serializable {
             next = 1;
         //fix cast
         idToFind = (nodeId + ((long) Math.pow(2, next - 1))) % (long) Math.pow(2, dimFingerTable);
-        NodeInterface newConnection = SocketManagement.getInstance().createConnection(findSuccessor(idToFind));
+        NodeInterface newConnection = SocketManager.getInstance().createConnection(findSuccessor(idToFind));
         if (!fingerTable.get(next - 1).getNodeId().equals(this.nodeId))
-            SocketManagement.getInstance().closeCommunicator(fingerTable.get(next-1));
+            SocketManager.getInstance().closeCommunicator(fingerTable.get(next-1));
         fingerTable.replace(next - 1, newConnection);
     }
 
