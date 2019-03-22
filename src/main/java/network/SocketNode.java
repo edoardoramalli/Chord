@@ -27,14 +27,18 @@ public class SocketNode implements Runnable, Serializable {
         } catch (IOException e) {
             this.close();
         }
+
+        out.println("COSE " + socketIn.getLocalPort());
+        out.println("ALTRO IP " + socketIn.getPort());
+
         out.println("PRIMA DI CREAZIONE CONNESSIONE IN");
         this.connected = true;
-        this.messageHandler = new NodeCommunicator(this, node);
-        try {
-            this.messageHandler.addConnection();
+        //this.messageHandler = SocketManager.getInstance().createConnection(socketIn.getInetAddress().getHostAddress(), socketIn.getLocalPort(), node);
+        /*try {
+            this.messageHandler.addConnection()
         } catch (IOException e) {
             e.printStackTrace();
-        }
+        }*/
         out.println("DOPO CREAZIONE CONNESSIONE OUT");
     }
 
