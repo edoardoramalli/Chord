@@ -1,8 +1,10 @@
 package network;
 
+import exceptions.ConnectionErrorException;
 import node.NodeInterface;
 
 import java.io.IOException;
+import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -32,11 +34,10 @@ public class SocketManager {
             socketManagerInstance = null;
     }
 
-    public NodeInterface createConnection(NodeInterface connectionNode) throws IOException {
-        Long nodeId = connectionNode.getNodeId();
+    public NodeInterface createConnection(NodeInterface connectionNode) throws IOException, ConnectionErrorException {
         String ipAddress = connectionNode.getIpAddress();
         int socketPort = connectionNode.getSocketPort();
-        String key = nodeId.toString() + ipAddress + socketPort;
+        String key = ipAddress + socketPort;
         NodeCommunicator searchedNode = nameSocket.get(key);
         if(searchedNode != null) {
             out.println("DALLA LISTA: " + key);
@@ -44,26 +45,22 @@ public class SocketManager {
         }
         else{
             out.println("NUOVO: " + key);
-            NodeCommunicator createdNode = null;
-            createdNode = new NodeCommunicator(connectionNode.getIpAddress(), connectionNode.getSocketPort(), node);
+            NodeCommunicator createdNode = new NodeCommunicator(connectionNode.getIpAddress(), connectionNode.getSocketPort(), node);
             nameSocket.put(key, createdNode);
             return createdNode;
         }
     }
 
     //called by startNodeListener, used to create first connection
-    void addConnection(Long nodeId, String ipAddress, int socketPort, NodeCommunicator node) throws IOException {
-        String key = nodeId.toString() + ipAddress + socketPort;
-        nameSocket.put(key, node);
-        out.println("AGGIUNTO: " + key);
+    NodeInterface createConnection(SocketNode socketNode, NodeInterface node, Socket socketIn) throws IOException {
+        return null;
     }
 
     public void closeCommunicator(NodeInterface node) throws IOException {
-        Long nodeId = node.getNodeId();
         String ipAddress = node.getIpAddress();
         int socketPort = node.getSocketPort();
         node.close();
-        String key = nodeId.toString() + ipAddress + socketPort;
+        String key = ipAddress + socketPort;
         nameSocket.remove(key);
     }
 }

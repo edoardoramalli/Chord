@@ -1,5 +1,7 @@
 package network;
 
+import exceptions.ConnectionErrorException;
+import exceptions.UnexpectedBehaviourException;
 import network.message.*;
 import node.NodeInterface;
 
@@ -33,11 +35,21 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
         return lockID - 1;
     }
 
-    public NodeCommunicator(String joinIpAddress, int joinSocketPort, NodeInterface node) throws IOException {
+    public NodeCommunicator(String joinIpAddress, int joinSocketPort, NodeInterface node) throws ConnectionErrorException {
         this.node = node;
-        joinNodeSocket = new Socket(joinIpAddress, joinSocketPort);
-        ObjectOutputStream out = new ObjectOutputStream(joinNodeSocket.getOutputStream());
-        ObjectInputStream in = new ObjectInputStream(joinNodeSocket.getInputStream());
+        try {
+            joinNodeSocket = new Socket(joinIpAddress, joinSocketPort);
+        } catch (IOException e) {
+            throw new ConnectionErrorException();
+        }
+        ObjectOutputStream out;
+        ObjectInputStream in;
+        try {
+            out = new ObjectOutputStream(joinNodeSocket.getOutputStream());
+            in = new ObjectInputStream(joinNodeSocket.getInputStream());
+        } catch (IOException e) {
+            throw new UnexpectedBehaviourException();
+        }
         this.socketNode = new SocketNode(in, out, this);
         Executors.newCachedThreadPool().submit(socketNode);
         //inizializzazione valori di ritorno
@@ -45,7 +57,7 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
     }
 
     //used by SocketNode, when StartSocketListener accepts a new connection
-    NodeCommunicator(SocketNode socketNode, NodeInterface node){
+    public NodeCommunicator(SocketNode socketNode, NodeInterface node){
         this.socketNode = socketNode;
         this.node = node;
         //inizializzazione valori di ritorno
@@ -74,6 +86,11 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
     }
 
     @Override
+    public NodeInterface createConnection(SocketNode socketNode) {
+        return null;
+    }
+
+    @Override
     public void notify(NodeInterface node) throws IOException {
         Long lockId = createLock();
         synchronized (lockList.get(lockId)){
@@ -93,15 +110,18 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
 
     @Override
     public String getIpAddress () throws IOException {
+
         Long lockId = createLock();
         synchronized (lockList.get(lockId)){
             socketNode.sendMessage(new GetIpAddressRequest(lockId));
+            out.println("PRIMA DI INVIO IP");
             try {
                 lockList.get(lockId).wait();
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
         }
+        out.println("INVIO RICEVUTO");
         String ipAddress = returnedString;
         returnedString = null;
         return ipAddress;
@@ -205,16 +225,8 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
     //---------> Handling of Messages
 
     @Override
-    public void addConnection() throws IOException {
-        try {
-            SocketManager.getInstance().addConnection(getNodeId(), getIpAddress(), getSocketPort(), this);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    @Override
     public void handle(FindSuccessorRequest findSuccessorRequest) throws IOException {
+        out.println("FIND Ricevuta");
         NodeInterface nodeInterface = node.findSuccessor(findSuccessorRequest.getId());
         out.println("FIND ELABORATA");
         socketNode.sendMessage(new FindSuccessorResponse(nodeInterface, findSuccessorRequest.getLockId()));

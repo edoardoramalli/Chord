@@ -1,9 +1,14 @@
 package node;
 
+import exceptions.ConnectionErrorException;
+import network.SocketNode;
+
 import java.io.IOException;
 import java.io.Serializable;
 
 public interface NodeInterface extends Serializable {
+
+    NodeInterface createConnection(SocketNode socketNode) throws IOException;
 
     void notify(NodeInterface node) throws IOException;
 

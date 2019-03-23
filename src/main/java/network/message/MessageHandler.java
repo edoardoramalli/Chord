@@ -4,8 +4,6 @@ import java.io.IOException;
 
 public interface MessageHandler {
 
-    void addConnection() throws IOException;
-
     void handle (FindSuccessorRequest findSuccessorRequest) throws IOException;
 
     void handle (FindSuccessorResponse findSuccessorResponse) throws IOException;
