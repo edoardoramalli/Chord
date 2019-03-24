@@ -18,7 +18,7 @@ import static java.lang.System.out;
 public class NodeCommunicator implements NodeInterface, Serializable, MessageHandler {
     private transient Socket joinNodeSocket;
     private NodeInterface node; //mio nodo
-    private transient long nodeId; //questo è il "mio" nodeId //TODO andrebbe inizializzato da qualche parte
+    private transient long nodeId; //questo è il "mio" nodeId //TODO andrebbe inizializzato da qualche parte o tolto
     private SocketNode socketNode;
     private volatile HashMap<Long, Object> lockList = new HashMap<>();
     private volatile Long lockID = 0L;
@@ -85,6 +85,7 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
         joinNodeSocket.close();
     }
 
+    //non serve a niente
     @Override
     public NodeInterface createConnection(SocketNode socketNode) {
         return null;
@@ -110,18 +111,15 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
 
     @Override
     public String getIpAddress () throws IOException {
-
         Long lockId = createLock();
         synchronized (lockList.get(lockId)){
             socketNode.sendMessage(new GetIpAddressRequest(lockId));
-            out.println("PRIMA DI INVIO IP");
             try {
                 lockList.get(lockId).wait();
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
         }
-        out.println("INVIO RICEVUTO");
         String ipAddress = returnedString;
         returnedString = null;
         return ipAddress;
@@ -161,26 +159,18 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
 
     @Override
     public NodeInterface findSuccessor(Long id) throws IOException {
-        out.println("INZIO FIND");
         Long lockId = createLock();
         synchronized (lockList.get(lockId)){
             socketNode.sendMessage(new FindSuccessorRequest(id, lockId));
-            out.println("MANDATO FIND");
             try {
                 lockList.get(lockId).wait();
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
         }
-        out.println("RICEVUTO FIND");
         NodeInterface nodeR = returnedNode;
         returnedNode = null;
         return nodeR;
-    }
-
-    @Override
-    public NodeInterface closestPrecedingNode(Long id) {
-        return null;
     }
 
     @Override
@@ -208,7 +198,6 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
     public Long getNodeId() throws IOException {
         Long lockId = createLock();
         synchronized (lockList.get(lockId)){
-            out.println("PRIMA INVIO GETID");
             socketNode.sendMessage(new GetNodeIdRequest(lockId));
             try {
                 lockList.get(lockId).wait();
@@ -216,7 +205,6 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
                 Thread.currentThread().interrupt();
             }
         }
-        out.println("RICEVUTA RISPOSTA GETID");
         Long nodeIdR = returnedNodeId;
         returnedNodeId = null;
         return nodeIdR;
@@ -226,11 +214,8 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
 
     @Override
     public void handle(FindSuccessorRequest findSuccessorRequest) throws IOException {
-        out.println("FIND Ricevuta");
         NodeInterface nodeInterface = node.findSuccessor(findSuccessorRequest.getId());
-        out.println("FIND ELABORATA");
         socketNode.sendMessage(new FindSuccessorResponse(nodeInterface, findSuccessorRequest.getLockId()));
-        out.println("FIND RISPOSTA");
     }
 
     @Override
@@ -290,12 +275,10 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
     @Override
     public void handle(GetNodeIdRequest getNodeIdRequest) throws IOException {
         socketNode.sendMessage(new GetNodeIdResponse(node.getNodeId(), getNodeIdRequest.getLockId()));
-        out.println("INVIATO MESSAGGIO GETNODEID");
     }
 
     @Override
     public void handle(GetNodeIdResponse getNodeIdResponse) throws IOException {
-        out.println("RICEVUTA RISPOSTA");
         synchronized (lockList.get(getNodeIdResponse.getLockId())){
             while (returnedNodeId != null){ //questo serve nel caso in cui altri metodi stanno usando returnedNode
                 try {
@@ -304,7 +287,6 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
                     Thread.currentThread().interrupt();
                 }
             }
-            out.println("FINE WAIT E SALVO RISPOSTA");
             returnedNodeId = getNodeIdResponse.getNodeId();
             lockList.get(getNodeIdResponse.getLockId()).notifyAll();
         }

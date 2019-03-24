@@ -24,24 +24,15 @@ public class SocketNodeListener implements Runnable, Serializable {
     public void run() {
         try (ServerSocket serverSocket = new ServerSocket(socketPort)) {
             ExecutorService executors = Executors.newCachedThreadPool();
-
             while (true) {
                 Socket socketIn = serverSocket.accept();
-                out.println("ACCETTATO");
-                out.println("MIO:");
-                out.println("Ip: " + socketIn.getLocalAddress().getHostAddress());
-                out.println("Porta: " + socketIn.getLocalPort());
-                out.println("ALTRO:");
-                out.println("Ip: " + socketIn.getInetAddress().getHostAddress());
-                out.println("Porta: " + socketIn.getPort());
                 SocketNode socketNode = new SocketNode(node, socketIn);
                 node.createConnection(socketNode);
                 executors.submit(socketNode);
                 if (false)
                     break;
             }
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             out.println("ERRORE SL");
             e.printStackTrace();
         }

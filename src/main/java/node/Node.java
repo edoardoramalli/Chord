@@ -38,7 +38,7 @@ public class Node implements NodeInterface, Serializable {
         out.println("NODE ID: " + nodeId);
     }
 
-    public NodeInterface createConnection(NodeInterface connectionNode) throws IOException, ConnectionErrorException {
+    private NodeInterface createConnection(NodeInterface connectionNode) throws IOException, ConnectionErrorException {
         Long searchedNodeId = connectionNode.getNodeId();
         NodeInterface searchedNode = socketManager.get(searchedNodeId);
         if(searchedNode != null) {
@@ -47,7 +47,7 @@ public class Node implements NodeInterface, Serializable {
         }
         else{
             out.println("NUOVO: " + searchedNodeId);
-            NodeCommunicator createdNode = null;
+            NodeCommunicator createdNode;
             try {
                 createdNode = new NodeCommunicator(connectionNode.getIpAddress(), connectionNode.getSocketPort(), this);
             } catch (ConnectionErrorException e) {
@@ -70,7 +70,6 @@ public class Node implements NodeInterface, Serializable {
         socketManager.remove(id);
     }
 
-
     public void create(int m) {
         successor = this;
         predecessor = null;
@@ -84,21 +83,17 @@ public class Node implements NodeInterface, Serializable {
         NodeCommunicator node = new NodeCommunicator(joinIpAddress, joinSocketPort, this);
         predecessor = null;
         NodeInterface successorNode = node.findSuccessor(this.nodeId);
-        out.println("DOPO FIND");
         dimFingerTable = node.getDimFingerTable();
-        out.println("DOPO GETFINGER");
         node.close();
         successor = createConnection(successorNode);
-        out.println("DOPO CREAZIONE");
         successor.notify(this); //serve per settare il predecessore nel successore del nodo
-        out.println("DOPO NOTIFY");
         startSocketListener(socketPort);
         createFingerTable();
         Executors.newCachedThreadPool().submit(new UpdateNode(this));
     }
 
     void stabilize() throws IOException {
-        //controllo su null predecess
+        //controllo su null predecessor
         NodeInterface x = successor.getPredecessor();
         long nodeIndex = x.getNodeId();
         long oldSucID = successor.getNodeId();
@@ -126,7 +121,6 @@ public class Node implements NodeInterface, Serializable {
         }
     }
 
-    @Override
     public NodeInterface closestPrecedingNode(Long id) throws IOException {
         long nodeIndex;
         for (int i = dimFingerTable - 1; i >= 0; i--) {
@@ -139,9 +133,6 @@ public class Node implements NodeInterface, Serializable {
 
     @Override
     public void notify(NodeInterface n) throws IOException {
-            err.println("NODO ARRIVATO_____________________");
-            err.println(n.getIpAddress());
-            err.println(n.getSocketPort());
         if (predecessor == null) {
             try {
                 predecessor = createConnection(n);
@@ -228,25 +219,28 @@ public class Node implements NodeInterface, Serializable {
     }
 
     private void createFingerTable() {
-        for (int i = 0; i <= dimFingerTable - 1; i++) {
+        for (int i = 0; i < dimFingerTable; i++)
             fingerTable.put(i, this);
-        }
     }
 
-    private String lookup(long id) throws IOException {
-        if (id == successor.getNodeId()) {
+    public String lookup(Long id) throws IOException {
+        if (id.equals(successor.getNodeId())) {
             return successor.getIpAddress();
-        } else if (id == predecessor.getNodeId()) {
+        } else if (id.equals(predecessor.getNodeId())) {
             return predecessor.getIpAddress();
         } else {
             return closestPrecedingNode(id).getIpAddress();
         }
     }
 
-    private Long hash(String ipAddress) {
-        Long ipNumber = ipToLong(ipAddress);
-        Long numberNodes = (long)Math.pow(2, dimFingerTable);
-        return ipNumber%numberNodes;
+    private NodeInterface lookup2(Long id) throws IOException {
+        if (id.equals(successor.getNodeId())) {
+            return successor;
+        } else if (id.equals(predecessor.getNodeId())) {
+            return predecessor;
+        } else {
+            return closestPrecedingNode(id);
+        }
     }
 
     @Override
@@ -284,19 +278,20 @@ public class Node implements NodeInterface, Serializable {
         return dimFingerTable;
     }
 
+    private Long hash(String ipAddress) {
+        Long ipNumber = ipToLong(ipAddress);
+        Long numberNodes = (long)Math.pow(2, dimFingerTable);
+        return ipNumber%numberNodes;
+    }
+
     private long ipToLong(String ipAddress) {
-
         String[] ipAddressInArray = ipAddress.split("\\.");
-
         long result = 0;
         for (int i = 0; i < ipAddressInArray.length; i++) {
-
             int power = 3 - i;
             int ip = Integer.parseInt(ipAddressInArray[i]);
             result += ip * Math.pow(256, power);
-
         }
-
         return result;
     }
 
@@ -317,15 +312,5 @@ public class Node implements NodeInterface, Serializable {
         if (predecessor != null)
             out.println("Predecessor: " + predecessor.getNodeId());
         out.println("Successor: " + successor.getNodeId());
-    }
-
-    private NodeInterface lookup2(long id) throws IOException {
-        if (id == successor.getNodeId()) {
-            return successor;
-        } else if (id == predecessor.getNodeId()) {
-            return predecessor;
-        } else {
-            return closestPrecedingNode(id);
-        }
     }
 }

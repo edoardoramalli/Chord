@@ -16,8 +16,8 @@ public class LaunchNode {
     private static final String JOIN_COMMAND = "join";
     private static final String LOOKUP_COMMAND = "lookup";
     private static final String ADDKEY_COMMAND = "addkey";
-    private static final String PRINT_SUCCESSOR_PREDECESSOR_COMMAND = "printps";
-    private static final String PRINT_FINGERTABLE_COMMAND = "printft";
+    private static final String PRINT_SUCCESSOR_PREDECESSOR_COMMAND = "ps";
+    private static final String PRINT_FINGERTABLE_COMMAND = "ft";
     private static final String EXIT_COMMAND = "exit";
     private static Scanner in = new Scanner(System.in);
 
@@ -61,10 +61,17 @@ public class LaunchNode {
         }
         exit = false;
         while (!exit){
-            out.println("Select 'lookup', 'addKey', 'printps', 'printft' or 'exit'" );
+            out.println("Select 'lookup', 'addKey', 'ps', 'ft' or 'exit'" );
             String choice = in.nextLine().toLowerCase();
             switch (choice) {
                 case LOOKUP_COMMAND:
+                    out.println("Insert ID of node to find" );
+                    Long id = Long.parseLong(in.nextLine().toLowerCase());
+                    try {
+                        node.lookup(id);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                     //TODO da fare
                     break;
                 case ADDKEY_COMMAND:

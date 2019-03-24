@@ -16,8 +16,6 @@ public interface NodeInterface extends Serializable {
 
     NodeInterface findSuccessor(Long id) throws IOException;
 
-    NodeInterface closestPrecedingNode(Long id) throws IOException;
-
     NodeInterface getPredecessor() throws IOException;
 
     NodeInterface getSuccessor();
