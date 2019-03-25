@@ -223,23 +223,14 @@ public class Node implements NodeInterface, Serializable {
             fingerTable.put(i, this);
     }
 
-    public String lookup(Long id) throws IOException {
-        if (id.equals(successor.getNodeId())) {
-            return successor.getIpAddress();
-        } else if (id.equals(predecessor.getNodeId())) {
-            return predecessor.getIpAddress();
-        } else {
-            return closestPrecedingNode(id).getIpAddress();
-        }
-    }
 
-    private NodeInterface lookup2(Long id) throws IOException {
+    private NodeInterface lookup(Long id) throws IOException {
         if (id.equals(successor.getNodeId())) {
             return successor;
         } else if (id.equals(predecessor.getNodeId())) {
             return predecessor;
         } else {
-            return closestPrecedingNode(id);
+            return findSuccessor(id);
         }
     }
 
