@@ -12,32 +12,27 @@ import java.util.concurrent.Executors;
 import static java.lang.System.out;
 
 public class SocketNodeListener implements Runnable, Serializable {
-    private int socketPort = 8000;
+    private int socketPort;
     private transient Node node;
 
-    public SocketNodeListener(Node node){
+    public SocketNodeListener(Node node, int socketPort){
         this.node = node;
-    }
-
-    public SocketNodeListener(Node node, int n){
-        this.node = node;
-        this.socketPort = this.socketPort + n;
+        this.socketPort = socketPort;
     }
 
     @Override
     public void run() {
         try (ServerSocket serverSocket = new ServerSocket(socketPort)) {
             ExecutorService executors = Executors.newCachedThreadPool();
-
             while (true) {
                 Socket socketIn = serverSocket.accept();
-                out.println("ACCETTATO");
-                executors.submit(new SocketNode(node, socketIn));
+                SocketNode socketNode = new SocketNode(node, socketIn);
+                node.createConnection(socketNode);
+                executors.submit(socketNode);
                 if (false)
                     break;
             }
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             out.println("ERRORE SL");
             e.printStackTrace();
         }

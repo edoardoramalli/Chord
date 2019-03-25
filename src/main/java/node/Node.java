@@ -1,142 +1,131 @@
 package node;
 
 import exceptions.ConnectionErrorException;
+import network.NodeCommunicator;
+import network.SocketNode;
 import network.SocketNodeListener;
 
 import java.io.IOException;
-import java.util.ArrayList;
+import java.io.Serializable;
 import java.util.HashMap;
 
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
-import static java.lang.System.out;
-
+import static java.lang.System.*;
 
 
-public class Node implements NodeInterface {
+public class Node implements NodeInterface, Serializable {
     private String ipAddress;
-    private long nodeId;
-    private NodeInterface successor; //TODO questi dovrebbero essere NodeCommunicator
-    private NodeInterface predecessor;
-    private Map<Integer, NodeInterface> fingerTable;
+    private int socketPort;
+    private Long nodeId;
+    private transient volatile NodeInterface successor;
+    private transient volatile NodeInterface predecessor;
+    private transient volatile Map<Integer, NodeInterface> fingerTable;
+    private transient volatile Map<Long, NodeInterface> socketManager;
     private List<NodeInterface> listOfSuccessor = new ArrayList<>();
-    private static final int DIM_LIST_SUCC = 3;
+    private transient int dimFingerTable = 3;
     private static final int DIM_FINGER_TABLE = 4; //questo poi potremmo metterlo variabile scelto nella create
-    private int next;
+    private transient int next;
 
-    //MESSAGE
-
-
-    public Node(String ipAddress) {
+    public Node(String ipAddress, int socketPort) {
         this.ipAddress = ipAddress;
-        this.nodeId = hash(ipAddress);
         this.successor = null;
         this.predecessor = null;
         this.fingerTable = new HashMap<>();
+        this.socketPort = socketPort;
         this.next = 0;
+        this.nodeId = hash(ipAddress);
+        this.socketManager = new HashMap<>();
+        out.println("NODE ID: " + nodeId);
     }
 
-    public void createMessage(long dest){
-        MessageEdo m = new MessageEdo(0,nodeId,dest,"Juve Merda");
-        send(m);
-    }
-
-    public void createMessage(long dest, String text){
-        MessageEdo m = new MessageEdo(0,nodeId,dest,text);
-        send(m);
-    }
-
-    public void updateListSuccessor(){
-        listOfSuccessor.clear();
-        listOfSuccessor.add(successor);
-        for (int i = 1;i<DIM_LIST_SUCC;i++){
-            listOfSuccessor.add(listOfSuccessor.get(i-1).getSuccessor());
+    private NodeInterface createConnection(NodeInterface connectionNode) throws IOException, ConnectionErrorException {
+        Long searchedNodeId = connectionNode.getNodeId();
+        NodeInterface searchedNode = socketManager.get(searchedNodeId);
+        if(searchedNode != null) {
+            out.println("DALLA LISTA: " + searchedNodeId);
+            return searchedNode;
         }
-
-        out.println("Node "+ nodeId+" -----");
-        for (int i = 0;i<DIM_LIST_SUCC;i++){
-            out.println(listOfSuccessor.get(i).getNodeId());
-        }
-    }
-
-    @Override
-    public void receive (MessageEdo m){
-        long dest = m.getDestination();
-
-        if(dest != nodeId){
-            out.println("Node "+ nodeId +" ha ricevuto un msg per Node "+dest+ "...Forwarding");
-            send(m);
-        }
-        else {
-            if(m.getPayload()=="£Leave"){
-                if (successor.getNodeId() == m.getSource()){
-                    successor = listOfSuccessor.get(1);
-                    updateListSuccessor();
-                }
-                updateListSuccessor();
+        else{
+            out.println("NUOVO: " + searchedNodeId);
+            NodeCommunicator createdNode;
+            try {
+                createdNode = new NodeCommunicator(connectionNode.getIpAddress(), connectionNode.getSocketPort(), this);
+            } catch (ConnectionErrorException e) {
+                throw new ConnectionErrorException();
             }
-            out.println("Node "+nodeId + " ha ricevuto un msg contenente : "+m.getPayload());
+            socketManager.put(searchedNodeId, createdNode);
+            return createdNode;
         }
     }
 
-    public void send (MessageEdo m){
-        NodeInterface tmp;
-        tmp = lookup2(m.getDestination());
-        tmp.receive (m);
+    public NodeInterface createConnection(SocketNode socketNode) throws IOException {
+        NodeInterface createdNode = new NodeCommunicator(socketNode, this);
+        socketManager.put(createdNode.getNodeId(), createdNode);
+        return createdNode;
     }
 
+    public void closeCommunicator(NodeInterface node) throws IOException {
+        Long id = node.getNodeId();
+        node.close();
+        socketManager.remove(id);
+    }
 
-
-    public void create() {
+    public void create(int m) {
         successor = this;
         predecessor = null;
-        //startSocketListener(0);
+        dimFingerTable = m;
+        startSocketListener(socketPort);
         createFingerTable();
+        Executors.newCachedThreadPool().submit(new UpdateNode(this));
     }
 
-    public void join(String ipAddress, int socketPort) throws ConnectionErrorException, IOException {
-        //NodeCommunicator node = new NodeCommunicator(ipAddress, socketPort);
-        //predecessor = null;
-        //successor = node.findSuccessor(this.nodeId);
-        //node.close();//TODO questo serve? magari con qualche condizione
-        //out.println("Gol di Pavoletti");
-        //startSocketListener(1);
+    public void join(String joinIpAddress, int joinSocketPort) throws ConnectionErrorException, IOException {
+        NodeCommunicator node = new NodeCommunicator(joinIpAddress, joinSocketPort, this);
+        predecessor = null;
+        NodeInterface successorNode = node.findSuccessor(this.nodeId);
+        dimFingerTable = node.getDimFingerTable();
+        node.close();
+        successor = createConnection(successorNode);
+        successor.notify(this); //serve per settare il predecessore nel successore del nodo
+        startSocketListener(socketPort);
+        createFingerTable();
+        Executors.newCachedThreadPool().submit(new UpdateNode(this));
     }
 
-    @Override
-    public void stabilize() {
-        //controllo su null predecess
+    void stabilize() throws IOException {
+        //controllo su null predecessor
         NodeInterface x = successor.getPredecessor();
         long nodeIndex = x.getNodeId();
         long oldSucID = successor.getNodeId();
-        if (checkInterval(getNodeId(), nodeIndex, oldSucID))
-            successor = x;
+        if (checkInterval(getNodeId(), nodeIndex, oldSucID) && !x.getNodeId().equals(successor.getNodeId())) {
+            try {
+                successor = createConnection(x);
+            } catch (ConnectionErrorException e) {
+                e.printStackTrace();
+            }
+        }
         successor.notify(this);
     }
 
-
-
     @Override
-    public NodeInterface findSuccessor(long id) throws IOException {
-        NodeInterface next;
+    public NodeInterface findSuccessor(Long id) throws IOException {
+        NodeInterface nextNode;
         if (checkIntervalEquivalence(nodeId, id, successor.getNodeId())) {
             return successor;
         } else {
-            next = closestPrecedingNode(id);
+            nextNode = closestPrecedingNode(id);
             //non ritorniamo più successor ma this
-            if (this == next)
+            if (this == nextNode)
                 return this;
-            return next.findSuccessor(id);
+            return nextNode.findSuccessor(id);
         }
     }
 
-    @Override
-    public NodeInterface closestPrecedingNode(long id) {
+    public NodeInterface closestPrecedingNode(Long id) throws IOException {
         long nodeIndex;
-        for (int i = DIM_FINGER_TABLE - 1; i >= 0; i--) {
+        for (int i = dimFingerTable - 1; i >= 0; i--) {
             nodeIndex = fingerTable.get(i).getNodeId();
             if (checkInterval3(nodeIndex, id, nodeId))
                 return fingerTable.get(i);
@@ -145,23 +134,33 @@ public class Node implements NodeInterface {
     }
 
     @Override
-    public void notify(Node n) {
-        if (predecessor == null)
-            predecessor = n;
+    public void notify(NodeInterface n) throws IOException {
+        if (predecessor == null) {
+            try {
+                predecessor = createConnection(n);
+            } catch (ConnectionErrorException e) {
+                e.printStackTrace();
+            }
+        }
         else {
             long index = n.getNodeId();
             long predIndex = predecessor.getNodeId();
-            if (checkInterval(predIndex, index, getNodeId()))
-                predecessor = n;
+            if (checkInterval(predIndex, index, getNodeId()) && !(predecessor.getNodeId().equals(n.getNodeId()))) {
+                closeCommunicator(predecessor);
+                try {
+                    predecessor = createConnection(n);
+                } catch (ConnectionErrorException e) {
+                    e.printStackTrace();
+                }
+            }
         }
     }
-
 
     private boolean checkInterval(long pred, long index, long succ) {
         if (pred == succ)
             return true;
         if (pred > succ) {
-            return (index > pred && index < Math.pow(2, DIM_FINGER_TABLE) ) || (index >= 0 && index < succ);
+            return (index > pred && index < Math.pow(2, dimFingerTable) ) || (index >= 0 && index < succ);
         } else {
             return index > pred && index < succ;
         }
@@ -173,7 +172,7 @@ public class Node implements NodeInterface {
         if (pred == succ)
             return true;
         if (pred > succ) {
-            return (index > pred && index < Math.pow(2, DIM_FINGER_TABLE) ) || (index >= 0 && index <= succ);
+            return (index > pred && index < Math.pow(2, dimFingerTable) ) || (index >= 0 && index <= succ);
         } else {
             return index > pred && index <= succ;
         }
@@ -186,65 +185,71 @@ public class Node implements NodeInterface {
             return false;
         if (pred > succ) {
             //controllate se il >=0 ha senso, l'ho messo in tutte e 3 le check
-            return (index > pred && index < Math.pow(2, DIM_FINGER_TABLE) ) || (index >= 0 && index < succ);
+            return (index > pred && index < Math.pow(2, dimFingerTable) ) || (index >= 0 && index < succ);
         } else {
             return index > pred && index < succ;
         }
     }
 
-    @Override
-    public void fixFingers() throws IOException {
+    void fixFingers() throws IOException {
         long idToFind;
         next = next + 1;
-        if (next > DIM_FINGER_TABLE)
+        if (next > dimFingerTable)
             next = 1;
         //fix cast
-        idToFind = (nodeId + ((long) Math.pow(2, next - 1))) % (long) Math.pow(2, DIM_FINGER_TABLE);
-        fingerTable.replace(next - 1, findSuccessor(idToFind));
+        idToFind = (nodeId + ((long) Math.pow(2, next - 1))) % (long) Math.pow(2, dimFingerTable);
+        NodeInterface newConnection = null;
+        try {
+            newConnection = createConnection(findSuccessor(idToFind));
+        } catch (ConnectionErrorException e) {
+            e.printStackTrace();
+        }
+        if (!fingerTable.get(next - 1).getNodeId().equals(this.nodeId))
+            closeCommunicator(fingerTable.get(next-1));
+        fingerTable.replace(next - 1, newConnection);
     }
 
+    //TODO forse va tolto
     @Override
     public void checkPredecessor() {
 
     }
 
-    private void startSocketListener(int n) { //TODO devo cercare di togliere questo n
-        SocketNodeListener socketNodeListener = new SocketNodeListener(this, n);
+    private void startSocketListener(int socketPort) {
+        SocketNodeListener socketNodeListener = new SocketNodeListener(this, socketPort);
         Executors.newCachedThreadPool().submit(socketNodeListener);
     }
 
     private void createFingerTable() {
-        for (int i = 0; i <= DIM_FINGER_TABLE - 1; i++) {
+        for (int i = 0; i < dimFingerTable; i++)
             fingerTable.put(i, this);
-        }
     }
 
-    private String lookup(long id) {
-        if (id == successor.getNodeId()) {
-            return successor.getIpAddress();
-        } else if (id == predecessor.getNodeId()) {
-            return predecessor.getIpAddress();
+
+    private NodeInterface lookup(Long id) throws IOException {
+        if (id.equals(successor.getNodeId())) {
+            return successor;
+        } else if (id.equals(predecessor.getNodeId())) {
+            return predecessor;
         } else {
-            return closestPrecedingNode(id).getIpAddress();
+            return findSuccessor(id);
         }
     }
-
-    private long hash(String ipAddress) {
-        long ipNumber = ipToLong(ipAddress);
-        long numberNodes = (long)Math.pow(2,DIM_FINGER_TABLE);
-        return ipNumber%numberNodes;
-    }
-
 
     @Override
-    public long getNodeId() {
+    public Long getNodeId() {
         return nodeId;
+    }
+
+    @Override
+    public void close() throws IOException {
+
     }
 
     @Override
     public NodeInterface getSuccessor() {
         return successor;
-    }
+    } //TODO questo serve?
 
     @Override
     public NodeInterface getPredecessor() {
@@ -256,19 +261,30 @@ public class Node implements NodeInterface {
         return ipAddress;
     }
 
-    public long ipToLong(String ipAddress) {
+    @Override
+    public int getSocketPort() {
+        return socketPort;
+    }
 
+    @Override
+    public int getDimFingerTable() {
+        return dimFingerTable;
+    }
+
+    private Long hash(String ipAddress) {
+        Long ipNumber = ipToLong(ipAddress);
+        Long numberNodes = (long)Math.pow(2, dimFingerTable);
+        return ipNumber%numberNodes;
+    }
+
+    private long ipToLong(String ipAddress) {
         String[] ipAddressInArray = ipAddress.split("\\.");
-
         long result = 0;
         for (int i = 0; i < ipAddressInArray.length; i++) {
-
             int power = 3 - i;
             int ip = Integer.parseInt(ipAddressInArray[i]);
             result += ip * Math.pow(256, power);
-
         }
-
         return result;
     }
 
@@ -276,185 +292,18 @@ public class Node implements NodeInterface {
         return fingerTable;
     }
 
-    //quando un nodo sta per uscire fa la cortesia di avvertire con uno speciale messaggio quello prima e quello dopo
-    //in ogni caso la rete dovrebbe accorgenese e tutto si aggiusta con la stabilize
-    public void leaveNetowrk (){
-        createMessage(successor.getNodeId(), "£Leave");
-        createMessage(predecessor.getNodeId(),"£Leave");
-        //TODO Il nodo in qualche modo si deve davvero distruggere...tipo delete object oppure usare node.close()?
-    }
-
-
-
-    //------------------- cose
-
-
-    public Node(long nodeId) {
-        this.nodeId = nodeId;
-        this.successor = null;
-        this.predecessor = null;
-        this.fingerTable = new HashMap<>();
-        this.next = 0;
-    }
-
-    public void join(Node node) throws IOException {
-        predecessor = null;
-        successor = node.findSuccessor(this.nodeId);
-        successor.notify(this); //serve per settare il predecessore nel successore del nodo
-        createFingerTable();
-    }
-
-    private void printFingerTable(){
+    public void printFingerTable() throws IOException { 
         out.println("FINGER TABLE: " + nodeId);
-        for (int i=0; i<DIM_FINGER_TABLE; i++)
+        for (int i = 0; i< dimFingerTable; i++)
         {
             out.println(fingerTable.get(i).getNodeId());
         }
     }
 
-    private void printPredecessorAndSuccessor(){
+    public void printPredecessorAndSuccessor() throws IOException {
         out.println(nodeId + ":----------------------");
-        out.println(predecessor.getNodeId());
-        out.println(successor.getNodeId());
-    }
-
-    private NodeInterface lookup2(long id) {
-        if (id == successor.getNodeId()) {
-            return successor;
-        } else if (id == predecessor.getNodeId()) {
-            return predecessor;
-        } else {
-            return closestPrecedingNode(id);
-        }
-    }
-
-
-
-    public static void main(String[] args) throws IOException {
-
-        Node node0 = new Node("192.168.1.0");
-        Node node1 = new Node("192.168.1.1");
-        Node node2 = new Node("192.168.1.2");
-        Node node3 = new Node("192.168.1.3");
-        Node node4 = new Node("192.168.1.4");
-        Node node6 = new Node("192.168.1.6");
-        Node node7 = new Node("192.168.1.7");
-
-        node0.create();
-        node1.join(node0);
-        node6.join(node1);
-        node4.join(node1);
-        node2.join(node4);
-        node3.join(node4);
-        node7.join(node2);
-
-
-
-        /* non servono più
-        node0.notify(node4);
-        node1.notify(node0);
-        node2.notify(node1);
-        node3.notify(node2);
-        node4.notify(node4);
-        node0.notify(node7);
-        node7.notify(node4);
-        */
-
-        for (int i =0 ; i< 10 ;i++){
-            node0.stabilize();
-            node1.stabilize();
-            node2.stabilize();
-            node3.stabilize();
-            node4.stabilize();
-            node6.stabilize();
-            node7.stabilize();
-        }
-
-/*        out.println("PREDECESSORE\nSUCCESSORE");
-
-        node0.printPredecessorAndSuccessor();
-        node1.printPredecessorAndSuccessor();
-        node2.printPredecessorAndSuccessor();
-        node3.printPredecessorAndSuccessor();
-        node4.printPredecessorAndSuccessor();
-        node7.printPredecessorAndSuccessor();*/
-
-        for (int i = 0; i < 10; i++) {
-            node0.fixFingers();
-            node0.fixFingers();
-            node0.fixFingers();
-            node0.fixFingers();
-
-            node1.fixFingers();
-            node1.fixFingers();
-            node1.fixFingers();
-            node1.fixFingers();
-
-
-            node2.fixFingers();
-            node2.fixFingers();
-            node2.fixFingers();
-            node2.fixFingers();
-
-
-            node3.fixFingers();
-            node3.fixFingers();
-            node3.fixFingers();
-            node3.fixFingers();
-
-
-            node4.fixFingers();
-            node4.fixFingers();
-            node4.fixFingers();
-            node4.fixFingers();
-
-
-            node6.fixFingers();
-            node6.fixFingers();
-            node6.fixFingers();
-            node6.fixFingers();
-
-
-            node7.fixFingers();
-            node7.fixFingers();
-            node7.fixFingers();
-            node7.fixFingers();
-
-        }
-
-        node0.updateListSuccessor();
-        node1.updateListSuccessor();
-        node2.updateListSuccessor();
-        node3.updateListSuccessor();
-        node4.updateListSuccessor();
-        node6.updateListSuccessor();
-        node7.updateListSuccessor();
-
-
-
-       /*node0.printFingerTable();
-        node1.printFingerTable();
-        node2.printFingerTable();
-        node3.printFingerTable();
-        node4.printFingerTable();
-        node7.printFingerTable();*/
-
-        node0.createMessage(6);
-
-        node4.leaveNetowrk();
-
-        node3.printFingerTable();
-
-        for (int i=0;i<10;i++) {
-            node3.fixFingers();
-            node3.fixFingers();
-            node3.fixFingers();
-            node3.fixFingers();
-        }
-
-
-        node3.printFingerTable();
-
-
+        if (predecessor != null)
+            out.println("Predecessor: " + predecessor.getNodeId());
+        out.println("Successor: " + successor.getNodeId());
     }
 }

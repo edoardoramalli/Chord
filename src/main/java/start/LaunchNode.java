@@ -16,24 +16,29 @@ public class LaunchNode {
     private static final String JOIN_COMMAND = "join";
     private static final String LOOKUP_COMMAND = "lookup";
     private static final String ADDKEY_COMMAND = "addkey";
+    private static final String PRINT_SUCCESSOR_PREDECESSOR_COMMAND = "ps";
+    private static final String PRINT_FINGERTABLE_COMMAND = "ft";
     private static final String EXIT_COMMAND = "exit";
     private static Scanner in = new Scanner(System.in);
-    private static Node node;
 
     public static void main(String[] args){
+        Node node = null;
         //TODO andrebbero fatti dei controlli sugli inserimenti
-        try {
-            node = new Node(InetAddress.getLocalHost().getHostAddress());
-        } catch (UnknownHostException e) {
-            throw new UnexpectedBehaviourException();
-        }
         boolean exit = false;
         while (!exit){
             out.println("Select create or join");
             String choice = in.nextLine().toLowerCase();
+            out.println("Select port"); //poi aggiungo controllo
+            int mySocketPort =  Integer.parseInt(in.nextLine());
+            try {
+                node = new Node(InetAddress.getLocalHost().getHostAddress(), mySocketPort);
+            } catch (UnknownHostException e) {
+                throw new UnexpectedBehaviourException();
+            }
             switch (choice){
                 case CREATE_COMMAND:
-                    node.create();
+                    out.println("Insert value of m:");
+                    node.create(Integer.parseInt(in.nextLine()));
                     exit = true;
                     break;
                 case JOIN_COMMAND:
@@ -42,12 +47,12 @@ public class LaunchNode {
                     out.println("Insert socket port of node");
                     int socketPort = Integer.parseInt(in.nextLine().toLowerCase());
                     try {
-                        node.join(ipAddress, socketPort); //Qui va modificato
+                        node.join(ipAddress, socketPort);
                         exit = true;
                     } catch (ConnectionErrorException e) {
                         out.println("Wrong ip address or port");
                     } catch (IOException e) {
-                        throw new UnexpectedBehaviourException();
+                        e.printStackTrace();
                     }
                     break;
                 default:
@@ -56,14 +61,35 @@ public class LaunchNode {
         }
         exit = false;
         while (!exit){
-            out.println("Select lookup or addKey");
+            out.println("Select 'lookup', 'addKey', 'ps', 'ft' or 'exit'" );
             String choice = in.nextLine().toLowerCase();
             switch (choice) {
                 case LOOKUP_COMMAND:
+                    out.println("Insert ID of node to find" );
+                    Long id = Long.parseLong(in.nextLine().toLowerCase());
+                    try {
+                        node.lookup(id);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                     //TODO da fare
                     break;
                 case ADDKEY_COMMAND:
                     //TODO da fare
+                    break;
+                case PRINT_SUCCESSOR_PREDECESSOR_COMMAND:
+                    try {
+                        node.printPredecessorAndSuccessor();
+                    } catch (IOException e) {
+                        throw new UnexpectedBehaviourException();
+                    }
+                    break;
+                case PRINT_FINGERTABLE_COMMAND:
+                    try {
+                        node.printFingerTable();
+                    } catch (IOException e) {
+                        throw new UnexpectedBehaviourException();
+                    }
                     break;
                 case EXIT_COMMAND:
                     exit = true;

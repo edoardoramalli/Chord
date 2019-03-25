@@ -1,31 +1,33 @@
 package node;
 
-import network.NodeCommunicator;
+import exceptions.ConnectionErrorException;
+import network.SocketNode;
 
 import java.io.IOException;
+import java.io.Serializable;
 
-public interface NodeInterface {
+public interface NodeInterface extends Serializable {
 
-    public void stabilize();
+    NodeInterface createConnection(SocketNode socketNode) throws IOException;
 
-    public void notify(Node n);
+    void notify(NodeInterface node) throws IOException;
 
-    public void fixFingers() throws IOException;
+    void checkPredecessor();
 
-    public void checkPredecessor();
+    NodeInterface findSuccessor(Long id) throws IOException;
 
-    public NodeInterface findSuccessor(long id) throws IOException;
+    NodeInterface getPredecessor() throws IOException;
 
-    public NodeInterface closestPrecedingNode(long id);
+    NodeInterface getSuccessor();
 
-    public NodeInterface getPredecessor();
+    String getIpAddress() throws IOException;
 
-    public NodeInterface getSuccessor();
+    int getSocketPort() throws IOException;
 
-    public String getIpAddress();
+    int getDimFingerTable() throws IOException;
 
-    public  long getNodeId();
+    Long getNodeId() throws IOException;
 
-    public void receive(MessageEdo m);
+    void close() throws IOException;
 
 }
