@@ -26,6 +26,7 @@ public class SocketNodeListener implements Runnable, Serializable {
             ExecutorService executors = Executors.newCachedThreadPool();
             while (true) {
                 Socket socketIn = serverSocket.accept();
+                out.println("----- Benvenuto in FIORENZA -----");
                 SocketNode socketNode = new SocketNode(node, socketIn);
                 node.createConnection(socketNode);
                 executors.submit(socketNode);

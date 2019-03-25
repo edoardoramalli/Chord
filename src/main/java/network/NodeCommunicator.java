@@ -35,6 +35,8 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
         return lockID - 1;
     }
 
+    //TODO metodo getter per getSuccessorList
+
     public NodeCommunicator(String joinIpAddress, int joinSocketPort, NodeInterface node) throws ConnectionErrorException {
         this.node = node;
         try {
