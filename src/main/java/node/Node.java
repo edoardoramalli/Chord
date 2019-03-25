@@ -23,7 +23,9 @@ public class Node implements NodeInterface, Serializable {
     private transient volatile NodeInterface predecessor;
     private transient volatile Map<Integer, NodeInterface> fingerTable;
     private transient volatile Map<Long, NodeInterface> socketManager;
+    private List<NodeInterface> listOfSuccessor = new ArrayList<>();
     private transient int dimFingerTable = 3;
+    private static final int DIM_FINGER_TABLE = 4; //questo poi potremmo metterlo variabile scelto nella create
     private transient int next;
 
     public Node(String ipAddress, int socketPort) {
@@ -290,7 +292,7 @@ public class Node implements NodeInterface, Serializable {
         return fingerTable;
     }
 
-    public void printFingerTable() throws IOException {
+    public void printFingerTable() throws IOException { 
         out.println("FINGER TABLE: " + nodeId);
         for (int i = 0; i< dimFingerTable; i++)
         {
