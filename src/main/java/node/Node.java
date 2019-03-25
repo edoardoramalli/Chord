@@ -7,8 +7,10 @@ import network.SocketNodeListener;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.HashMap;
 
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
 
@@ -226,7 +228,7 @@ public class Node implements NodeInterface, Serializable {
     }
 
 
-    private NodeInterface lookup(Long id) throws IOException {
+    public NodeInterface lookup(Long id) throws IOException {
         if (id.equals(successor.getNodeId())) {
             return successor;
         } else if (id.equals(predecessor.getNodeId())) {
