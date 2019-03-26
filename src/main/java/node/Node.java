@@ -68,10 +68,9 @@ public class Node implements NodeInterface, Serializable {
         return createdNode;
     }
 
-    public void closeCommunicator(NodeInterface node) throws IOException {
-        Long id = node.getNodeId();
-        node.close();
-        socketManager.remove(id);
+    public void closeCommunicator(Long nodeId) throws IOException {
+        socketManager.remove(nodeId);
+        out.println("RIMOSSO: " + nodeId);
     }
 
     public void create(int m) {
@@ -148,7 +147,7 @@ public class Node implements NodeInterface, Serializable {
             long index = n.getNodeId();
             long predIndex = predecessor.getNodeId();
             if (checkInterval(predIndex, index, getNodeId()) && !(predecessor.getNodeId().equals(n.getNodeId()))) {
-                closeCommunicator(predecessor);
+                closeCommunicator(predecessor.getHostId());
                 try {
                     predecessor = createConnection(n);
                 } catch (ConnectionErrorException e) {
@@ -207,7 +206,7 @@ public class Node implements NodeInterface, Serializable {
             e.printStackTrace();
         }
         if (!fingerTable.get(next - 1).getNodeId().equals(this.nodeId))
-            closeCommunicator(fingerTable.get(next-1));
+            closeCommunicator(fingerTable.get(next-1).getHostId());
         fingerTable.replace(next - 1, newConnection);
     }
 

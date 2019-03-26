@@ -10,6 +10,8 @@ public interface NodeInterface extends Serializable {
 
     NodeInterface createConnection(SocketNode socketNode, String ipAddress) throws IOException;
 
+    void closeCommunicator(Long nodeId) throws IOException;
+
     void notify(NodeInterface node) throws IOException;
 
     void checkPredecessor();

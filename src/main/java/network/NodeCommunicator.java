@@ -116,6 +116,7 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
         }
         socketNode.close();
         joinNodeSocket.close();
+        node.closeCommunicator(nodeId);
     }
 
     //non serve a niente
@@ -283,6 +284,7 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
     public void handle(CloseMessage closeMessage) throws IOException {
         socketNode.sendMessage(new TerminatedMethodMessage(closeMessage.getLockId()));
         socketNode.close();
+        node.closeCommunicator(nodeId);
     }
 
     @Override
@@ -387,5 +389,10 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
 
     public long getHostId(){
         return this.nodeId;
+    }
+
+    @Override
+    public void closeCommunicator(Long nodeId) throws IOException {
+
     }
 }
