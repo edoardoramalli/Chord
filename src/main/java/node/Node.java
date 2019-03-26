@@ -53,7 +53,7 @@ public class Node implements NodeInterface, Serializable {
             out.println("NUOVO: " + searchedNodeId);
             NodeCommunicator createdNode;
             try {
-                createdNode = new NodeCommunicator(connectionNode.getIpAddress(), connectionNode.getSocketPort(), this);
+                createdNode = new NodeCommunicator(connectionNode.getIpAddress(), connectionNode.getSocketPort(), this, hash(connectionNode.getIpAddress()));
             } catch (ConnectionErrorException e) {
                 throw new ConnectionErrorException();
             }
@@ -63,6 +63,7 @@ public class Node implements NodeInterface, Serializable {
     }
 
     public NodeInterface createConnection(SocketNode socketNode, String ipAddress) throws IOException {
+        out.println("CREO: " + hash(ipAddress));
         NodeInterface createdNode = new NodeCommunicator(socketNode, this, hash(ipAddress));
         socketManager.put(hash(ipAddress), createdNode);
         return createdNode;
@@ -83,7 +84,7 @@ public class Node implements NodeInterface, Serializable {
     }
 
     public void join(String joinIpAddress, int joinSocketPort) throws ConnectionErrorException, IOException {
-        NodeCommunicator node = new NodeCommunicator(joinIpAddress, joinSocketPort, this, hash(ipAddress));
+        NodeCommunicator node = new NodeCommunicator(joinIpAddress, joinSocketPort, this, hash(joinIpAddress));
         predecessor = null;
         NodeInterface successorNode = node.findSuccessor(this.nodeId);
         dimFingerTable = node.getDimFingerTable();
@@ -147,7 +148,7 @@ public class Node implements NodeInterface, Serializable {
             long index = n.getNodeId();
             long predIndex = predecessor.getNodeId();
             if (checkInterval(predIndex, index, getNodeId()) && !(predecessor.getNodeId().equals(n.getNodeId()))) {
-                closeCommunicator(predecessor.getHostId());
+                //closeCommunicator(predecessor.getHostId());
                 try {
                     predecessor = createConnection(n);
                 } catch (ConnectionErrorException e) {

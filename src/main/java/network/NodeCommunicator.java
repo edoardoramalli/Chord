@@ -18,7 +18,7 @@ import static java.lang.System.out;
 public class NodeCommunicator implements NodeInterface, Serializable, MessageHandler {
     private transient Socket joinNodeSocket;
     private NodeInterface node; //mio nodo
-    private transient long nodeId; //questo è il "mio" nodeId //TODO andrebbe inizializzato da qualche parte o tolto
+    private transient long nodeId; //questo è il nodeId dell'altro
     private SocketNode socketNode;
     private volatile HashMap<Long, Object> lockList = new HashMap<>();
     private volatile Long lockID = 0L;
@@ -37,7 +37,7 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
 
     //TODO metodo getter per getSuccessorList
 
-    public NodeCommunicator(String joinIpAddress, int joinSocketPort, NodeInterface node) throws ConnectionErrorException {
+    /*public NodeCommunicator(String joinIpAddress, int joinSocketPort, NodeInterface node) throws ConnectionErrorException {
         this.node = node;
         try {
             joinNodeSocket = new Socket(joinIpAddress, joinSocketPort);
@@ -56,7 +56,7 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
         Executors.newCachedThreadPool().submit(socketNode);
         //inizializzazione valori di ritorno
         nullReturnValue();
-    }
+    }*/
 
     public NodeCommunicator(String joinIpAddress, int joinSocketPort, NodeInterface node, long id) throws ConnectionErrorException {
         this.node = node;
@@ -81,12 +81,12 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
     }
 
     //used by SocketNode, when StartSocketListener accepts a new connection
-    public NodeCommunicator(SocketNode socketNode, NodeInterface node){
+    /*public NodeCommunicator(SocketNode socketNode, NodeInterface node){
         this.socketNode = socketNode;
         this.node = node;
         //inizializzazione valori di ritorno
         nullReturnValue();
-    }
+    }*/
 
     //used by SocketNode, when StartSocketListener accepts a new connection
     public NodeCommunicator(SocketNode socketNode, NodeInterface node, long id){
