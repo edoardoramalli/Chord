@@ -8,7 +8,7 @@ import java.io.Serializable;
 
 public interface NodeInterface extends Serializable {
 
-    NodeInterface createConnection(SocketNode socketNode) throws IOException;
+    NodeInterface createConnection(SocketNode socketNode, String ipAddress) throws IOException;
 
     void notify(NodeInterface node) throws IOException;
 

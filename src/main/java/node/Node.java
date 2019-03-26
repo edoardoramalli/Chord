@@ -62,9 +62,9 @@ public class Node implements NodeInterface, Serializable {
         }
     }
 
-    public NodeInterface createConnection(SocketNode socketNode) throws IOException {
+    public NodeInterface createConnection(SocketNode socketNode, String ipAddress) throws IOException {
         NodeInterface createdNode = new NodeCommunicator(socketNode, this);
-        socketManager.put(createdNode.getNodeId(), createdNode);
+        socketManager.put(hash(ipAddress), createdNode);
         return createdNode;
     }
 
@@ -308,4 +308,49 @@ public class Node implements NodeInterface, Serializable {
             out.println("Predecessor: " + predecessor.getNodeId());
         out.println("Successor: " + successor.getNodeId());
     }
+
+
+    private List<NodeInterface> successorList;
+
+
+
+    public void listStabilize() throws ConnectionErrorException, IOException {
+
+        NodeInterface x = successor.getPredecessor();
+        long nodeIndex = x.getNodeId();
+        long oldSucID = successor.getNodeId();
+        if (checkInterval(getNodeId(), nodeIndex, oldSucID))
+            successor = x;
+
+        List<NodeInterface> xList=new ArrayList<>();
+        // xList=successor.getSuccessorList();
+        successorList= copySuccessorList(xList);
+
+        successor.notify(this);
+    }
+    //catch successor exception--->update listSuccessor
+
+    public List<NodeInterface> copySuccessorList(List<NodeInterface> nextNodeSuccessorList) throws ConnectionErrorException, IOException {
+        ArrayList<NodeInterface> newSuccessorList= new ArrayList<>();
+        String ip=successor.getIpAddress();
+        int port=0;
+        newSuccessorList.add(new NodeCommunicator(ip,port, this));
+        for (int i=0; i < nextNodeSuccessorList.size()-1; i++) {
+
+            ip=nextNodeSuccessorList.get(i).getIpAddress();
+            port = nextNodeSuccessorList.get(i).getSocketPort();
+            newSuccessorList.add(createConnection(new NodeCommunicator(ip, port, this)));
+        }
+        return newSuccessorList;
+    }
+
+  /*  public NodeInterface closestPrecedingNodeList(long id) {
+        long nodeIndex;
+        for (int i = DIM_FINGER_TABLE - 1; i >= 0; i--) {
+            nodeIndex = fingerTable.get(i).getNodeId();
+            if (checkInterval3(nodeIndex, id, nodeId))
+                return fingerTable.get(i);
+        }
+        return this;
+    }*/
 }

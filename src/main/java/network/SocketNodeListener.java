@@ -28,7 +28,6 @@ public class SocketNodeListener implements Runnable, Serializable {
                 Socket socketIn = serverSocket.accept();
                 out.println("----- Benvenuto in FIORENZA -----");
                 SocketNode socketNode = new SocketNode(node, socketIn);
-                node.createConnection(socketNode);
                 executors.submit(socketNode);
                 if (false)
                     break;

@@ -89,7 +89,7 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
 
     //non serve a niente
     @Override
-    public NodeInterface createConnection(SocketNode socketNode) {
+    public NodeInterface createConnection(SocketNode socketNode, String ipAddress) {
         return null;
     }
 
