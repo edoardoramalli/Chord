@@ -63,7 +63,7 @@ public class Node implements NodeInterface, Serializable {
     }
 
     public NodeInterface createConnection(SocketNode socketNode, String ipAddress) throws IOException {
-        NodeInterface createdNode = new NodeCommunicator(socketNode, this);
+        NodeInterface createdNode = new NodeCommunicator(socketNode, this, hash(ipAddress));
         socketManager.put(hash(ipAddress), createdNode);
         return createdNode;
     }
@@ -84,7 +84,7 @@ public class Node implements NodeInterface, Serializable {
     }
 
     public void join(String joinIpAddress, int joinSocketPort) throws ConnectionErrorException, IOException {
-        NodeCommunicator node = new NodeCommunicator(joinIpAddress, joinSocketPort, this);
+        NodeCommunicator node = new NodeCommunicator(joinIpAddress, joinSocketPort, this, hash(ipAddress));
         predecessor = null;
         NodeInterface successorNode = node.findSuccessor(this.nodeId);
         dimFingerTable = node.getDimFingerTable();
@@ -99,7 +99,7 @@ public class Node implements NodeInterface, Serializable {
     void stabilize() throws IOException {
         //controllo su null predecessor
         NodeInterface x = successor.getPredecessor();
-        long nodeIndex = x.getNodeId();
+        long nodeIndex = x.getHostId();
         long oldSucID = successor.getNodeId();
         if (checkInterval(getNodeId(), nodeIndex, oldSucID) && !x.getNodeId().equals(successor.getNodeId())) {
             try {
@@ -334,12 +334,12 @@ public class Node implements NodeInterface, Serializable {
         ArrayList<NodeInterface> newSuccessorList= new ArrayList<>();
         String ip=successor.getIpAddress();
         int port=0;
-        newSuccessorList.add(new NodeCommunicator(ip,port, this));
+        newSuccessorList.add(new NodeCommunicator(ip,port, this, hash(ip)));
         for (int i=0; i < nextNodeSuccessorList.size()-1; i++) {
 
             ip=nextNodeSuccessorList.get(i).getIpAddress();
             port = nextNodeSuccessorList.get(i).getSocketPort();
-            newSuccessorList.add(createConnection(new NodeCommunicator(ip, port, this)));
+            newSuccessorList.add(createConnection(new NodeCommunicator(ip, port, this, hash(ip))));
         }
         return newSuccessorList;
     }
@@ -353,4 +353,9 @@ public class Node implements NodeInterface, Serializable {
         }
         return this;
     }*/
+
+    @Override
+    public long getHostId() {
+        return 0;
+    }
 }

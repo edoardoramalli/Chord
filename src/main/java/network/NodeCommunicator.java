@@ -58,10 +58,41 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
         nullReturnValue();
     }
 
+    public NodeCommunicator(String joinIpAddress, int joinSocketPort, NodeInterface node, long id) throws ConnectionErrorException {
+        this.node = node;
+        this.nodeId=id;
+        try {
+            joinNodeSocket = new Socket(joinIpAddress, joinSocketPort);
+        } catch (IOException e) {
+            throw new ConnectionErrorException();
+        }
+        ObjectOutputStream out;
+        ObjectInputStream in;
+        try {
+            out = new ObjectOutputStream(joinNodeSocket.getOutputStream());
+            in = new ObjectInputStream(joinNodeSocket.getInputStream());
+        } catch (IOException e) {
+            throw new UnexpectedBehaviourException();
+        }
+        this.socketNode = new SocketNode(in, out, this);
+        Executors.newCachedThreadPool().submit(socketNode);
+        //inizializzazione valori di ritorno
+        nullReturnValue();
+    }
+
     //used by SocketNode, when StartSocketListener accepts a new connection
     public NodeCommunicator(SocketNode socketNode, NodeInterface node){
         this.socketNode = socketNode;
         this.node = node;
+        //inizializzazione valori di ritorno
+        nullReturnValue();
+    }
+
+    //used by SocketNode, when StartSocketListener accepts a new connection
+    public NodeCommunicator(SocketNode socketNode, NodeInterface node, long id){
+        this.socketNode = socketNode;
+        this.node = node;
+        this.nodeId=id;
         //inizializzazione valori di ritorno
         nullReturnValue();
     }
@@ -352,5 +383,9 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
             returnedInt = getSocketPortResponse.getSocketPort();
             lockList.get(getSocketPortResponse.getLockId()).notifyAll();
         }
+    }
+
+    public long getHostId(){
+        return this.nodeId;
     }
 }
