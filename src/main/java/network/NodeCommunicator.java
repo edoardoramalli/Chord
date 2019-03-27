@@ -3,6 +3,7 @@ package network;
 import exceptions.ConnectionErrorException;
 import exceptions.UnexpectedBehaviourException;
 import network.message.*;
+import node.Node;
 import node.NodeInterface;
 
 import java.io.IOException;
@@ -13,6 +14,7 @@ import java.net.Socket;
 import java.util.HashMap;
 import java.util.concurrent.Executors;
 
+import static java.lang.System.err;
 import static java.lang.System.out;
 
 public class NodeCommunicator implements NodeInterface, Serializable, MessageHandler {
@@ -116,7 +118,7 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
         }
         socketNode.close();
         joinNodeSocket.close();
-        node.closeCommunicator(nodeId);
+        node.closeCommunicator(getHostId());
     }
 
     //non serve a niente
@@ -249,7 +251,7 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
     @Override
     public void handle(FindSuccessorRequest findSuccessorRequest) throws IOException {
         NodeInterface nodeInterface = node.findSuccessor(findSuccessorRequest.getId());
-        socketNode.sendMessage(new FindSuccessorResponse(nodeInterface, findSuccessorRequest.getLockId()));
+        socketNode.sendMessage(new FindSuccessorResponse(new Node(nodeInterface.getIpAddress(), nodeInterface.getSocketPort()), findSuccessorRequest.getLockId()));
     }
 
     @Override
@@ -289,11 +291,14 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
 
     @Override
     public void handle(GetPredecessorRequest getPredecessorRequest) throws IOException {
-        socketNode.sendMessage(new GetPredecessorResponse(node.getPredecessor(), getPredecessorRequest.getLockId()));
+        NodeInterface pred = node.getPredecessor();
+        out.println("Predecessore inviato: " + pred.getHostId());
+        socketNode.sendMessage(new GetPredecessorResponse(new Node(pred.getIpAddress(), pred.getSocketPort()), getPredecessorRequest.getLockId()));
     }
 
     @Override
     public void handle(GetPredecessorResponse getPredecessorResponse) throws IOException {
+        out.println("Predecessore ritornato: " + getPredecessorResponse.getNode().getHostId());
         synchronized (lockList.get(getPredecessorResponse.getLockId())){
             while (returnedNode != null){ //questo serve nel caso in cui altri metodi stanno usando returnedNode
                 try {
@@ -387,7 +392,7 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
         }
     }
 
-    public long getHostId(){
+    public Long getHostId(){
         return this.nodeId;
     }
 

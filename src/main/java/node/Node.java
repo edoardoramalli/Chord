@@ -44,21 +44,27 @@ public class Node implements NodeInterface, Serializable {
 
     private NodeInterface createConnection(NodeInterface connectionNode) throws IOException, ConnectionErrorException {
         Long searchedNodeId = connectionNode.getNodeId();
-        NodeInterface searchedNode = socketManager.get(searchedNodeId);
-        if(searchedNode != null) {
-            out.println("DALLA LISTA: " + searchedNodeId);
-            return searchedNode;
+        if (searchedNodeId.equals(nodeId)) {
+            out.println("CREATECONN, RITORNO ME STESSO");
+            return this;
         }
-        else{
-            out.println("NUOVO: " + searchedNodeId);
-            NodeCommunicator createdNode;
-            try {
-                createdNode = new NodeCommunicator(connectionNode.getIpAddress(), connectionNode.getSocketPort(), this, hash(connectionNode.getIpAddress()));
-            } catch (ConnectionErrorException e) {
-                throw new ConnectionErrorException();
+        else {
+            NodeInterface searchedNode = socketManager.get(searchedNodeId);
+            if(searchedNode != null) {
+                out.println("DALLA LISTA: " + searchedNodeId);
+                return searchedNode;
             }
-            socketManager.put(searchedNodeId, createdNode);
-            return createdNode;
+            else{
+                out.println("NUOVO: " + searchedNodeId);
+                NodeCommunicator createdNode;
+                try {
+                    createdNode = new NodeCommunicator(connectionNode.getIpAddress(), connectionNode.getSocketPort(), this, hash(connectionNode.getIpAddress()));
+                } catch (ConnectionErrorException e) {
+                    throw new ConnectionErrorException();
+                }
+                socketManager.put(searchedNodeId, createdNode);
+                return createdNode;
+            }
         }
     }
 
@@ -355,7 +361,7 @@ public class Node implements NodeInterface, Serializable {
     }*/
 
     @Override
-    public long getHostId() {
-        return 0;
+    public Long getHostId() {
+        return nodeId;
     }
 }
