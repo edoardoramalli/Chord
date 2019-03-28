@@ -16,6 +16,8 @@ public class UpdateNode implements Runnable {
             try {
                 node.stabilize();
                 node.fixFingers();
+                node.fixFingers();
+                node.fixFingers();
             } catch (IOException e) {
                 e.printStackTrace(); //qui poi devo gestire la disconnessione
             }

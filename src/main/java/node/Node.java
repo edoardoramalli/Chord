@@ -86,7 +86,7 @@ public class Node implements NodeInterface, Serializable {
         dimFingerTable = m;
         startSocketListener(socketPort);
         createFingerTable();
-        Executors.newCachedThreadPool().submit(new UpdateNode(this));
+        //Executors.newCachedThreadPool().submit(new UpdateNode(this));
     }
 
     public void join(String joinIpAddress, int joinSocketPort) throws ConnectionErrorException, IOException {
@@ -142,10 +142,15 @@ public class Node implements NodeInterface, Serializable {
     }
 
     @Override
-    public void notify(NodeInterface n) throws IOException {
+    synchronized public void notify(NodeInterface n) throws IOException {
         if (predecessor == null) {
             try {
                 predecessor = createConnection(n);
+                Executors.newCachedThreadPool().submit(new UpdateNode(this));
+                /*stabilize();
+                fixFingers();
+                fixFingers();
+                fixFingers();*/
             } catch (ConnectionErrorException e) {
                 e.printStackTrace();
             }
@@ -199,7 +204,7 @@ public class Node implements NodeInterface, Serializable {
         }
     }
 
-    void fixFingers() throws IOException {
+    synchronized void fixFingers() throws IOException {
         long idToFind;
         next = next + 1;
         if (next > dimFingerTable)
@@ -212,7 +217,7 @@ public class Node implements NodeInterface, Serializable {
         } catch (ConnectionErrorException e) {
             e.printStackTrace();
         }
-        if (!fingerTable.get(next - 1).getNodeId().equals(this.nodeId))
+        if (!fingerTable.get(next - 1).getNodeId().equals(newConnection.getHostId()))
             closeCommunicator(fingerTable.get(next-1).getHostId());
         fingerTable.replace(next - 1, newConnection);
     }

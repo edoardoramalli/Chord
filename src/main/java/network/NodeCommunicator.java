@@ -292,13 +292,11 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
     @Override
     public void handle(GetPredecessorRequest getPredecessorRequest) throws IOException {
         NodeInterface pred = node.getPredecessor();
-        out.println("Predecessore inviato: " + pred.getHostId());
         socketNode.sendMessage(new GetPredecessorResponse(new Node(pred.getIpAddress(), pred.getSocketPort()), getPredecessorRequest.getLockId()));
     }
 
     @Override
     public void handle(GetPredecessorResponse getPredecessorResponse) throws IOException {
-        out.println("Predecessore ritornato: " + getPredecessorResponse.getNode().getHostId());
         synchronized (lockList.get(getPredecessorResponse.getLockId())){
             while (returnedNode != null){ //questo serve nel caso in cui altri metodi stanno usando returnedNode
                 try {
