@@ -29,7 +29,7 @@ public class SocketNode implements Runnable, Serializable {
         }
         this.connected = true;
         try {
-            this.messageHandler = (MessageHandler) node.getSocketManager().createConnection(this, socketIn.getInetAddress().getHostAddress());
+            this.messageHandler = (MessageHandler) node.createConnection(this, socketIn.getInetAddress().getHostAddress());
         } catch (IOException e) {
             e.printStackTrace();
         }
