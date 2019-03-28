@@ -3,7 +3,6 @@ package node;
 import exceptions.ConnectionErrorException;
 import network.NodeCommunicator;
 import network.SocketManager;
-import network.SocketNode;
 import network.SocketNodeListener;
 
 import java.io.IOException;
@@ -26,7 +25,6 @@ public class Node implements NodeInterface, Serializable {
     private transient volatile NodeInterface predecessor;
     private transient volatile Map<Integer, NodeInterface> fingerTable;
     private transient volatile SocketManager socketManager;
-    //private transient volatile Map<Long, NodeInterface> socketManager; //da togliere
     private transient List<NodeInterface> listOfSuccessor = new ArrayList<>();
     private transient int dimFingerTable = 3;
     private transient int next;

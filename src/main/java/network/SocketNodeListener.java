@@ -33,7 +33,6 @@ public class SocketNodeListener implements Runnable, Serializable {
                     break;
             }
         } catch (IOException e) {
-            out.println("ERRORE SL");
             e.printStackTrace();
         }
     }
