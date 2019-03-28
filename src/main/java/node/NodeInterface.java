@@ -1,16 +1,13 @@
 package node;
 
 import exceptions.ConnectionErrorException;
+import network.SocketManager;
 import network.SocketNode;
 
 import java.io.IOException;
 import java.io.Serializable;
 
 public interface NodeInterface extends Serializable {
-
-    NodeInterface createConnection(SocketNode socketNode, String ipAddress) throws IOException;
-
-    void closeCommunicator(Long nodeId) throws IOException;
 
     void notify(NodeInterface node) throws IOException;
 
@@ -33,5 +30,7 @@ public interface NodeInterface extends Serializable {
     void close() throws IOException;
 
     Long getHostId();
+
+    SocketManager getSocketManager();
 
 }

@@ -62,7 +62,7 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
 
     public NodeCommunicator(String joinIpAddress, int joinSocketPort, NodeInterface node, long id) throws ConnectionErrorException {
         this.node = node;
-        this.nodeId=id;
+        this.nodeId = id;
         try {
             joinNodeSocket = new Socket(joinIpAddress, joinSocketPort);
         } catch (IOException e) {
@@ -94,7 +94,7 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
     public NodeCommunicator(SocketNode socketNode, NodeInterface node, long id){
         this.socketNode = socketNode;
         this.node = node;
-        this.nodeId=id;
+        this.nodeId = id;
         //inizializzazione valori di ritorno
         nullReturnValue();
     }
@@ -118,13 +118,7 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
         }
         socketNode.close();
         joinNodeSocket.close();
-        node.closeCommunicator(getHostId());
-    }
-
-    //non serve a niente
-    @Override
-    public NodeInterface createConnection(SocketNode socketNode, String ipAddress) {
-        return null;
+        node.getSocketManager().closeCommunicator(getHostId());
     }
 
     @Override
@@ -286,7 +280,7 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
     public void handle(CloseMessage closeMessage) throws IOException {
         socketNode.sendMessage(new TerminatedMethodMessage(closeMessage.getLockId()));
         socketNode.close();
-        node.closeCommunicator(nodeId);
+        node.getSocketManager().closeCommunicator(nodeId);
     }
 
     @Override
@@ -397,7 +391,8 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
     }
 
     @Override
-    public void closeCommunicator(Long nodeId) throws IOException {
-
+    public SocketManager getSocketManager() {
+        return null;
     }
+
 }
