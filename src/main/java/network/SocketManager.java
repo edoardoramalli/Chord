@@ -11,7 +11,7 @@ import java.util.Map;
 import static java.lang.System.out;
 
 public class SocketManager {
-    //private static SocketManager socketManagerInstance;
+    private static SocketManager socketManagerInstance;
     private Map<Long, NodeInterface> socketList; //map tra nodeId e nodeCommunicator
     private Map<Long, Integer> socketNumber; //map tra nodeId e numero di connessioni verso quel nodo
     private volatile Node node;
@@ -71,14 +71,14 @@ public class SocketManager {
     }
 
     //called by startNodeListener, used to create first connection
-    NodeInterface createConnection(SocketNode socketNode, String ipAddress) throws IOException {
+    public NodeInterface createConnection(SocketNode socketNode, String ipAddress) throws IOException {
         out.println("CREO: " + node.hash(ipAddress));
         NodeInterface createdNode = new NodeCommunicator(socketNode, (NodeInterface) this, node.hash(ipAddress));
         socketList.put(node.hash(ipAddress), createdNode);
         return createdNode;
     }
 
-    void closeCommunicator(Long nodeId) throws IOException {
+    public void closeCommunicator(Long nodeId) throws IOException {
         socketList.remove(nodeId);
         out.println("RIMOSSO: " + nodeId);
     }

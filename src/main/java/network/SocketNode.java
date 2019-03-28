@@ -35,7 +35,7 @@ public class SocketNode implements Runnable, Serializable {
         }
     }
 
-    SocketNode(ObjectInputStream socketInput, ObjectOutputStream socketOutput, MessageHandler messageHandler){
+    public SocketNode(ObjectInputStream socketInput, ObjectOutputStream socketOutput, MessageHandler messageHandler){
         this.messageHandler = messageHandler;
         this.socketInput = socketInput;
         this.socketOutput = socketOutput;

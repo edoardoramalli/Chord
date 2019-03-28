@@ -1,6 +1,8 @@
 package node;
 
+import exceptions.ConnectionErrorException;
 import network.SocketManager;
+import network.SocketNode;
 
 import java.io.IOException;
 import java.io.Serializable;
