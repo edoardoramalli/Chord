@@ -5,13 +5,11 @@ import network.message.Message;
 import network.message.MessageHandler;
 import node.NodeInterface;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
+import java.io.*;
 import java.net.Socket;
 import java.util.concurrent.Executors;
 
+import static java.lang.System.err;
 import static java.lang.System.out;
 
 public class SocketNode implements Runnable, Serializable {
@@ -35,7 +33,7 @@ public class SocketNode implements Runnable, Serializable {
         }
     }
 
-    public SocketNode(ObjectInputStream socketInput, ObjectOutputStream socketOutput, MessageHandler messageHandler){
+    SocketNode(ObjectInputStream socketInput, ObjectOutputStream socketOutput, MessageHandler messageHandler){
         this.messageHandler = messageHandler;
         this.socketInput = socketInput;
         this.socketOutput = socketOutput;
@@ -62,8 +60,19 @@ public class SocketNode implements Runnable, Serializable {
 
     private Message getMessage() {
         try {
-            return (Message) socketInput.readObject();
+            Message message = (Message) socketInput.readObject();
+            err.println(message.getClass());
+            return message;
+        } catch (EOFException e){
+            out.println("Exception chiusura connessione");
+            connected = false;
+            //this.close();
+            // TODO potremmo togliere la chiusura doppia da entrambi i lati.
+            //  quando uno chiude la connessione da un lato arriva qui
+            //  l'eccezione (forse) e lo chiudiamo in questo modo. oppure
+            //  si vede dove lancia l'eccezione e si gestisce lì la chisura
         } catch (IOException e) {
+            e.printStackTrace();
             connected = false;
             this.close();
         } catch (ClassNotFoundException e) {
@@ -73,6 +82,7 @@ public class SocketNode implements Runnable, Serializable {
     }
 
     void sendMessage(Message message) throws IOException {
+        out.println(message.getClass());
         socketOutput.writeObject(message);
         socketOutput.reset();
     }

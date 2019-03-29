@@ -16,18 +16,21 @@ import java.util.concurrent.Executors;
 
 import static java.lang.System.*;
 
-
 public class Node implements NodeInterface, Serializable {
     private String ipAddress;
     private int socketPort;
     private Long nodeId;
     private transient volatile NodeInterface successor;
     private transient volatile NodeInterface predecessor;
-    private transient volatile Map<Integer, NodeInterface> fingerTable;
-    private transient volatile Map<Long, NodeInterface> socketManager;
+    private transient volatile Map<Integer, NodeInterface> fingerTable; //TODO qui non dovrebbe essere Long al posto di Integer?
     private List<NodeInterface> listOfSuccessor = new ArrayList<>();
     private transient int dimFingerTable = 3;
     private transient int next;
+    //connection handler
+    private transient volatile Map<Long, NodeInterface> socketManager;
+    private transient volatile Map<Long, Integer> socketNumber;
+
+    private static final long serialVersionUID = 1L;
 
     public Node(String ipAddress, int socketPort) {
         this.ipAddress = ipAddress;
@@ -38,12 +41,14 @@ public class Node implements NodeInterface, Serializable {
         this.next = 0;
         this.nodeId = hash(ipAddress);
         this.socketManager = new HashMap<>();
-        out.println("NODE ID: " + nodeId);
+        this.socketNumber = new HashMap<>();
     }
 
+    //TODO qui devo cercare di differenziare tra quando viene presa una connessione esistente per una "nuova"
+    // connessione, e quando viene restituito un nodo uguale a quello che c'era prima.
     private NodeInterface createConnection(NodeInterface connectionNode) throws IOException, ConnectionErrorException {
         Long searchedNodeId = connectionNode.getNodeId();
-        if (searchedNodeId.equals(nodeId)) {
+        if (searchedNodeId.equals(nodeId)) { //nel caso in cui ritorno me stesso non ho bisogno di aggiornare il numero di connessioni
             out.println("CREATECONN, RITORNO ME STESSO");
             return this;
         }
@@ -51,6 +56,8 @@ public class Node implements NodeInterface, Serializable {
             NodeInterface searchedNode = socketManager.get(searchedNodeId);
             if(searchedNode != null) {
                 out.println("DALLA LISTA: " + searchedNodeId);
+                int n = socketNumber.get(searchedNodeId); //vecchio numero di connessioni
+                socketNumber.replace(searchedNodeId, n+1); //faccio replace con nodeId e n+1
                 return searchedNode;
             }
             else{
@@ -62,6 +69,7 @@ public class Node implements NodeInterface, Serializable {
                     throw new ConnectionErrorException();
                 }
                 socketManager.put(searchedNodeId, createdNode);
+                socketNumber.put(hash(ipAddress), 1); //quando creo un nodo inserisco nella lista <nodeId, 1>
                 return createdNode;
             }
         }
@@ -71,11 +79,17 @@ public class Node implements NodeInterface, Serializable {
         out.println("CREO: " + hash(ipAddress));
         NodeInterface createdNode = new NodeCommunicator(socketNode, this, hash(ipAddress));
         socketManager.put(hash(ipAddress), createdNode);
+        socketNumber.put(hash(ipAddress), 1); //quando creo un nodo inserisco nella lista <nodeId, 1>
         return createdNode;
     }
 
     public void closeCommunicator(Long nodeId) throws IOException {
-        socketManager.remove(nodeId);
+        int n = socketNumber.get(nodeId); //vecchio numero di connessioni
+        if (n == 1) { //rimuovo la connessione
+            socketNumber.remove(nodeId);
+            socketManager.remove(nodeId);
+        } else //diminuisco il numero di connessioni
+            socketNumber.replace(nodeId, n-1);
         out.println("RIMOSSO: " + nodeId);
     }
 
@@ -98,9 +112,14 @@ public class Node implements NodeInterface, Serializable {
         successor.notify(this); //serve per settare il predecessore nel successore del nodo
         startSocketListener(socketPort);
         createFingerTable();
-        Executors.newCachedThreadPool().submit(new UpdateNode(this));
+        //Executors.newCachedThreadPool().submit(new UpdateNode(this));
+        //stabilize();
+        //fixFingers();
+        //fixFingers();
+        //fixFingers();
     }
 
+    //TODO devo implementare il numero di connessioni
     void stabilize() throws IOException {
         //controllo su null predecessor
         NodeInterface x = successor.getPredecessor();
@@ -130,7 +149,7 @@ public class Node implements NodeInterface, Serializable {
         }
     }
 
-    public NodeInterface closestPrecedingNode(Long id) throws IOException {
+    private NodeInterface closestPrecedingNode(Long id) throws IOException {
         long nodeIndex;
         for (int i = dimFingerTable - 1; i >= 0; i--) {
             nodeIndex = fingerTable.get(i).getNodeId();
@@ -140,12 +159,13 @@ public class Node implements NodeInterface, Serializable {
         return this;
     }
 
+    //TODO devo implementare il numero di connessioni
     @Override
-    synchronized public void notify(NodeInterface n) throws IOException {
+    public synchronized void notify(NodeInterface n) throws IOException {
         if (predecessor == null) {
             try {
                 predecessor = createConnection(n);
-                Executors.newCachedThreadPool().submit(new UpdateNode(this));
+                //Executors.newCachedThreadPool().submit(new UpdateNode(this));
                 /*stabilize();
                 fixFingers();
                 fixFingers();
@@ -203,6 +223,7 @@ public class Node implements NodeInterface, Serializable {
         }
     }
 
+    //TODO devo implementare il numero di connessioni
     synchronized void fixFingers() throws IOException {
         long idToFind;
         next = next + 1;
@@ -221,7 +242,7 @@ public class Node implements NodeInterface, Serializable {
         fingerTable.replace(next - 1, newConnection);
     }
 
-    //TODO forse va tolto
+    //TODO da implementare
     @Override
     public void checkPredecessor() {
 
@@ -236,7 +257,6 @@ public class Node implements NodeInterface, Serializable {
         for (int i = 0; i < dimFingerTable; i++)
             fingerTable.put(i, this);
     }
-
 
     public NodeInterface lookup(Long id) throws IOException {
         if (id.equals(successor.getNodeId())) {
@@ -261,7 +281,7 @@ public class Node implements NodeInterface, Serializable {
     @Override
     public NodeInterface getSuccessor() {
         return successor;
-    } //TODO questo serve?
+    } //TODO questo serve? non lo usiamo mai
 
     @Override
     public NodeInterface getPredecessor() {
@@ -302,9 +322,9 @@ public class Node implements NodeInterface, Serializable {
 
     public Map<Integer, NodeInterface> getFingerTable() {
         return fingerTable;
-    }
+    } //TODO mai usato, magari da togliere
 
-    public void printFingerTable() throws IOException { 
+    public void printFingerTable() {
         out.println("FINGER TABLE: " + nodeId);
         for (int i = 0; i< dimFingerTable; i++)
         {
@@ -312,7 +332,7 @@ public class Node implements NodeInterface, Serializable {
         }
     }
 
-    public void printPredecessorAndSuccessor() throws IOException {
+    public void printPredecessorAndSuccessor() {
         out.println(nodeId + ":----------------------");
         if (predecessor != null)
             out.println("Predecessor: " + predecessor.getNodeId());
@@ -320,9 +340,9 @@ public class Node implements NodeInterface, Serializable {
     }
 
 
+    //TODO da qui dobbiamo collegare tutto
+
     private List<NodeInterface> successorList;
-
-
 
     public void listStabilize() throws ConnectionErrorException, IOException {
 

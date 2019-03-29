@@ -14,9 +14,6 @@ import java.net.Socket;
 import java.util.HashMap;
 import java.util.concurrent.Executors;
 
-import static java.lang.System.err;
-import static java.lang.System.out;
-
 public class NodeCommunicator implements NodeInterface, Serializable, MessageHandler {
     private transient Socket joinNodeSocket;
     private NodeInterface node; //mio nodo
@@ -202,7 +199,7 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
     }
 
     @Override
-    public Long getNodeId() throws IOException {
+    public Long getNodeId() {
         return nodeId;
     }
 
@@ -270,11 +267,13 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
         }
     }
 
+    //non più usato, poi andrà tolto
     @Override
     public void handle(GetNodeIdRequest getNodeIdRequest) throws IOException {
         socketNode.sendMessage(new GetNodeIdResponse(node.getNodeId(), getNodeIdRequest.getLockId()));
     }
 
+    //non più usato, poi andrà tolto
     @Override
     public void handle(GetNodeIdResponse getNodeIdResponse) throws IOException {
         synchronized (lockList.get(getNodeIdResponse.getLockId())){
