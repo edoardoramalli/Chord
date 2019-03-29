@@ -27,7 +27,6 @@ public class Node implements NodeInterface, Serializable {
     private transient volatile Map<Long, NodeInterface> socketManager;
     private List<NodeInterface> listOfSuccessor = new ArrayList<>();
     private transient int dimFingerTable = 3;
-    private static final int DIM_FINGER_TABLE = 4; //questo poi potremmo metterlo variabile scelto nella create
     private transient int next;
 
     public Node(String ipAddress, int socketPort) {
@@ -105,7 +104,7 @@ public class Node implements NodeInterface, Serializable {
     void stabilize() throws IOException {
         //controllo su null predecessor
         NodeInterface x = successor.getPredecessor();
-        long nodeIndex = x.getHostId();
+        long nodeIndex = x.getNodeId();
         long oldSucID = successor.getNodeId();
         if (checkInterval(getNodeId(), nodeIndex, oldSucID) && !x.getNodeId().equals(successor.getNodeId())) {
             try {
@@ -217,8 +216,8 @@ public class Node implements NodeInterface, Serializable {
         } catch (ConnectionErrorException e) {
             e.printStackTrace();
         }
-        if (!fingerTable.get(next - 1).getNodeId().equals(newConnection.getHostId()))
-            closeCommunicator(fingerTable.get(next-1).getHostId());
+        if (!fingerTable.get(next - 1).getNodeId().equals(newConnection.getNodeId()))
+            closeCommunicator(fingerTable.get(next-1).getNodeId());
         fingerTable.replace(next - 1, newConnection);
     }
 
@@ -364,9 +363,4 @@ public class Node implements NodeInterface, Serializable {
         }
         return this;
     }*/
-
-    @Override
-    public Long getHostId() {
-        return nodeId;
-    }
 }

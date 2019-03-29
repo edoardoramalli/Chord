@@ -39,30 +39,9 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
 
     //TODO metodo getter per getSuccessorList
 
-    /*public NodeCommunicator(String joinIpAddress, int joinSocketPort, NodeInterface node) throws ConnectionErrorException {
-        this.node = node;
-        try {
-            joinNodeSocket = new Socket(joinIpAddress, joinSocketPort);
-        } catch (IOException e) {
-            throw new ConnectionErrorException();
-        }
-        ObjectOutputStream out;
-        ObjectInputStream in;
-        try {
-            out = new ObjectOutputStream(joinNodeSocket.getOutputStream());
-            in = new ObjectInputStream(joinNodeSocket.getInputStream());
-        } catch (IOException e) {
-            throw new UnexpectedBehaviourException();
-        }
-        this.socketNode = new SocketNode(in, out, this);
-        Executors.newCachedThreadPool().submit(socketNode);
-        //inizializzazione valori di ritorno
-        nullReturnValue();
-    }*/
-
     public NodeCommunicator(String joinIpAddress, int joinSocketPort, NodeInterface node, long id) throws ConnectionErrorException {
         this.node = node;
-        this.nodeId=id;
+        this.nodeId = id;
         try {
             joinNodeSocket = new Socket(joinIpAddress, joinSocketPort);
         } catch (IOException e) {
@@ -81,14 +60,6 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
         //inizializzazione valori di ritorno
         nullReturnValue();
     }
-
-    //used by SocketNode, when StartSocketListener accepts a new connection
-    /*public NodeCommunicator(SocketNode socketNode, NodeInterface node){
-        this.socketNode = socketNode;
-        this.node = node;
-        //inizializzazione valori di ritorno
-        nullReturnValue();
-    }*/
 
     //used by SocketNode, when StartSocketListener accepts a new connection
     public NodeCommunicator(SocketNode socketNode, NodeInterface node, long id){
@@ -118,7 +89,7 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
         }
         socketNode.close();
         joinNodeSocket.close();
-        node.closeCommunicator(getHostId());
+        node.closeCommunicator(nodeId);
     }
 
     //non serve a niente
@@ -232,18 +203,7 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
 
     @Override
     public Long getNodeId() throws IOException {
-        Long lockId = createLock();
-        synchronized (lockList.get(lockId)){
-            socketNode.sendMessage(new GetNodeIdRequest(lockId));
-            try {
-                lockList.get(lockId).wait();
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-        }
-        Long nodeIdR = returnedNodeId;
-        returnedNodeId = null;
-        return nodeIdR;
+        return nodeId;
     }
 
     //---------> Handling of Messages
@@ -388,10 +348,6 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
             returnedInt = getSocketPortResponse.getSocketPort();
             lockList.get(getSocketPortResponse.getLockId()).notifyAll();
         }
-    }
-
-    public Long getHostId(){
-        return this.nodeId;
     }
 
     @Override

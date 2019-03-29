@@ -32,6 +32,4 @@ public interface NodeInterface extends Serializable {
 
     void close() throws IOException;
 
-    Long getHostId();
-
 }
