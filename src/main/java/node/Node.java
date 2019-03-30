@@ -45,10 +45,7 @@ public class Node implements NodeInterface, Serializable {
         this.socketNumber = new HashMap<>();
     }
 
-    //la i serve per capire se incrementare o no il numero di connessioni.
-    // se è =1 allora aumento
-    // se =0 tengo lo stesso numero
-    private NodeInterface createConnection(NodeInterface connectionNode, int i) throws IOException, ConnectionErrorException {
+    private NodeInterface createConnection(NodeInterface connectionNode) throws IOException, ConnectionErrorException {
         Long searchedNodeId = connectionNode.getNodeId();
         if (searchedNodeId.equals(nodeId)) { //nel caso in cui ritorno me stesso non ho bisogno di aggiornare il numero di connessioni
             out.println("CREATECONN, RITORNO ME STESSO");
@@ -59,7 +56,7 @@ public class Node implements NodeInterface, Serializable {
             if(searchedNode != null) {
                 out.println("DALLA LISTA: " + searchedNodeId);
                 int n = socketNumber.get(searchedNodeId); //vecchio numero di connessioni
-                socketNumber.replace(searchedNodeId, n+i); //faccio replace con nodeId e n+i
+                socketNumber.replace(searchedNodeId, n+1); //faccio replace con nodeId e n+1
                 return searchedNode;
             }
             else{
@@ -113,7 +110,7 @@ public class Node implements NodeInterface, Serializable {
         NodeInterface successorNode = node.findSuccessor(this.nodeId);
         dimFingerTable = node.getDimFingerTable();
         node.close();
-        successor = createConnection(successorNode, 1); //creo nuova connessione
+        successor = createConnection(successorNode); //creo nuova connessione
         successor.notify(this); //serve per settare il predecessore nel successore del nodo
         startSocketListener(socketPort);
         createFingerTable();
@@ -133,7 +130,7 @@ public class Node implements NodeInterface, Serializable {
         if (checkInterval(getNodeId(), nodeIndex, oldSucID) && !x.getNodeId().equals(successor.getNodeId())) {
             try {
                 closeCommunicator(successor.getNodeId());
-                successor = createConnection(x, 1);
+                successor = createConnection(x);
             } catch (ConnectionErrorException e) {
                 e.printStackTrace();
             }
@@ -168,7 +165,7 @@ public class Node implements NodeInterface, Serializable {
     public synchronized void notify(NodeInterface n) throws IOException {
         if (predecessor == null) {
             try {
-                predecessor = createConnection(n, 1); //creo connessione aumentando di 1
+                predecessor = createConnection(n); //creo connessione aumentando di 1
                 //Executors.newCachedThreadPool().submit(new UpdateNode(this));
                 /*stabilize();
                 fixFingers();
@@ -185,7 +182,7 @@ public class Node implements NodeInterface, Serializable {
                 //closeCommunicator(predecessor.getHostId());
                 try {
                     closeCommunicator(predecessor.getNodeId());//chiudo connessione verso vecchio predecessore
-                    predecessor = createConnection(n, 1); //apro connessione verso nuovo predecessore
+                    predecessor = createConnection(n); //apro connessione verso nuovo predecessore
                 } catch (ConnectionErrorException e) {
                     e.printStackTrace();
                 }
@@ -248,7 +245,7 @@ public class Node implements NodeInterface, Serializable {
         if (!node.getNodeId().equals(fingerTable.get(next - 1).getNodeId())){ //se il nuovo nodo è diverso da quello già presente
             NodeInterface newConnection;
             try {
-                newConnection = createConnection(node, 1);
+                newConnection = createConnection(node);
             } catch (ConnectionErrorException e) {
                 throw new UnexpectedBehaviourException();
             }
