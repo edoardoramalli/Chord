@@ -45,7 +45,7 @@ public class Node implements NodeInterface, Serializable {
         this.socketNumber = new HashMap<>();
     }
 
-    private NodeInterface createConnection(NodeInterface connectionNode) throws IOException, ConnectionErrorException {
+    private synchronized NodeInterface createConnection(NodeInterface connectionNode) throws IOException, ConnectionErrorException {
         Long searchedNodeId = connectionNode.getNodeId();
         if (searchedNodeId.equals(nodeId)) { //nel caso in cui ritorno me stesso non ho bisogno di aggiornare il numero di connessioni
             out.println("CREATECONN, RITORNO ME STESSO");
@@ -68,7 +68,7 @@ public class Node implements NodeInterface, Serializable {
                     throw new ConnectionErrorException();
                 }
                 socketManager.put(searchedNodeId, createdNode);
-                socketNumber.put(hash(ipAddress), 1); //quando creo un nodo inserisco nella lista <nodeId, 1>
+                socketNumber.put(searchedNodeId, 1); //quando creo un nodo inserisco nella lista <nodeId, 1>
                 return createdNode;
             }
         }
@@ -84,14 +84,16 @@ public class Node implements NodeInterface, Serializable {
 
     public void closeCommunicator(Long nodeId) {
         //eseguo solo se il nodeId da rimuovere non è il mio
-        if (!this.nodeId.equals(nodeId)){
-            int n = socketNumber.get(nodeId); //old connection number
-            if (n == 1) { //removes the connection
-                socketNumber.remove(nodeId);
-                socketManager.remove(nodeId);
-            } else //decreases the number of connection
-                socketNumber.replace(nodeId, n-1);
-            out.println("RIMOSSO: " + nodeId);
+        if (!this.nodeId.equals(nodeId)){ //non posso rimuovere me stesso dalla lista
+            Integer n = socketNumber.get(nodeId); //old connection number
+            if (n != null){
+                if (n == 1) { //removes the connection
+                    socketNumber.remove(nodeId);
+                    socketManager.remove(nodeId);
+                } else //decreases the number of connection
+                    socketNumber.replace(nodeId, n-1);
+                out.println("RIMOSSO: " + nodeId);
+            }
         }
     }
 
@@ -166,7 +168,7 @@ public class Node implements NodeInterface, Serializable {
         if (predecessor == null) {
             try {
                 predecessor = createConnection(n); //creo connessione aumentando di 1
-                //Executors.newCachedThreadPool().submit(new UpdateNode(this));
+                Executors.newCachedThreadPool().submit(new UpdateNode(this));
                 /*stabilize();
                 fixFingers();
                 fixFingers();

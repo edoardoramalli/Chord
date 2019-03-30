@@ -72,9 +72,10 @@ public class SocketNode implements Runnable, Serializable {
             //  l'eccezione (forse) e lo chiudiamo in questo modo. oppure
             //  si vede dove lancia l'eccezione e si gestisce lì la chisura
         } catch (IOException e) {
-            e.printStackTrace();
+            out.println("Entro qui");
+            //e.printStackTrace();
             connected = false;
-            this.close();
+            //this.close();
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
