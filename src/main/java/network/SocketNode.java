@@ -9,7 +9,6 @@ import java.io.*;
 import java.net.Socket;
 import java.util.concurrent.Executors;
 
-import static java.lang.System.err;
 import static java.lang.System.out;
 
 public class SocketNode implements Runnable, Serializable {
@@ -27,7 +26,7 @@ public class SocketNode implements Runnable, Serializable {
         }
         this.connected = true;
         try {
-            this.messageHandler = (MessageHandler) node.createConnection(this, socketIn.getInetAddress().getHostAddress());
+            this.messageHandler = (MessageHandler) node.getSocketManager().createConnection(this, socketIn.getInetAddress().getHostAddress());
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -60,9 +59,7 @@ public class SocketNode implements Runnable, Serializable {
 
     private Message getMessage() {
         try {
-            Message message = (Message) socketInput.readObject();
-            err.println(message.getClass());
-            return message;
+            return (Message) socketInput.readObject();
         } catch (EOFException e){
             out.println("Exception chiusura connessione");
             connected = false;
@@ -83,7 +80,6 @@ public class SocketNode implements Runnable, Serializable {
     }
 
     synchronized void sendMessage(Message message) throws IOException {
-        out.println(message.getClass());
         socketOutput.reset();
         socketOutput.writeObject(message);
         socketOutput.flush();

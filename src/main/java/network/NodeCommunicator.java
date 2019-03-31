@@ -14,6 +14,8 @@ import java.net.Socket;
 import java.util.HashMap;
 import java.util.concurrent.Executors;
 
+import static java.lang.System.err;
+
 public class NodeCommunicator implements NodeInterface, Serializable, MessageHandler {
     private transient Socket joinNodeSocket;
     private NodeInterface node; //mio nodo
@@ -86,12 +88,13 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
         }
         socketNode.close();
         joinNodeSocket.close();
-        node.closeCommunicator(nodeId);
+        node.getSocketManager().closeCommunicator(nodeId);
     }
 
-    //non serve a niente
+    //non usato
     @Override
-    public NodeInterface createConnection(SocketNode socketNode, String ipAddress) {
+    public SocketManager getSocketManager() {
+        err.println("ERRORE DENTRO GETSOCKETMANAGER in NODECOMMUNICATOR");
         return null;
     }
 
@@ -193,10 +196,6 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
         return nodeR;
     }
 
-    @Override
-    public NodeInterface getSuccessor() {
-        return null;
-    }
 
     @Override
     public Long getNodeId() {
@@ -243,7 +242,7 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
     public void handle(CloseMessage closeMessage) throws IOException {
         socketNode.sendMessage(new TerminatedMethodMessage(closeMessage.getLockId()));
         socketNode.close();
-        node.closeCommunicator(nodeId);
+        node.getSocketManager().closeCommunicator(nodeId);
     }
 
     @Override
@@ -347,10 +346,5 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
             returnedInt = getSocketPortResponse.getSocketPort();
             lockList.get(getSocketPortResponse.getLockId()).notifyAll();
         }
-    }
-
-    @Override
-    public void closeCommunicator(Long nodeId) throws IOException {
-
     }
 }

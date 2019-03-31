@@ -1,16 +1,11 @@
 package node;
 
-import exceptions.ConnectionErrorException;
-import network.SocketNode;
+import network.SocketManager;
 
 import java.io.IOException;
 import java.io.Serializable;
 
 public interface NodeInterface extends Serializable {
-
-    NodeInterface createConnection(SocketNode socketNode, String ipAddress) throws IOException;
-
-    void closeCommunicator(Long nodeId) throws IOException;
 
     void notify(NodeInterface node) throws IOException;
 
@@ -19,8 +14,6 @@ public interface NodeInterface extends Serializable {
     NodeInterface findSuccessor(Long id) throws IOException;
 
     NodeInterface getPredecessor() throws IOException;
-
-    NodeInterface getSuccessor();
 
     String getIpAddress() throws IOException;
 
@@ -31,5 +24,7 @@ public interface NodeInterface extends Serializable {
     Long getNodeId();
 
     void close() throws IOException;
+
+    SocketManager getSocketManager();
 
 }

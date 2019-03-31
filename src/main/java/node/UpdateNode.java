@@ -15,9 +15,8 @@ public class UpdateNode implements Runnable {
         while (true){
             try {
                 node.stabilize();
-                node.fixFingers();
-                node.fixFingers();
-                node.fixFingers();
+                for (int i = 0; i < node.getDimFingerTable(); i++)
+                    node.fixFingers();
             } catch (IOException e) {
                 e.printStackTrace(); //qui poi devo gestire la disconnessione
             }
