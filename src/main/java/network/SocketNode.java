@@ -66,7 +66,7 @@ public class SocketNode implements Runnable, Serializable {
         } catch (EOFException e){
             out.println("Exception chiusura connessione");
             connected = false;
-            //this.close();
+            this.close();
             // TODO potremmo togliere la chiusura doppia da entrambi i lati.
             //  quando uno chiude la connessione da un lato arriva qui
             //  l'eccezione (forse) e lo chiudiamo in questo modo. oppure
@@ -75,17 +75,18 @@ public class SocketNode implements Runnable, Serializable {
             out.println("Entro qui");
             //e.printStackTrace();
             connected = false;
-            //this.close();
+            this.close();
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
         return null;
     }
 
-    void sendMessage(Message message) throws IOException {
+    synchronized void sendMessage(Message message) throws IOException {
         out.println(message.getClass());
-        socketOutput.writeObject(message);
         socketOutput.reset();
+        socketOutput.writeObject(message);
+        socketOutput.flush();
     }
 
     void close() {

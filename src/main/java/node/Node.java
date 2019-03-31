@@ -116,7 +116,7 @@ public class Node implements NodeInterface, Serializable {
         successor.notify(this); //serve per settare il predecessore nel successore del nodo
         startSocketListener(socketPort);
         createFingerTable();
-        //Executors.newCachedThreadPool().submit(new UpdateNode(this));
+        //Executors.newCachedThreadPool().submit(new UpdateNode(this)); //da scommentare nel nodo che fa join
         //stabilize();
         //fixFingers();
         //fixFingers();
@@ -168,7 +168,7 @@ public class Node implements NodeInterface, Serializable {
         if (predecessor == null) {
             try {
                 predecessor = createConnection(n); //creo connessione aumentando di 1
-                Executors.newCachedThreadPool().submit(new UpdateNode(this));
+                Executors.newCachedThreadPool().submit(new UpdateNode(this)); //da scommentare nel nodo che fa create
                 /*stabilize();
                 fixFingers();
                 fixFingers();
