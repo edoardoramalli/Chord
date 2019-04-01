@@ -317,12 +317,26 @@ public class Node implements NodeInterface, Serializable {
 
     public NodeInterface closestPrecedingNodeList(long id) {
         long nodeIndex;
+        long maxClosestId=this.nodeId;
+        NodeInterface maxClosestNode=this;
+
+        for (int i = successorList.size()-1; i>=0; i-- ){
+            nodeIndex = successorList.get(i).getNodeId();
+            if (checkInterval3(nodeIndex, id, this.nodeId)) {
+                maxClosestId = nodeIndex;
+                break;
+            }
+        }
+
         for (int i = dimFingerTable - 1; i >= 0; i--) {
             nodeIndex = fingerTable.get(i).getNodeId();
-            if (checkInterval3(nodeIndex, id, nodeId))
-                return fingerTable.get(i);
+            if (checkInterval3(nodeIndex, id, this.nodeId))
+                if (maxClosestId<=nodeIndex)
+                    return fingerTable.get(i);
+                else
+                    break;
         }
-        return this;
+            return maxClosestNode;
     }
 
    @Override
