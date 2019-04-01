@@ -116,6 +116,7 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
             }
         }
         GetIpAddressResponse getIpAddressResponse = (GetIpAddressResponse) messageList.get(lockId);
+        messageList.remove(lockId);
         return getIpAddressResponse.getIpAddress();
     }
 
@@ -131,6 +132,7 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
             }
         }
         GetSocketPortResponse getSocketPortResponse = (GetSocketPortResponse) messageList.get(lockId);
+        messageList.remove(lockId);
         return getSocketPortResponse.getSocketPort();
     }
 
@@ -146,6 +148,7 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
             }
         }
         GetDimFingerTableResponse getDimFingerTableResponse = (GetDimFingerTableResponse) messageList.get(lockId);
+        messageList.remove(lockId);
         return getDimFingerTableResponse.getDimFingerTable();
     }
 
@@ -161,6 +164,7 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
             }
         }
         FindSuccessorResponse findSuccessorResponse = (FindSuccessorResponse) messageList.get(lockId);
+        messageList.remove(lockId);
         return findSuccessorResponse.getNode();
     }
 
@@ -176,6 +180,7 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
             }
         }
         GetPredecessorResponse getPredecessorResponse = (GetPredecessorResponse) messageList.get(lockId);
+        messageList.remove(lockId);
         return getPredecessorResponse.getNode();
     }
 
@@ -197,6 +202,7 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
             }
         }
         GetSuccessorListResponse getSuccessorListResponse = (GetSuccessorListResponse) messageList.get(lockId);
+        messageList.remove(lockId);
         return getSuccessorListResponse.getSuccessorList();
     }
 
