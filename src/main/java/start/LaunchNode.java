@@ -78,18 +78,10 @@ public class LaunchNode {
                     //TODO da fare
                     break;
                 case PRINT_SUCCESSOR_PREDECESSOR_COMMAND:
-                    try {
-                        node.printPredecessorAndSuccessor();
-                    } catch (IOException e) {
-                        throw new UnexpectedBehaviourException();
-                    }
+                    node.printPredecessorAndSuccessor();
                     break;
                 case PRINT_FINGERTABLE_COMMAND:
-                    try {
-                        node.printFingerTable();
-                    } catch (IOException e) {
-                        throw new UnexpectedBehaviourException();
-                    }
+                    node.printFingerTable();
                     break;
                 case EXIT_COMMAND:
                     exit = true;
