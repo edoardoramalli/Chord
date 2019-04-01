@@ -72,4 +72,9 @@ public class SocketManager {
             }
         }
     }
+
+    public void removeNode(Long disconnectedId){
+        node.checkDisconnectedNode(disconnectedId);
+        closeCommunicator(disconnectedId);
+    }
 }

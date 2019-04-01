@@ -60,18 +60,11 @@ public class SocketNode implements Runnable, Serializable {
     private Message getMessage() {
         try {
             return (Message) socketInput.readObject();
-        } catch (EOFException e){
-            out.println("Exception chiusura connessione");
-            connected = false;
-            this.close();
-            // TODO potremmo togliere la chiusura doppia da entrambi i lati.
-            //  quando uno chiude la connessione da un lato arriva qui
-            //  l'eccezione (forse) e lo chiudiamo in questo modo. oppure
-            //  si vede dove lancia l'eccezione e si gestisce lì la chisura
         } catch (IOException e) {
             out.println("Entro qui");
             //e.printStackTrace();
             connected = false;
+            messageHandler.nodeDisconnected();
             this.close();
         } catch (ClassNotFoundException e) {
             e.printStackTrace();

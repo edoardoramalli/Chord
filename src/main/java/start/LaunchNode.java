@@ -17,8 +17,7 @@ public class LaunchNode {
     private static final String JOIN_COMMAND = "join";
     private static final String LOOKUP_COMMAND = "lookup";
     private static final String ADDKEY_COMMAND = "addkey";
-    private static final String PRINT_SUCCESSOR_PREDECESSOR_COMMAND = "ps";
-    private static final String PRINT_FINGERTABLE_COMMAND = "ft";
+    private static final String PRINT_COMMAND = "p";
     private static final String EXIT_COMMAND = "exit";
     private static Scanner in = new Scanner(System.in);
 
@@ -79,11 +78,8 @@ public class LaunchNode {
                 case ADDKEY_COMMAND:
                     //TODO da fare
                     break;
-                case PRINT_SUCCESSOR_PREDECESSOR_COMMAND:
-                    node.printPredecessorAndSuccessor();
-                    break;
-                case PRINT_FINGERTABLE_COMMAND:
-                    node.printFingerTable();
+                case PRINT_COMMAND:
+                    out.println(node);
                     break;
                 case EXIT_COMMAND:
                     exit = true;

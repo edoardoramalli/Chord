@@ -49,7 +49,7 @@ public class Node implements NodeInterface, Serializable {
         dimFingerTable = m;
         startSocketListener(socketPort);
         createFingerTable();
-        //Executors.newCachedThreadPool().submit(new UpdateNode(this));
+        Executors.newCachedThreadPool().submit(new UpdateNode(this));
     }
 
     public void join(String joinIpAddress, int joinSocketPort) throws ConnectionErrorException, IOException {
@@ -62,7 +62,7 @@ public class Node implements NodeInterface, Serializable {
         successor.notify(this); //serve per settare il predecessore nel successore del nodo
         startSocketListener(socketPort);
         createFingerTable();
-        //Executors.newCachedThreadPool().submit(new UpdateNode(this)); //da scommentare nel nodo che fa join
+        Executors.newCachedThreadPool().submit(new UpdateNode(this));
     }
 
     void stabilize() throws IOException {
@@ -110,11 +110,6 @@ public class Node implements NodeInterface, Serializable {
         if (predecessor == null) {
             try {
                 predecessor = socketManager.createConnection(n); //creo connessione aumentando di 1
-                Executors.newCachedThreadPool().submit(new UpdateNode(this)); //da scommentare nel nodo che fa create
-                /*stabilize();
-                fixFingers();
-                fixFingers();
-                fixFingers();*/
             } catch (ConnectionErrorException e) {
                 e.printStackTrace();
             }
@@ -196,6 +191,16 @@ public class Node implements NodeInterface, Serializable {
 
     }
 
+    public void checkDisconnectedNode(Long disconnectedId){
+        if (successor.getNodeId().equals(disconnectedId)) //se il nodo disconnesso è il successore lo metto = this
+            successor = this;
+        if (predecessor.getNodeId().equals(disconnectedId)) //se il nodo disconnesso è il predecessore lo metto = null
+            predecessor = null;
+        for (int i = 0; i < dimFingerTable; i++) //se il nodo disconnesso è uno della finger lo metto = this
+            if (fingerTable.get(i).getNodeId().equals(disconnectedId))
+                fingerTable.replace(i, this);
+    }
+
     private void startSocketListener(int socketPort) {
         SocketNodeListener socketNodeListener = new SocketNodeListener(this, socketPort);
         Executors.newCachedThreadPool().submit(socketNodeListener);
@@ -268,24 +273,26 @@ public class Node implements NodeInterface, Serializable {
         return result;
     }
 
-    public void printFingerTable() {
-        out.println("FINGER TABLE: " + nodeId);
-        for (int i = 0; i< dimFingerTable; i++)
-        {
-            out.println(fingerTable.get(i).getNodeId());
-        }
-    }
-
-    public void printPredecessorAndSuccessor() {
-        out.println(nodeId + ":----------------------");
+    @Override
+    public String toString() {
+        String string = "--------------------------\n" +
+                "NODE ID: " + nodeId + "\n\n" +
+                "PREDECESSOR:\t";
         if (predecessor != null)
-            out.println("Predecessor: " + predecessor.getNodeId());
-        out.println("Successor: " + successor.getNodeId());
+            string = string + predecessor.getNodeId() + "\n";
+        else
+            string = string + "null\n";
+        string = string +
+                "SUCCESSOR:\t\t" + successor.getNodeId() + "\n\n" +
+                "FINGER TABLE:\n";
+        for (int i = 0; i< dimFingerTable; i++)
+            string = string +
+                    "\t\t" + fingerTable.get(i).getNodeId() + "\n";
+        string = string + "--------------------------\n";
+        return string;
     }
-
 
     //TODO da qui dobbiamo collegare tutto
-
 
     public void listStabilize() throws ConnectionErrorException, IOException {
 
@@ -336,10 +343,10 @@ public class Node implements NodeInterface, Serializable {
                 else
                     break;
         }
-            return maxClosestNode;
+        return maxClosestNode;
     }
 
-   @Override
+    @Override
     public List<NodeInterface> getSuccessorList() {
         return successorList;
     }

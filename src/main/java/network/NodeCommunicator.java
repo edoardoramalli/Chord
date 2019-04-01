@@ -206,6 +206,10 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
         return getSuccessorListResponse.getSuccessorList();
     }
 
+    @Override
+    public void nodeDisconnected() {
+        node.getSocketManager().removeNode(nodeId);
+    }
     //---------> Handling of Messages
 
     @Override
