@@ -210,6 +210,7 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
     public void nodeDisconnected() {
         node.getSocketManager().removeNode(nodeId);
     }
+
     //---------> Handling of Messages
 
     @Override

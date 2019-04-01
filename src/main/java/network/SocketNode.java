@@ -25,11 +25,7 @@ public class SocketNode implements Runnable, Serializable {
             this.close();
         }
         this.connected = true;
-        try {
-            this.messageHandler = (MessageHandler) node.getSocketManager().createConnection(this, socketIn.getInetAddress().getHostAddress());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        this.messageHandler = (MessageHandler) node.getSocketManager().createConnection(this, socketIn.getInetAddress().getHostAddress());
     }
 
     SocketNode(ObjectInputStream socketInput, ObjectOutputStream socketOutput, MessageHandler messageHandler){

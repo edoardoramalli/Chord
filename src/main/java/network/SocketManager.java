@@ -50,7 +50,7 @@ public class SocketManager {
         }
     }
 
-    NodeInterface createConnection(SocketNode socketNode, String ipAddress) throws IOException {
+    NodeInterface createConnection(SocketNode socketNode, String ipAddress){
         out.println("CREO: " + node.hash(ipAddress));
         NodeInterface createdNode = new NodeCommunicator(socketNode, node, node.hash(ipAddress));
         socketList.put(node.hash(ipAddress), createdNode);
@@ -73,7 +73,7 @@ public class SocketManager {
         }
     }
 
-    public void removeNode(Long disconnectedId){
+    void removeNode(Long disconnectedId){
         node.checkDisconnectedNode(disconnectedId);
         closeCommunicator(disconnectedId);
     }
