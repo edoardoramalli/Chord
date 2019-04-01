@@ -50,7 +50,7 @@ public class SocketManager {
         }
     }
 
-    public NodeInterface createConnection(SocketNode socketNode, String ipAddress) throws IOException {
+    NodeInterface createConnection(SocketNode socketNode, String ipAddress) throws IOException {
         out.println("CREO: " + node.hash(ipAddress));
         NodeInterface createdNode = new NodeCommunicator(socketNode, node, node.hash(ipAddress));
         socketList.put(node.hash(ipAddress), createdNode);

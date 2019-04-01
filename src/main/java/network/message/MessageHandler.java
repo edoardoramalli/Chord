@@ -18,10 +18,6 @@ public interface MessageHandler {
 
     void handle(GetPredecessorResponse getPredecessorResponse) throws IOException;
 
-    void handle(GetNodeIdRequest getNodeIdRequest) throws IOException; //TODO da togliere
-
-    void handle(GetNodeIdResponse getNodeIdResponse) throws IOException; //TODO da togliere
-
     void handle(GetDimFingerTableRequest getDimFingerTableRequest) throws IOException;
 
     void handle(GetDimFingerTableResponse getDimFingerTableResponse) throws IOException;
@@ -33,4 +29,8 @@ public interface MessageHandler {
     void handle(GetSocketPortRequest getSocketPortRequest) throws IOException;
 
     void handle(GetSocketPortResponse getSocketPortResponse) throws IOException;
+
+    void handle(GetSuccessorListRequest getSuccessorListRequest) throws IOException;
+
+    void handle(GetSuccessorListResponse getSuccessorListResponse) throws IOException;
 }

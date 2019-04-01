@@ -3,6 +3,7 @@ package start;
 import exceptions.ConnectionErrorException;
 import exceptions.UnexpectedBehaviourException;
 import node.Node;
+import node.NodeInterface;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -68,7 +69,8 @@ public class LaunchNode {
                     out.println("Insert ID of node to find" );
                     Long id = Long.parseLong(in.nextLine().toLowerCase());
                     try {
-                        node.lookup(id);
+                        NodeInterface searchedNode = node.lookup(id);
+                        out.println("Searched Node: " + searchedNode.getNodeId());
                     } catch (IOException e) {
                         e.printStackTrace();
                     }

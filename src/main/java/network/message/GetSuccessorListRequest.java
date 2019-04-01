@@ -3,22 +3,16 @@ package network.message;
 import java.io.IOException;
 import java.io.Serializable;
 
-public class GetNodeIdResponse implements Message, Serializable {
-    private Long nodeId;
+public class GetSuccessorListRequest implements Message, Serializable {
     private Long lockId;
 
-    public GetNodeIdResponse(Long nodeId, Long lockId) {
-        this.nodeId = nodeId;
+    public GetSuccessorListRequest(Long lockId) {
         this.lockId = lockId;
     }
 
     @Override
     public void handle(MessageHandler messageHandler) throws IOException {
         messageHandler.handle(this);
-    }
-
-    public Long getNodeId() {
-        return nodeId;
     }
 
     public Long getLockId() {

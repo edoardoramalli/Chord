@@ -4,7 +4,6 @@ import exceptions.ConnectionErrorException;
 import exceptions.UnexpectedBehaviourException;
 import network.NodeCommunicator;
 import network.SocketManager;
-import network.SocketNode;
 import network.SocketNodeListener;
 
 import java.io.IOException;
@@ -25,7 +24,7 @@ public class Node implements NodeInterface, Serializable {
     private transient volatile NodeInterface successor;
     private transient volatile NodeInterface predecessor;
     private transient volatile Map<Integer, NodeInterface> fingerTable;
-    private List<NodeInterface> listOfSuccessor = new ArrayList<>();
+    private transient List<NodeInterface> successorList;
     private transient int dimFingerTable = 3;
     private transient int next;
     //connection handler
@@ -287,7 +286,6 @@ public class Node implements NodeInterface, Serializable {
 
     //TODO da qui dobbiamo collegare tutto
 
-   /* private List<NodeInterface> successorList;
 
     public void listStabilize() throws ConnectionErrorException, IOException {
 
@@ -296,36 +294,39 @@ public class Node implements NodeInterface, Serializable {
         long oldSucID = successor.getNodeId();
         if (checkInterval(getNodeId(), nodeIndex, oldSucID))
             successor = x;
-
-        List<NodeInterface> xList=new ArrayList<>();
+        List<NodeInterface> xList = new ArrayList<>();
         // xList=successor.getSuccessorList();
-        successorList= copySuccessorList(xList);
+        successorList = copySuccessorList(xList);
 
         successor.notify(this);
     }
     //catch successor exception--->update listSuccessor
 
-    public List<NodeInterface> copySuccessorList(List<NodeInterface> nextNodeSuccessorList) throws ConnectionErrorException, IOException {
-        ArrayList<NodeInterface> newSuccessorList= new ArrayList<>();
-        String ip=successor.getIpAddress();
-        int port=0;
-        newSuccessorList.add(new NodeCommunicator(ip,port, this, hash(ip)));
-        for (int i=0; i < nextNodeSuccessorList.size()-1; i++) {
-
-            ip=nextNodeSuccessorList.get(i).getIpAddress();
+    private List<NodeInterface> copySuccessorList(List<NodeInterface> nextNodeSuccessorList) throws ConnectionErrorException, IOException {
+        ArrayList<NodeInterface> newSuccessorList = new ArrayList<>();
+        String ip = successor.getIpAddress();
+        int port = 0;
+        newSuccessorList.add(new NodeCommunicator(ip, port, this, hash(ip)));
+        for (int i = 0; i < nextNodeSuccessorList.size()-1; i++) {
+            ip = nextNodeSuccessorList.get(i).getIpAddress();
             port = nextNodeSuccessorList.get(i).getSocketPort();
-            newSuccessorList.add(createConnection(new NodeCommunicator(ip, port, this, hash(ip))));
+            newSuccessorList.add(socketManager.createConnection(new NodeCommunicator(ip, port, this, hash(ip))));
         }
         return newSuccessorList;
     }
 
     public NodeInterface closestPrecedingNodeList(long id) {
         long nodeIndex;
-        for (int i = DIM_FINGER_TABLE - 1; i >= 0; i--) {
+        for (int i = dimFingerTable - 1; i >= 0; i--) {
             nodeIndex = fingerTable.get(i).getNodeId();
             if (checkInterval3(nodeIndex, id, nodeId))
                 return fingerTable.get(i);
         }
         return this;
-    }*/
+    }
+
+   @Override
+    public List<NodeInterface> getSuccessorList() {
+        return successorList;
+    }
 }

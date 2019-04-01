@@ -4,8 +4,11 @@ import network.SocketManager;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.List;
 
 public interface NodeInterface extends Serializable {
+
+    SocketManager getSocketManager();
 
     void notify(NodeInterface node) throws IOException;
 
@@ -25,6 +28,6 @@ public interface NodeInterface extends Serializable {
 
     void close() throws IOException;
 
-    SocketManager getSocketManager();
+    List<NodeInterface> getSuccessorList() throws IOException;
 
 }
