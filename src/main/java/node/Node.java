@@ -301,8 +301,8 @@ public class Node implements NodeInterface, Serializable {
         long oldSucID = successor.getNodeId();
         if (checkInterval(getNodeId(), nodeIndex, oldSucID))
             successor = x;
-        List<NodeInterface> xList = new ArrayList<>();
-        // xList=successor.getSuccessorList();
+        List<NodeInterface> xList;
+        xList=successor.getSuccessorList();
         successorList = copySuccessorList(xList);
 
         successor.notify(this);
@@ -338,7 +338,7 @@ public class Node implements NodeInterface, Serializable {
         for (int i = dimFingerTable - 1; i >= 0; i--) {
             nodeIndex = fingerTable.get(i).getNodeId();
             if (checkInterval3(nodeIndex, id, this.nodeId))
-                if (maxClosestId<=nodeIndex)
+                if (checkInterval3(maxClosestId,nodeIndex,id))
                     return fingerTable.get(i);
                 else
                     break;
