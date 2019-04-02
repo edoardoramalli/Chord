@@ -75,6 +75,7 @@ public class SocketManager {
 
     void removeNode(Long disconnectedId){
         node.checkDisconnectedNode(disconnectedId);
-        closeCommunicator(disconnectedId);
+        socketList.remove(disconnectedId);
+        socketNumber.remove(disconnectedId);
     }
 }
