@@ -296,28 +296,30 @@ public class Node implements NodeInterface, Serializable {
 
     public void listStabilize() throws ConnectionErrorException, IOException {
 
-        NodeInterface x = successor.getPredecessor();
+        NodeInterface x = successorList.get(0).getPredecessor();
         long nodeIndex = x.getNodeId();
-        long oldSucID = successor.getNodeId();
-        if (checkInterval(getNodeId(), nodeIndex, oldSucID))
-            successor = x;
+        long oldSucID = successorList.get(0).getNodeId();
+        if (checkInterval(getNodeId(), nodeIndex, oldSucID)) {
+            try{
+                socketManager.closeCommunicator(oldSucID);
+                successorList.clear();
+                successorList.add( socketManager.createConnection(x));
+            }
+            catch (ConnectionErrorException e){
+                e.printStackTrace();
+            }
+        }
         List<NodeInterface> xList;
-        xList=successor.getSuccessorList();
-        successorList = copySuccessorList(xList);
-
-        successor.notify(this);
+        xList=successorList.get(0).getSuccessorList();
+        successorList.addAll(copySuccessorList(xList));
+        successorList.get(0).notify(this);
     }
     //catch successor exception--->update listSuccessor
 
     private List<NodeInterface> copySuccessorList(List<NodeInterface> nextNodeSuccessorList) throws ConnectionErrorException, IOException {
-        ArrayList<NodeInterface> newSuccessorList = new ArrayList<>();
-        String ip = successor.getIpAddress();
-        int port = 0;
-        newSuccessorList.add(new NodeCommunicator(ip, port, this, hash(ip)));
+        ArrayList<NodeInterface> newSuccessorList= new ArrayList<>();
         for (int i = 0; i < nextNodeSuccessorList.size()-1; i++) {
-            ip = nextNodeSuccessorList.get(i).getIpAddress();
-            port = nextNodeSuccessorList.get(i).getSocketPort();
-            newSuccessorList.add(socketManager.createConnection(new NodeCommunicator(ip, port, this, hash(ip))));
+            newSuccessorList.add(socketManager.createConnection((nextNodeSuccessorList.get(i))));
         }
         return newSuccessorList;
     }
