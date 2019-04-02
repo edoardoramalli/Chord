@@ -47,6 +47,7 @@ public class Node implements NodeInterface, Serializable {
 
     public void create(int m) {
         successor = this;
+        createSuccessorList();
         predecessor = null;
         dimFingerTable = m;
         startSocketListener(socketPort);
@@ -214,6 +215,7 @@ public class Node implements NodeInterface, Serializable {
     }
 
     private void createSuccessorList(){
+        successorList = new ArrayList<>();
         for (int i = 0; i < dimSuccessorList; i++)
             successorList.add(i, this);
     }
@@ -301,15 +303,15 @@ public class Node implements NodeInterface, Serializable {
 
     //TODO da qui dobbiamo collegare tutto
 
-    public void listStabilize() throws ConnectionErrorException, IOException {
+    public void listStabilize() throws IOException {
         NodeInterface x = successorList.get(0).getPredecessor();
         long nodeIndex = x.getNodeId();
         long oldSucID = successorList.get(0).getNodeId();
         if (checkInterval(getNodeId(), nodeIndex, oldSucID)) {
             try{
                 socketManager.closeCommunicator(oldSucID);
-                successorList.clear();
-                successorList.add(socketManager.createConnection(x));
+                successorList.remove(0);
+                successorList.add(0, socketManager.createConnection(x));
             }
             catch (ConnectionErrorException e){
                 e.printStackTrace();
@@ -327,17 +329,6 @@ public class Node implements NodeInterface, Serializable {
         }
     }
     //catch successor exception--->update listSuccessor
-
-    //non più usato, in
-    private List<NodeInterface> copySuccessorList(List<NodeInterface> nextNodeSuccessorList) throws ConnectionErrorException, IOException {
-        ArrayList<NodeInterface> newSuccessorList = new ArrayList<>();
-        NodeInterface node;
-        for (int i = 0; i < nextNodeSuccessorList.size()-1; i++) {
-            node = findSuccessor(nextNodeSuccessorList.get(i).getNodeId());
-            newSuccessorList.add(socketManager.createConnection(node));
-        }
-        return newSuccessorList;
-    }
 
     public NodeInterface closestPrecedingNodeList(long id) {
         long nodeIndex;

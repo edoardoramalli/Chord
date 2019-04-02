@@ -3,7 +3,6 @@ package network;
 import exceptions.ConnectionErrorException;
 import exceptions.UnexpectedBehaviourException;
 import network.message.*;
-import node.Node;
 import node.NodeInterface;
 
 import java.io.IOException;
