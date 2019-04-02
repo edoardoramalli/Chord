@@ -9,6 +9,7 @@ import java.io.*;
 import java.net.Socket;
 import java.util.concurrent.Executors;
 
+import static java.lang.System.err;
 import static java.lang.System.out;
 
 public class SocketNode implements Runnable, Serializable {
@@ -48,13 +49,14 @@ public class SocketNode implements Runnable, Serializable {
                     e.printStackTrace();
                 }
             });
-            if(false)
-                break;
         }
     }
 
     private Message getMessage() {
         try {
+            /*Message message = (Message) socketInput.readObject();
+            err.println(message);
+            return message;*/
             return (Message) socketInput.readObject();
         } catch (IOException e) {
             out.println("Entro qui");
@@ -72,6 +74,7 @@ public class SocketNode implements Runnable, Serializable {
         socketOutput.reset();
         socketOutput.writeObject(message);
         socketOutput.flush();
+        //out.println(message);
     }
 
     void close() {

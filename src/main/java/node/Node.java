@@ -15,27 +15,23 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
 
-import static java.lang.System.*;
-
 public class Node implements NodeInterface, Serializable {
+    private static final long serialVersionUID = 1L;
+
     private String ipAddress;
     private int socketPort;
     private Long nodeId;
-    private transient volatile NodeInterface successor;
+    private transient volatile List<NodeInterface> successorList;
     private transient volatile NodeInterface predecessor;
     private transient volatile Map<Integer, NodeInterface> fingerTable;
-    private transient List<NodeInterface> successorList;
     private transient int dimFingerTable = 3;
     private transient int dimSuccessorList = 3; //todo quanto è lunga la lista?
     private transient int next;
     //connection handler
     private transient volatile SocketManager socketManager;
 
-    private static final long serialVersionUID = 1L;
-
     public Node(String ipAddress, int socketPort) {
         this.ipAddress = ipAddress;
-        this.successor = null; //TODO da togliere
         createSuccessorList();
         this.predecessor = null;
         this.fingerTable = new HashMap<>();
@@ -46,7 +42,6 @@ public class Node implements NodeInterface, Serializable {
     }
 
     public void create(int m) {
-        successor = this;
         createSuccessorList();
         predecessor = null;
         dimFingerTable = m;
@@ -61,14 +56,15 @@ public class Node implements NodeInterface, Serializable {
         NodeInterface successorNode = node.findSuccessor(this.nodeId);
         dimFingerTable = node.getDimFingerTable();
         node.close();
-        successor = socketManager.createConnection(successorNode); //creo nuova connessione
-        successor.notify(this); //serve per settare il predecessore nel successore del nodo
+        successorList.remove(0);
+        successorList.add(0, socketManager.createConnection(successorNode)); //creo nuova connessione
+        successorList.get(0).notify(this); //serve per settare il predecessore nel successore del nodo
         startSocketListener(socketPort);
         createFingerTable();
         Executors.newCachedThreadPool().submit(new UpdateNode(this));
     }
 
-    void stabilize() throws IOException {
+    /*void stabilize() throws IOException {
         //controllo su null predecessor
         NodeInterface x = successor.getPredecessor();
         long nodeIndex = x.getNodeId();
@@ -83,19 +79,56 @@ public class Node implements NodeInterface, Serializable {
             }
         }
         successor.notify(this); //questa forse va dentro l'if, perché se non cambio il successore non ho bisogno di fargli la notify
-    }
+    }*/
 
+    void listStabilize() throws IOException {
+        NodeInterface x = successorList.get(0).getPredecessor();
+        long nodeIndex = x.getNodeId();
+        long oldSucID = successorList.get(0).getNodeId();
+        if (checkInterval(getNodeId(), nodeIndex, oldSucID)) {
+            try{
+                socketManager.closeCommunicator(oldSucID);
+                successorList.remove(0);
+                successorList.add(0, socketManager.createConnection(x));
+            }
+            catch (ConnectionErrorException e){
+                e.printStackTrace();
+            }
+        }
+        successorList.get(0).notify(this);
+        List<NodeInterface> xList; //xList contiene la lista dei successori del successore
+        xList = successorList.get(0).getSuccessorList();
+        for (int i = 1; i < dimSuccessorList; i++) {
+            if (!successorList.get(i).getNodeId().equals(xList.get(i - 1).getNodeId())){
+                socketManager.closeCommunicator(successorList.get(i).getNodeId());
+                successorList.remove(i);
+                successorList.add(i, findSuccessor(successorList.get(i).getNodeId()));
+            }
+        }
+    }
+    //catch successor exception--->update listSuccessor
+
+    //TODO va implementato con la lista di successori
     @Override
     public NodeInterface findSuccessor(Long id) throws IOException {
-        NodeInterface nextNode;
-        if (checkIntervalEquivalence(nodeId, id, successor.getNodeId())) {
-            return successor;
+        /*NodeInterface nextNode;
+        if (checkIntervalEquivalence(nodeId, id, successorList.get(0).getNodeId())) {
+            return successorList.get(0);
         } else {
-            nextNode = closestPrecedingNode(id);
+            nextNode = closestPrecedingNodeList(id);
             if (this == nextNode)
                 return this;
             return nextNode.findSuccessor(id);
+        }*/
+        NodeInterface nextNode;
+        for (int i = 0; i < dimSuccessorList; i++) {
+            if (checkIntervalEquivalence(nodeId, id, successorList.get(i).getNodeId()))
+                return successorList.get(i);
         }
+        nextNode = closestPrecedingNodeList(id);
+        if (this == nextNode)
+            return this;
+        return nextNode.findSuccessor(id);
     }
 
     private NodeInterface closestPrecedingNode(Long id){
@@ -106,6 +139,30 @@ public class Node implements NodeInterface, Serializable {
                 return fingerTable.get(i);
         }
         return this;
+    }
+
+    private NodeInterface closestPrecedingNodeList(long id) {
+        long nodeIndex;
+        long maxClosestId=this.nodeId;
+        NodeInterface maxClosestNode=this;
+
+        for (int i = successorList.size()-1; i>=0; i-- ){
+            nodeIndex = successorList.get(i).getNodeId();
+            if (checkInterval3(nodeIndex, id, this.nodeId)) {
+                maxClosestId = nodeIndex;
+                break;
+            }
+        }
+
+        for (int i = dimFingerTable - 1; i >= 0; i--) {
+            nodeIndex = fingerTable.get(i).getNodeId();
+            if (checkInterval3(nodeIndex, id, this.nodeId))
+                if (checkInterval3(maxClosestId,nodeIndex,id))
+                    return fingerTable.get(i);
+                else
+                    break;
+        }
+        return maxClosestNode;
     }
 
     @Override
@@ -126,10 +183,42 @@ public class Node implements NodeInterface, Serializable {
                     socketManager.closeCommunicator(predecessor.getNodeId());//chiudo connessione verso vecchio predecessore
                     predecessor = socketManager.createConnection(n); //apro connessione verso nuovo predecessore
                 } catch (ConnectionErrorException e) {
-                    e.printStackTrace();
+                    throw new UnexpectedBehaviourException();
                 }
             }
         }
+    }
+
+    public NodeInterface lookup(Long id) throws IOException {
+        for (int i = 0; i < dimSuccessorList; i++) {
+            if (id.equals(successorList.get(i).getNodeId()))
+                return successorList.get(i);
+        }
+        if (id.equals(predecessor.getNodeId()))
+            return predecessor;
+        else
+            return findSuccessor(id);
+    }
+
+    synchronized void fixFingers() throws IOException {
+        long idToFind;
+        next = next + 1;
+        if (next > dimFingerTable)
+            next = 1;
+        //fix cast
+        idToFind = (nodeId + ((long) Math.pow(2, next - 1))) % (long) Math.pow(2, dimFingerTable);
+        NodeInterface node = findSuccessor(idToFind);
+        if (!node.getNodeId().equals(fingerTable.get(next - 1).getNodeId())){ //se il nuovo nodo è diverso da quello già presente
+            NodeInterface newConnection;
+            try {
+                newConnection = socketManager.createConnection(node);
+            } catch (ConnectionErrorException e) {
+                throw new UnexpectedBehaviourException();
+            }
+            socketManager.closeCommunicator(fingerTable.get(next-1).getNodeId());//chiudo connessione verso il vecchio nodo
+            fingerTable.replace(next-1, newConnection);
+        }
+        //else non faccio niente, perchè il vecchio nodo della finger è uguale a quello nuovo
     }
 
     private boolean checkInterval(long pred, long index, long succ) {
@@ -167,27 +256,6 @@ public class Node implements NodeInterface, Serializable {
         }
     }
 
-    synchronized void fixFingers() throws IOException {
-        long idToFind;
-        next = next + 1;
-        if (next > dimFingerTable)
-            next = 1;
-        //fix cast
-        idToFind = (nodeId + ((long) Math.pow(2, next - 1))) % (long) Math.pow(2, dimFingerTable);
-        NodeInterface node = findSuccessor(idToFind);
-        if (!node.getNodeId().equals(fingerTable.get(next - 1).getNodeId())){ //se il nuovo nodo è diverso da quello già presente
-            NodeInterface newConnection;
-            try {
-                newConnection = socketManager.createConnection(node);
-            } catch (ConnectionErrorException e) {
-                throw new UnexpectedBehaviourException();
-            }
-            socketManager.closeCommunicator(fingerTable.get(next-1).getNodeId());//chiudo connessione verso il vecchio nodo
-            fingerTable.replace(next-1, newConnection);
-        }
-        //else non faccio niente, perchè il vecchio nodo della finger è uguale a quello nuovo
-    }
-
     //TODO da implementare
     @Override
     public void checkPredecessor() {
@@ -195,8 +263,14 @@ public class Node implements NodeInterface, Serializable {
     }
 
     public void checkDisconnectedNode(Long disconnectedId){
-        if (successor.getNodeId().equals(disconnectedId)) //se il nodo disconnesso è il successore lo metto = this
-            successor = this;
+        for (int i = 0, j = 0; i < dimSuccessorList; i++) {
+            if (successorList.get(j).getNodeId().equals(disconnectedId)) { //se il nodo disconnesso è il successore lo metto = this
+                successorList.remove(j);
+                successorList.add(this);
+            }
+            else
+                j++;
+        }
         if (predecessor.getNodeId().equals(disconnectedId)) //se il nodo disconnesso è il predecessore lo metto = null
             predecessor = null;
         for (int i = 0; i < dimFingerTable; i++) //se il nodo disconnesso è uno della finger lo metto = this
@@ -218,16 +292,6 @@ public class Node implements NodeInterface, Serializable {
         successorList = new ArrayList<>();
         for (int i = 0; i < dimSuccessorList; i++)
             successorList.add(i, this);
-    }
-
-    public NodeInterface lookup(Long id) throws IOException {
-        if (id.equals(successor.getNodeId())) {
-            return successor;
-        } else if (id.equals(predecessor.getNodeId())) {
-            return predecessor;
-        } else {
-            return findSuccessor(id);
-        }
     }
 
     @Override
@@ -265,6 +329,11 @@ public class Node implements NodeInterface, Serializable {
         return socketManager;
     }
 
+    @Override
+    public List<NodeInterface> getSuccessorList() {
+        return successorList;
+    }
+
     public Long hash(String ipAddress) {
         Long ipNumber = ipToLong(ipAddress);
         Long numberNodes = (long)Math.pow(2, dimFingerTable);
@@ -292,70 +361,15 @@ public class Node implements NodeInterface, Serializable {
         else
             string = string + "null\n";
         string = string +
-                "SUCCESSOR:\t\t" + successor.getNodeId() + "\n\n" +
+                "SUCCESSOR LIST:";
+        for (int i = 0; i < dimSuccessorList; i++)
+            string = string + "\t" + successorList.get(i).getNodeId();
+        string = string + "\n\n" +
                 "FINGER TABLE:\n";
         for (int i = 0; i< dimFingerTable; i++)
             string = string +
                     "\t\t" + fingerTable.get(i).getNodeId() + "\n";
         string = string + "--------------------------\n";
         return string;
-    }
-
-    //TODO da qui dobbiamo collegare tutto
-
-    public void listStabilize() throws IOException {
-        NodeInterface x = successorList.get(0).getPredecessor();
-        long nodeIndex = x.getNodeId();
-        long oldSucID = successorList.get(0).getNodeId();
-        if (checkInterval(getNodeId(), nodeIndex, oldSucID)) {
-            try{
-                socketManager.closeCommunicator(oldSucID);
-                successorList.remove(0);
-                successorList.add(0, socketManager.createConnection(x));
-            }
-            catch (ConnectionErrorException e){
-                e.printStackTrace();
-            }
-        }
-        successorList.get(0).notify(this);
-        List<NodeInterface> xList; //xList contiene la lista dei successori del successore
-        xList = successorList.get(0).getSuccessorList();
-        for (int i = 1; i < dimSuccessorList; i++) {
-            if (!successorList.get(i).getNodeId().equals(xList.get(i - 1).getNodeId())){
-                socketManager.closeCommunicator(successorList.get(i).getNodeId());
-                successorList.remove(i);
-                successorList.add(i, findSuccessor(successorList.get(i).getNodeId()));
-            }
-        }
-    }
-    //catch successor exception--->update listSuccessor
-
-    public NodeInterface closestPrecedingNodeList(long id) {
-        long nodeIndex;
-        long maxClosestId=this.nodeId;
-        NodeInterface maxClosestNode=this;
-
-        for (int i = successorList.size()-1; i>=0; i-- ){
-            nodeIndex = successorList.get(i).getNodeId();
-            if (checkInterval3(nodeIndex, id, this.nodeId)) {
-                maxClosestId = nodeIndex;
-                break;
-            }
-        }
-
-        for (int i = dimFingerTable - 1; i >= 0; i--) {
-            nodeIndex = fingerTable.get(i).getNodeId();
-            if (checkInterval3(nodeIndex, id, this.nodeId))
-                if (checkInterval3(maxClosestId,nodeIndex,id))
-                    return fingerTable.get(i);
-                else
-                    break;
-        }
-        return maxClosestNode;
-    }
-
-    @Override
-    public List<NodeInterface> getSuccessorList() {
-        return successorList;
     }
 }

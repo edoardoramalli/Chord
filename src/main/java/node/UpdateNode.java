@@ -15,7 +15,7 @@ public class UpdateNode implements Runnable {
         while (true){
             try {
                 if (node.getPredecessor() != null)
-                    node.stabilize();
+                    node.listStabilize();
                 for (int i = 0; i < node.getDimFingerTable(); i++)
                     node.fixFingers();
             } catch (IOException e) {
