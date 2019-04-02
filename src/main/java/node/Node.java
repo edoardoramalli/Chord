@@ -26,6 +26,7 @@ public class Node implements NodeInterface, Serializable {
     private transient volatile Map<Integer, NodeInterface> fingerTable;
     private transient List<NodeInterface> successorList;
     private transient int dimFingerTable = 3;
+    private transient int dimSuccessorList = 3; //todo quanto è lunga la lista?
     private transient int next;
     //connection handler
     private transient volatile SocketManager socketManager;
@@ -34,7 +35,8 @@ public class Node implements NodeInterface, Serializable {
 
     public Node(String ipAddress, int socketPort) {
         this.ipAddress = ipAddress;
-        this.successor = null;
+        this.successor = null; //TODO da togliere
+        createSuccessorList();
         this.predecessor = null;
         this.fingerTable = new HashMap<>();
         this.socketPort = socketPort;
@@ -211,6 +213,11 @@ public class Node implements NodeInterface, Serializable {
             fingerTable.put(i, this);
     }
 
+    private void createSuccessorList(){
+        for (int i = 0; i < dimSuccessorList; i++)
+            successorList.add(i, this);
+    }
+
     public NodeInterface lookup(Long id) throws IOException {
         if (id.equals(successor.getNodeId())) {
             return successor;
@@ -295,7 +302,6 @@ public class Node implements NodeInterface, Serializable {
     //TODO da qui dobbiamo collegare tutto
 
     public void listStabilize() throws ConnectionErrorException, IOException {
-
         NodeInterface x = successorList.get(0).getPredecessor();
         long nodeIndex = x.getNodeId();
         long oldSucID = successorList.get(0).getNodeId();
@@ -303,23 +309,32 @@ public class Node implements NodeInterface, Serializable {
             try{
                 socketManager.closeCommunicator(oldSucID);
                 successorList.clear();
-                successorList.add( socketManager.createConnection(x));
+                successorList.add(socketManager.createConnection(x));
             }
             catch (ConnectionErrorException e){
                 e.printStackTrace();
             }
         }
-        List<NodeInterface> xList;
-        xList=successorList.get(0).getSuccessorList();
-        successorList.addAll(copySuccessorList(xList));
         successorList.get(0).notify(this);
+        List<NodeInterface> xList; //xList contiene la lista dei successori del successore
+        xList = successorList.get(0).getSuccessorList();
+        for (int i = 1; i < dimSuccessorList; i++) {
+            if (!successorList.get(i).getNodeId().equals(xList.get(i - 1).getNodeId())){
+                socketManager.closeCommunicator(successorList.get(i).getNodeId());
+                successorList.remove(i);
+                successorList.add(i, findSuccessor(successorList.get(i).getNodeId()));
+            }
+        }
     }
     //catch successor exception--->update listSuccessor
 
+    //non più usato, in
     private List<NodeInterface> copySuccessorList(List<NodeInterface> nextNodeSuccessorList) throws ConnectionErrorException, IOException {
-        ArrayList<NodeInterface> newSuccessorList= new ArrayList<>();
+        ArrayList<NodeInterface> newSuccessorList = new ArrayList<>();
+        NodeInterface node;
         for (int i = 0; i < nextNodeSuccessorList.size()-1; i++) {
-            newSuccessorList.add(socketManager.createConnection((nextNodeSuccessorList.get(i))));
+            node = findSuccessor(nextNodeSuccessorList.get(i).getNodeId());
+            newSuccessorList.add(socketManager.createConnection(node));
         }
         return newSuccessorList;
     }

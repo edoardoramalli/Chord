@@ -71,7 +71,6 @@ public class SocketNode implements Runnable, Serializable {
     synchronized void sendMessage(Message message) throws IOException {
         socketOutput.reset();
         socketOutput.writeObject(message);
-        out.println(message);
         socketOutput.flush();
     }
 
