@@ -215,8 +215,7 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
 
     @Override
     public void handle(FindSuccessorRequest findSuccessorRequest) throws IOException {
-        NodeInterface nodeInterface = node.findSuccessor(findSuccessorRequest.getId());
-        socketNode.sendMessage(new FindSuccessorResponse(new Node(nodeInterface.getIpAddress(), nodeInterface.getSocketPort()), findSuccessorRequest.getLockId()));
+        socketNode.sendMessage(new FindSuccessorResponse(node.findSuccessor(findSuccessorRequest.getId()), findSuccessorRequest.getLockId()));
     }
 
     @Override
@@ -249,8 +248,7 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
 
     @Override
     public void handle(GetPredecessorRequest getPredecessorRequest) throws IOException {
-        NodeInterface pred = node.getPredecessor();
-        socketNode.sendMessage(new GetPredecessorResponse(new Node(pred.getIpAddress(), pred.getSocketPort()), getPredecessorRequest.getLockId()));
+        socketNode.sendMessage(new GetPredecessorResponse(node.getPredecessor(), getPredecessorRequest.getLockId()));
     }
 
     @Override
