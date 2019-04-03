@@ -3,6 +3,7 @@ package network;
 import exceptions.ConnectionErrorException;
 import exceptions.UnexpectedBehaviourException;
 import network.message.*;
+import node.Node;
 import node.NodeInterface;
 
 import java.io.IOException;
@@ -10,11 +11,13 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.Executors;
 
 import static java.lang.System.err;
+import static java.lang.System.out;
 
 public class NodeCommunicator implements NodeInterface, Serializable, MessageHandler {
     private transient Socket joinNodeSocket;
@@ -247,7 +250,8 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
 
     @Override
     public void handle(GetPredecessorRequest getPredecessorRequest) throws IOException {
-        socketNode.sendMessage(new GetPredecessorResponse(node.getPredecessor(), getPredecessorRequest.getLockId()));
+        NodeInterface predecessor = node.getPredecessor();
+        socketNode.sendMessage(new GetPredecessorResponse(new Node(predecessor.getIpAddress(), predecessor.getSocketPort()), getPredecessorRequest.getLockId()));
     }
 
     @Override
@@ -297,10 +301,14 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
         }
     }
 
-    //TODO BISOGNA CONTROLLARE SE VA, o se dobbiamo clonare la lista prima di ritornarla
     @Override
     public void handle(GetSuccessorListRequest getSuccessorListRequest) throws IOException {
-        socketNode.sendMessage(new GetSuccessorListResponse(node.getSuccessorList(), getSuccessorListRequest.getLockId()));
+        List<NodeInterface> list = new ArrayList<>();
+        for (NodeInterface nodeInterface :
+                node.getSuccessorList()) {
+            list.add(new Node(nodeInterface.getIpAddress(), nodeInterface.getSocketPort()));
+        }
+        socketNode.sendMessage(new GetSuccessorListResponse(list, getSuccessorListRequest.getLockId()));
     }
 
     @Override

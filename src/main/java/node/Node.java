@@ -21,7 +21,7 @@ public class Node implements NodeInterface, Serializable {
     private String ipAddress;
     private int socketPort;
     private Long nodeId;
-    private transient volatile List<NodeInterface> successorList;
+    private transient volatile ArrayList<NodeInterface> successorList;
     private transient volatile NodeInterface predecessor;
     private transient volatile Map<Integer, NodeInterface> fingerTable;
     private transient int dimFingerTable = 3;
@@ -116,13 +116,11 @@ public class Node implements NodeInterface, Serializable {
         xList = successorList.get(0).getSuccessorList();
         if (successorList.size() < dimSuccessorList){
             for (NodeInterface node: xList) {
-                while (successorList.size() < dimSuccessorList){
-                    if (!node.getNodeId().equals(nodeId)) {
-                        try {
-                            successorList.add(socketManager.createConnection(node));
-                        } catch (ConnectionErrorException e) {
-                            e.printStackTrace();
-                        }
+                if (!node.getNodeId().equals(nodeId) && successorList.size() < dimSuccessorList) {
+                    try {
+                        successorList.add(socketManager.createConnection(node));
+                    } catch (ConnectionErrorException e) {
+                        e.printStackTrace();
                     }
                 }
             }
@@ -146,9 +144,9 @@ public class Node implements NodeInterface, Serializable {
     @Override
     public NodeInterface findSuccessor(Long id) throws IOException {
         NodeInterface nextNode;
-        for (int i = 0; i < dimSuccessorList; i++) {
-            if (checkIntervalEquivalence(nodeId, id, successorList.get(i).getNodeId()))
-                return successorList.get(i);
+        for (NodeInterface nodeInterface : successorList) {
+            if (checkIntervalEquivalence(nodeId, id, nodeInterface.getNodeId()))
+                return nodeInterface;
         }
         nextNode = closestPrecedingNodeList(id);
         if (this == nextNode)
@@ -288,14 +286,14 @@ public class Node implements NodeInterface, Serializable {
     }
 
     public void checkDisconnectedNode(Long disconnectedId){
-        for (int i = 0, j = 0; i < dimSuccessorList; i++) {
-            if (successorList.get(j).getNodeId().equals(disconnectedId)) { //se il nodo disconnesso è il successore lo metto = this
-                successorList.remove(j);
-                successorList.add(this);
+        ArrayList<NodeInterface> successorListClone = (ArrayList<NodeInterface>) successorList.clone();
+        for (NodeInterface nodeInterface : successorListClone) {
+            if (nodeInterface.getNodeId().equals(disconnectedId)) { //se il nodo disconnesso è il successore lo metto = this
+                successorList.remove(nodeInterface);
             }
-            else
-                j++;
         }
+        if (successorList.isEmpty())
+            successorList.add(this);
         if (predecessor.getNodeId().equals(disconnectedId)) //se il nodo disconnesso è il predecessore lo metto = null
             predecessor = null;
         for (int i = 0; i < dimFingerTable; i++) //se il nodo disconnesso è uno della finger lo metto = this
