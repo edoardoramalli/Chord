@@ -56,8 +56,7 @@ public class Node implements NodeInterface, Serializable {
         NodeInterface successorNode = node.findSuccessor(this.nodeId);
         dimFingerTable = node.getDimFingerTable();
         node.close();
-        successorList.remove(0);
-        successorList.add(0, socketManager.createConnection(successorNode)); //creo nuova connessione
+        successorList.set(0, socketManager.createConnection(successorNode)); //creo nuova connessione
         successorList.get(0).notify(this); //serve per settare il predecessore nel successore del nodo
         startSocketListener(socketPort);
         createFingerTable();
@@ -94,7 +93,7 @@ public class Node implements NodeInterface, Serializable {
                 e.printStackTrace();
             }
         }
-        successorList.get(0).notify(this);
+
         List<NodeInterface> xList; //xList contiene la lista dei successori del successore
         xList = successorList.get(0).getSuccessorList();
         for (int i = 1; i < dimSuccessorList; i++) {
@@ -103,6 +102,8 @@ public class Node implements NodeInterface, Serializable {
                 successorList.set(i, findSuccessor(successorList.get(i).getNodeId()));
             }
         }
+        successorList.get(0).notify(this);
+
     }
     //catch successor exception--->update listSuccessor
 
