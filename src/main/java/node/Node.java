@@ -15,6 +15,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
 
+import static java.lang.System.out;
+
 public class Node implements NodeInterface, Serializable {
     private static final long serialVersionUID = 1L;
 
@@ -58,9 +60,25 @@ public class Node implements NodeInterface, Serializable {
         node.close();
         successorList.set(0, socketManager.createConnection(successorNode)); //creo nuova connessione
         successorList.get(0).notify(this); //serve per settare il predecessore nel successore del nodo
+        initializeSuccessorList();
         startSocketListener(socketPort);
         createFingerTable();
         Executors.newCachedThreadPool().submit(new UpdateNode(this));
+    }
+
+    private void initializeSuccessorList() throws IOException {
+        List<NodeInterface> successorNodeList = successorList.get(0).getSuccessorList();
+        for (NodeInterface node: successorNodeList) {
+            if (node.getNodeId().equals(successorList.get(0)))
+                break;
+            while (successorList.size() <= dimSuccessorList ){
+                try {
+                    successorList.add(socketManager.createConnection(node));
+                } catch (ConnectionErrorException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 
     /*void stabilize() throws IOException {
@@ -81,6 +99,7 @@ public class Node implements NodeInterface, Serializable {
     }*/
 
     void listStabilize() throws IOException {
+        //questo serve per settare il primo successore
         NodeInterface x = successorList.get(0).getPredecessor();
         long nodeIndex = x.getNodeId();
         long oldSucID = successorList.get(0).getNodeId();
@@ -93,21 +112,19 @@ public class Node implements NodeInterface, Serializable {
                 e.printStackTrace();
             }
         }
+        successorList.get(0).notify(this);
 
         List<NodeInterface> xList; //xList contiene la lista dei successori del successore
         xList = successorList.get(0).getSuccessorList();
-        for (int i = 1; i < dimSuccessorList; i++) {
+        for (int i = 1; i < dimSuccessorList && i < successorList.size(); i++) {
             if (!successorList.get(i).getNodeId().equals(xList.get(i - 1).getNodeId())){
                 socketManager.closeCommunicator(successorList.get(i).getNodeId());
                 successorList.set(i, findSuccessor(successorList.get(i).getNodeId()));
             }
         }
-        successorList.get(0).notify(this);
-
     }
     //catch successor exception--->update listSuccessor
 
-    //TODO va implementato con la lista di successori
     @Override
     public NodeInterface findSuccessor(Long id) throws IOException {
         /*NodeInterface nextNode;
@@ -200,6 +217,7 @@ public class Node implements NodeInterface, Serializable {
     }
 
     synchronized void fixFingers() throws IOException {
+        out.println("aa");
         long idToFind;
         next = next + 1;
         if (next > dimFingerTable)
@@ -282,15 +300,16 @@ public class Node implements NodeInterface, Serializable {
         Executors.newCachedThreadPool().submit(socketNodeListener);
     }
 
+    //The finger table is initialized with this in all positions
     private void createFingerTable() {
         for (int i = 0; i < dimFingerTable; i++)
             fingerTable.put(i, this);
     }
 
+    //The successor list is initialized with only this
     private void createSuccessorList(){
         successorList = new ArrayList<>();
-        for (int i = 0; i < dimSuccessorList; i++)
-            successorList.add(i, this);
+        successorList.add(0, this);
     }
 
     @Override
@@ -361,8 +380,8 @@ public class Node implements NodeInterface, Serializable {
             string = string + "null\n";
         string = string +
                 "SUCCESSOR LIST:";
-        for (int i = 0; i < dimSuccessorList; i++)
-            string = string + "\t" + successorList.get(i).getNodeId();
+        for (NodeInterface nodeInterface : successorList)
+            string = string + "\t" + nodeInterface.getNodeId();
         string = string + "\n\n" +
                 "FINGER TABLE:\n";
         for (int i = 0; i< dimFingerTable; i++)
