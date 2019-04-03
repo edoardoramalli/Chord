@@ -88,8 +88,7 @@ public class Node implements NodeInterface, Serializable {
         if (checkInterval(getNodeId(), nodeIndex, oldSucID)) {
             try{
                 socketManager.closeCommunicator(oldSucID);
-                successorList.remove(0);
-                successorList.add(0, socketManager.createConnection(x));
+                successorList.set(0, socketManager.createConnection(x));
             }
             catch (ConnectionErrorException e){
                 e.printStackTrace();
@@ -101,8 +100,7 @@ public class Node implements NodeInterface, Serializable {
         for (int i = 1; i < dimSuccessorList; i++) {
             if (!successorList.get(i).getNodeId().equals(xList.get(i - 1).getNodeId())){
                 socketManager.closeCommunicator(successorList.get(i).getNodeId());
-                successorList.remove(i);
-                successorList.add(i, findSuccessor(successorList.get(i).getNodeId()));
+                successorList.set(i, findSuccessor(successorList.get(i).getNodeId()));
             }
         }
     }
