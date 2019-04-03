@@ -15,8 +15,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
 
-import static java.lang.System.out;
-
 public class Node implements NodeInterface, Serializable {
     private static final long serialVersionUID = 1L;
 
@@ -69,7 +67,7 @@ public class Node implements NodeInterface, Serializable {
     private void initializeSuccessorList() throws IOException {
         List<NodeInterface> successorNodeList = successorList.get(0).getSuccessorList();
         for (NodeInterface node: successorNodeList) {
-            if (node.getNodeId().equals(successorList.get(0)))
+            if (node.getNodeId().equals(successorList.get(0).getNodeId()))
                 break;
             while (successorList.size() <= dimSuccessorList ){
                 try {
@@ -116,10 +114,30 @@ public class Node implements NodeInterface, Serializable {
 
         List<NodeInterface> xList; //xList contiene la lista dei successori del successore
         xList = successorList.get(0).getSuccessorList();
-        for (int i = 1; i < dimSuccessorList && i < successorList.size(); i++) {
-            if (!successorList.get(i).getNodeId().equals(xList.get(i - 1).getNodeId())){
-                socketManager.closeCommunicator(successorList.get(i).getNodeId());
-                successorList.set(i, findSuccessor(successorList.get(i).getNodeId()));
+        if (successorList.size() < dimSuccessorList){
+            for (NodeInterface node: xList) {
+                while (successorList.size() < dimSuccessorList){
+                    if (!node.getNodeId().equals(nodeId)) {
+                        try {
+                            successorList.add(socketManager.createConnection(node));
+                        } catch (ConnectionErrorException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            }
+        }
+        else {
+            for (int i = 1; i < dimSuccessorList && i < xList.size(); i++) {
+                if (!successorList.get(i).getNodeId().equals(xList.get(i - 1).getNodeId())
+                        && !xList.get(i-1).getNodeId().equals(nodeId)){
+                    socketManager.closeCommunicator(successorList.get(i).getNodeId());
+                    try {
+                        successorList.set(i, socketManager.createConnection(findSuccessor(xList.get(i-1).getNodeId())));
+                    } catch (ConnectionErrorException e) {
+                        e.printStackTrace();
+                    }
+                }
             }
         }
     }
@@ -127,15 +145,6 @@ public class Node implements NodeInterface, Serializable {
 
     @Override
     public NodeInterface findSuccessor(Long id) throws IOException {
-        /*NodeInterface nextNode;
-        if (checkIntervalEquivalence(nodeId, id, successorList.get(0).getNodeId())) {
-            return successorList.get(0);
-        } else {
-            nextNode = closestPrecedingNodeList(id);
-            if (this == nextNode)
-                return this;
-            return nextNode.findSuccessor(id);
-        }*/
         NodeInterface nextNode;
         for (int i = 0; i < dimSuccessorList; i++) {
             if (checkIntervalEquivalence(nodeId, id, successorList.get(i).getNodeId()))
@@ -217,7 +226,6 @@ public class Node implements NodeInterface, Serializable {
     }
 
     synchronized void fixFingers() throws IOException {
-        out.println("aa");
         long idToFind;
         next = next + 1;
         if (next > dimFingerTable)
