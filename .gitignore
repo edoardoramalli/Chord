@@ -109,3 +109,4 @@ buildNumber.properties
 *.xml
 *.xml
 *.xml
+.idea/misc.xml
