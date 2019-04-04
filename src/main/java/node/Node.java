@@ -15,6 +15,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
 
+import static java.lang.System.out;
+
 public class Node implements NodeInterface, Serializable {
     private static final long serialVersionUID = 1L;
 
@@ -251,6 +253,27 @@ public class Node implements NodeInterface, Serializable {
             fingerTable.replace(next-1, newConnection);
         }
         //else non faccio niente, perchè il vecchio nodo della finger è uguale a quello nuovo
+    }
+
+    @Override
+    public void sendTextMessage(Long source, Long dest, String textMessage) throws IOException {
+        if (dest.equals(nodeId)){
+            out.println("MESSAGE RECEIVED");
+            out.println("SENDER: " + source);
+            out.println("TEXT: " + textMessage);
+            return;
+        }
+        if (dest.equals(predecessor.getNodeId())){
+            predecessor.sendTextMessage(source, dest, textMessage);
+            return;
+        }
+        for (NodeInterface nodeInterface : successorList) {
+            if (dest.equals(nodeInterface.getNodeId())) {
+                nodeInterface.sendTextMessage(source, dest, textMessage);
+                return;
+            }
+        }
+        successorList.get(0).sendTextMessage(nodeId, dest, textMessage);
     }
 
     private boolean checkInterval(long pred, long index, long succ) {
