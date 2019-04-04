@@ -126,7 +126,8 @@ public class Node implements NodeInterface, Serializable {
                                 already=true;
                         }
                         if (!already)*/
-                        successorList.add(socketManager.createConnection(node));
+                            successorList.add(socketManager.createConnection(node));
+                        //already = false;
                     } catch (ConnectionErrorException e) {
                         e.printStackTrace();
                     }
