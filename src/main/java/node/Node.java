@@ -69,7 +69,7 @@ public class Node implements NodeInterface, Serializable {
         for (NodeInterface node: successorNodeList) {
             if (node.getNodeId().equals(successorList.get(0).getNodeId()))
                 break;
-            while (successorList.size() <= dimSuccessorList ){
+            if (successorList.size() <= dimSuccessorList ){
                 try {
                     successorList.add(socketManager.createConnection(node));
                 } catch (ConnectionErrorException e) {
@@ -112,12 +112,20 @@ public class Node implements NodeInterface, Serializable {
         }
         successorList.get(0).notify(this);
 
+       // boolean already=false;
+
         List<NodeInterface> xList; //xList contiene la lista dei successori del successore
         xList = successorList.get(0).getSuccessorList();
         if (successorList.size() < dimSuccessorList){
             for (NodeInterface node: xList) {
                 if (!node.getNodeId().equals(nodeId) && successorList.size() < dimSuccessorList) {
                     try {
+                        /*for (NodeInterface internalNode:
+                            successorList ) {
+                            if (internalNode.getNodeId()==node.getNodeId())
+                                already=true;
+                        }
+                        if (!already)*/
                         successorList.add(socketManager.createConnection(node));
                     } catch (ConnectionErrorException e) {
                         e.printStackTrace();

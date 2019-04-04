@@ -61,7 +61,7 @@ public class LaunchNode {
         }
         exit = false;
         while (!exit){
-            out.println("Select 'lookup', 'addKey', 'p', 'ft' or 'exit'" );
+            out.println("Select 'lookup', 'addKey', 'ps', 'ft' or 'exit'" );
             String choice = in.nextLine().toLowerCase();
             switch (choice) {
                 case LOOKUP_COMMAND:
