@@ -16,8 +16,6 @@ public interface NodeInterface extends Serializable {
 
     NodeInterface findSuccessor(Long id) throws IOException;
 
-    void sendTextMessage(Long source, Long dest, String textMessage) throws IOException;
-
     NodeInterface getPredecessor() throws IOException;
 
     String getIpAddress() throws IOException;
