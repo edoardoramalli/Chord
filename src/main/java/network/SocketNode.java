@@ -15,7 +15,7 @@ import static java.lang.System.out;
 public class SocketNode implements Runnable, Serializable {
     private transient ObjectOutputStream socketOutput;
     private transient ObjectInputStream socketInput;
-    private transient MessageHandler messageHandler;
+    private transient volatile MessageHandler messageHandler;
     private transient volatile boolean connected;
 
     SocketNode(NodeInterface node, Socket socketIn){
@@ -26,7 +26,11 @@ public class SocketNode implements Runnable, Serializable {
             this.close();
         }
         this.connected = true;
-        this.messageHandler = (MessageHandler) node.getSocketManager().createConnection(this, socketIn.getInetAddress().getHostAddress());
+        Executors.newCachedThreadPool().execute(() -> node.getSocketManager().createConnection(this, socketIn.getInetAddress().getHostAddress()));
+    }
+
+    public void setMessageHandler(MessageHandler messageHandler) {
+        this.messageHandler = messageHandler;
     }
 
     SocketNode(ObjectInputStream socketInput, ObjectOutputStream socketOutput, MessageHandler messageHandler){

@@ -21,7 +21,7 @@ import static java.lang.System.err;
 public class NodeCommunicator implements NodeInterface, Serializable, MessageHandler {
     private transient Socket joinNodeSocket;
     private transient NodeInterface node; //mio nodo
-    private transient long nodeId; //questo è il nodeId dell'altro
+    private transient Long nodeId; //questo è il nodeId dell'altro
     private transient SocketNode socketNode;
     private transient volatile HashMap<Long, Object> lockList = new HashMap<>();
     private transient volatile Long lockID = 0L;
@@ -58,11 +58,14 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
     }
 
     //used by SocketNode, when StartSocketListener accepts a new connection
-    NodeCommunicator(SocketNode socketNode, NodeInterface node, long id){
+    NodeCommunicator(SocketNode socketNode, NodeInterface node){
         this.socketNode = socketNode;
         this.node = node;
-        this.nodeId = id;
         this.messageList = new HashMap<>();
+    }
+
+    public void setNodeId(Long nodeId) {
+        this.nodeId = nodeId;
     }
 
     public void close() throws IOException {

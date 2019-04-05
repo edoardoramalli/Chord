@@ -1,6 +1,7 @@
 package network;
 
 import exceptions.ConnectionErrorException;
+import network.message.MessageHandler;
 import node.Node;
 import node.NodeInterface;
 
@@ -39,7 +40,7 @@ public class SocketManager {
                 out.println("NUOVO: " + searchedNodeId);
                 NodeCommunicator createdNode;
                 try {
-                    createdNode = new NodeCommunicator(connectionNode.getIpAddress(), connectionNode.getSocketPort(), node, node.hash(connectionNode.getIpAddress()));
+                    createdNode = new NodeCommunicator(connectionNode.getIpAddress(), connectionNode.getSocketPort(), node, connectionNode.getNodeId());
                 } catch (ConnectionErrorException e) {
                     throw new ConnectionErrorException();
                 }
@@ -50,12 +51,20 @@ public class SocketManager {
         }
     }
 
-    NodeInterface createConnection(SocketNode socketNode, String ipAddress){
-        out.println("CREO: " + node.hash(ipAddress));
-        NodeInterface createdNode = new NodeCommunicator(socketNode, node, node.hash(ipAddress));
-        socketList.put(node.hash(ipAddress), createdNode);
-        socketNumber.put(node.hash(ipAddress), 1); //quando creo un nodo inserisco nella lista <nodeId, 1>
-        return createdNode;
+    synchronized void createConnection(SocketNode socketNode, String ipAddress){
+        NodeInterface createdNode = new NodeCommunicator(socketNode, node);
+        socketNode.setMessageHandler((MessageHandler) createdNode);
+        out.println("Handler a posto");
+        int port = 0;
+        try {
+            port = createdNode.getSocketPort();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        createdNode.setNodeId(node.hash(ipAddress, port));
+        out.println("CREO: " + createdNode.getNodeId());
+        socketList.put(createdNode.getNodeId(), createdNode);
+        socketNumber.put(createdNode.getNodeId(), 1); //quando creo un nodo inserisco nella lista <nodeId, 1>
     }
 
     public void closeCommunicator(Long nodeId) {

@@ -39,11 +39,12 @@ public class Node implements NodeInterface, Serializable {
         this.fingerTable = new HashMap<>();
         this.socketPort = socketPort;
         this.next = 0;
-        this.nodeId = hash(ipAddress);
+        this.nodeId = hash(ipAddress, socketPort);
         this.socketManager = new SocketManager(this);
     }
 
     public void create(int m) {
+        out.println("MIO ID: " + nodeId);
         createSuccessorList();
         predecessor = null;
         dimFingerTable = m;
@@ -53,7 +54,8 @@ public class Node implements NodeInterface, Serializable {
     }
 
     public void join(String joinIpAddress, int joinSocketPort) throws ConnectionErrorException, IOException {
-        NodeCommunicator node = new NodeCommunicator(joinIpAddress, joinSocketPort, this, hash(joinIpAddress));
+        out.println("MIO ID: " + nodeId);
+        NodeCommunicator node = new NodeCommunicator(joinIpAddress, joinSocketPort, this, hash(joinIpAddress, joinSocketPort));
         predecessor = null;
         NodeInterface successorNode = node.findSuccessor(this.nodeId);
         dimFingerTable = node.getDimFingerTable();
@@ -361,6 +363,11 @@ public class Node implements NodeInterface, Serializable {
     }
 
     @Override
+    public void setNodeId(Long nodeId) {
+        this.nodeId = nodeId;
+    }
+
+    @Override
     public SocketManager getSocketManager() {
         return socketManager;
     }
@@ -370,8 +377,8 @@ public class Node implements NodeInterface, Serializable {
         return successorList;
     }
 
-    public Long hash(String ipAddress) {
-        Long ipNumber = ipToLong(ipAddress);
+    public Long hash(String ipAddress, int socketPort) {
+        Long ipNumber = ipToLong(ipAddress) + socketPort;
         Long numberNodes = (long)Math.pow(2, dimFingerTable);
         return ipNumber%numberNodes;
     }
