@@ -408,4 +408,29 @@ public class Node implements NodeInterface, Serializable {
         string = string + "--------------------------\n";
         return string;
     }
+
+    //KEY-VALUE
+
+    private HashMap<Long, Object> keyStore;
+
+    public NodeInterface addKey(Map.Entry<Long, Object> keyValue) throws IOException {
+        NodeInterface newNodeKey;
+        for (int i = 0; i < successorList.size(); i++) {
+            if (keyValue.getKey().equals(successorList.get(i).getNodeId()))
+                newNodeKey= successorList.get(i);
+        }
+        if (keyValue.getKey().equals(predecessor.getNodeId()))
+            newNodeKey= predecessor;
+        else
+            newNodeKey = findSuccessor(keyValue.getKey());
+
+        newNodeKey.addKeyToStore(keyValue);
+
+        return newNodeKey;
+    }
+
+    public void addKeyToStore(Map.Entry<Long, Object> keyValue){
+        keyStore.put(keyValue.getKey(),keyValue.getValue());
+    }
+
 }

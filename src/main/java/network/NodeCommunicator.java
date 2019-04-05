@@ -14,6 +14,7 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Executors;
 
 import static java.lang.System.err;
@@ -317,5 +318,41 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
             messageList.put(getSuccessorListResponse.getLockId(), getSuccessorListResponse);
             lockList.get(getSuccessorListResponse.getLockId()).notifyAll();
         }
+    }
+
+    @Override
+    public void handle(AddKeyRequest addKeyRequest) throws IOException {
+        NodeInterface nodeInterface = node.findSuccessor(addKeyRequest.getKeyValue().getKey());
+        socketNode.sendMessage(new AddKeyResponse(new Node(nodeInterface.getIpAddress(), nodeInterface.getSocketPort()), addKeyRequest.getLockId()));
+    }
+
+    @Override
+    public void handle(AddKeyResponse addKeyResponse) throws IOException {
+        synchronized (lockList.get(addKeyResponse.getLockId())){
+            messageList.put(addKeyResponse.getLockId(), addKeyResponse);
+            lockList.get(addKeyResponse.getLockId()).notifyAll();
+        }
+    }
+
+
+    @Override
+    public NodeInterface addKey(Map.Entry<Long, Object> keyValue) throws IOException {
+        Long lockId = createLock();
+        synchronized (lockList.get(lockId)){
+            socketNode.sendMessage(new AddKeyRequest(keyValue, lockId));
+            try {
+                lockList.get(lockId).wait();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+        AddKeyResponse addKeyResponse = (AddKeyResponse) messageList.get(lockId);
+        messageList.remove(lockId);
+        return addKeyResponse.getNode();
+    }
+
+    @Override
+    public void addKeyToStore(Map.Entry<Long, Object> keyValue) {
+
     }
 }
