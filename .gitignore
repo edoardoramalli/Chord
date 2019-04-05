@@ -110,3 +110,5 @@ buildNumber.properties
 *.xml
 *.xml
 .idea/misc.xml
+.idea/misc.xml
+*.xml
