@@ -69,7 +69,7 @@ public class Node implements NodeInterface, Serializable {
     private void initializeSuccessorList() throws IOException {
         List<NodeInterface> successorNodeList = successorList.get(0).getSuccessorList();
         for (NodeInterface node: successorNodeList) {
-            if (node.getNodeId().equals(successorList.get(0).getNodeId()))
+            if (node.getNodeId().equals(successorList.get(0).getNodeId()) || node.getNodeId().equals(this.nodeId))
                 break;
             if (successorList.size() <= dimSuccessorList ){
                 try {
@@ -114,7 +114,7 @@ public class Node implements NodeInterface, Serializable {
         }
         successorList.get(0).notify(this);
 
-       // boolean already=false;
+        boolean already=false;
 
         List<NodeInterface> xList; //xList contiene la lista dei successori del successore
         xList = successorList.get(0).getSuccessorList();
@@ -122,14 +122,15 @@ public class Node implements NodeInterface, Serializable {
             for (NodeInterface node: xList) {
                 if (!node.getNodeId().equals(nodeId) && successorList.size() < dimSuccessorList) {
                     try {
-                        /*for (NodeInterface internalNode:
+                        for (NodeInterface internalNode:
                             successorList ) {
-                            if (internalNode.getNodeId()==node.getNodeId())
+                            if (internalNode.getNodeId().equals(node.getNodeId()))
                                 already=true;
                         }
-                        if (!already)*/
+                        if (!already) {
                             successorList.add(socketManager.createConnection(node));
-                        //already = false;
+                        }
+                        already = false;
                     } catch (ConnectionErrorException e) {
                         e.printStackTrace();
                     }
@@ -224,7 +225,7 @@ public class Node implements NodeInterface, Serializable {
     }
 
     public NodeInterface lookup(Long id) throws IOException {
-        for (int i = 0; i < dimSuccessorList; i++) {
+        for (int i = 0; i < successorList.size(); i++) {
             if (id.equals(successorList.get(i).getNodeId()))
                 return successorList.get(i);
         }
