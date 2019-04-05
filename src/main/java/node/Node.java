@@ -41,6 +41,7 @@ public class Node implements NodeInterface, Serializable {
         this.next = 0;
         this.nodeId = hash(ipAddress);
         this.socketManager = new SocketManager(this);
+        this.keyStore=new HashMap<>();
     }
 
     public void create(int m) {
