@@ -406,6 +406,14 @@ public class Node implements NodeInterface, Serializable {
         for (int i = 0; i< dimFingerTable; i++)
             string = string +
                     "\t\t" + fingerTable.get(i).getNodeId() + "\n";
+
+        //KEY
+        string = string + "MY KEY" + "\n";
+        for (Map.Entry<Long, Object> keyValue:
+             keyStore.entrySet()) {
+            string = string + keyValue.getKey() + " " + keyValue.getValue() + "\n";
+        }
+
         string = string + "--------------------------\n";
         return string;
     }
@@ -420,7 +428,6 @@ public class Node implements NodeInterface, Serializable {
             if (keyValue.getKey().equals(successorList.get(i).getNodeId())) {
                 newNodeKey = successorList.get(i);
                 newNodeKey.addKey(keyValue);
-                System.out.println("OOOOOOOOOOK");
                 return newNodeKey;
             }
         }
