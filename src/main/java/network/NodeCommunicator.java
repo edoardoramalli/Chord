@@ -322,8 +322,8 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
 
     @Override
     public void handle(AddKeyRequest addKeyRequest) throws IOException {
-        NodeInterface nodeInterface = node.findSuccessor(addKeyRequest.getKeyValue().getKey());
-        socketNode.sendMessage(new AddKeyResponse(new Node(nodeInterface.getIpAddress(), nodeInterface.getSocketPort()), addKeyRequest.getLockId()));
+        node.addKeyToStore(addKeyRequest.getKeyValue());
+        socketNode.sendMessage(new AddKeyResponse(new Node(node.getIpAddress(), node.getSocketPort()), addKeyRequest.getLockId()));
     }
 
     @Override

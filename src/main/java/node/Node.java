@@ -416,8 +416,12 @@ public class Node implements NodeInterface, Serializable {
     public NodeInterface addKey(Map.Entry<Long, Object> keyValue) throws IOException {
         NodeInterface newNodeKey;
         for (int i = 0; i < successorList.size(); i++) {
-            if (keyValue.getKey().equals(successorList.get(i).getNodeId()))
-                newNodeKey= successorList.get(i);
+            if (keyValue.getKey().equals(successorList.get(i).getNodeId())) {
+                newNodeKey = successorList.get(i);
+                newNodeKey.addKey(keyValue);
+                System.out.println("OOOOOOOOOOK");
+                return newNodeKey;
+            }
         }
         if (keyValue.getKey().equals(predecessor.getNodeId()))
             newNodeKey= predecessor;
