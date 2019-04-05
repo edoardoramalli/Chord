@@ -35,4 +35,6 @@ public interface MessageHandler {
     void handle(GetSuccessorListRequest getSuccessorListRequest) throws IOException;
 
     void handle(GetSuccessorListResponse getSuccessorListResponse) throws IOException;
+
+    void handle(SendTextMessageRequest sendTextMessageRequest) throws IOException;
 }

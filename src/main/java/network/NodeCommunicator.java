@@ -17,7 +17,6 @@ import java.util.List;
 import java.util.concurrent.Executors;
 
 import static java.lang.System.err;
-import static java.lang.System.out;
 
 public class NodeCommunicator implements NodeInterface, Serializable, MessageHandler {
     private transient Socket joinNodeSocket;
@@ -171,6 +170,19 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
     }
 
     @Override
+    public void sendTextMessage(Long source, Long dest, String textMessage) throws IOException {
+        Long lockId = createLock();
+        synchronized (lockList.get(lockId)){
+            socketNode.sendMessage(new SendTextMessageRequest(source, dest, textMessage, lockId));
+            try {
+                lockList.get(lockId).wait();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+    }
+
+    @Override
     public NodeInterface getPredecessor() throws IOException {
         Long lockId = createLock();
         synchronized (lockList.get(lockId)){
@@ -318,5 +330,10 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
             messageList.put(getSuccessorListResponse.getLockId(), getSuccessorListResponse);
             lockList.get(getSuccessorListResponse.getLockId()).notifyAll();
         }
+    }
+
+    @Override
+    public void handle(SendTextMessageRequest sendTextMessageRequest) throws IOException {
+
     }
 }

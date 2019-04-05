@@ -16,6 +16,7 @@ public class LaunchNode {
     private static final String CREATE_COMMAND = "create";
     private static final String JOIN_COMMAND = "join";
     private static final String LOOKUP_COMMAND = "lookup";
+    private static final String SEND_COMMAND = "send";
     private static final String ADDKEY_COMMAND = "addkey";
     private static final String PRINT_COMMAND = "p";
     private static final String EXIT_COMMAND = "exit";
@@ -61,7 +62,7 @@ public class LaunchNode {
         }
         exit = false;
         while (!exit){
-            out.println("Select 'lookup', 'addKey', 'p', 'ft' or 'exit'" );
+            out.println("Select 'lookup', 'addKey', 'ps', 'ft' or 'exit'" );
             String choice = in.nextLine().toLowerCase();
             switch (choice) {
                 case LOOKUP_COMMAND:
@@ -74,6 +75,17 @@ public class LaunchNode {
                         e.printStackTrace();
                     }
                     //TODO da fare
+                    break;
+                case SEND_COMMAND:
+                    out.println("Insert ID of node" );
+                    id = Long.parseLong(in.nextLine().toLowerCase());
+                    out.println("Insert text of message" );
+                    String textMessage = in.nextLine();
+                    try {
+                        node.sendTextMessage(node.getNodeId(), id, textMessage);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                     break;
                 case ADDKEY_COMMAND:
                     //TODO da fare
