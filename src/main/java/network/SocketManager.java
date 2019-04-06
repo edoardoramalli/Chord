@@ -67,7 +67,7 @@ public class SocketManager {
         socketNumber.put(createdNode.getNodeId(), 1); //quando creo un nodo inserisco nella lista <nodeId, 1>
     }
 
-    public void closeCommunicator(Long nodeId) {
+    public synchronized void closeCommunicator(Long nodeId) {
         //eseguo solo se il nodeId da rimuovere non è il mio
         if (!node.getNodeId().equals(nodeId)){ //non posso rimuovere me stesso dalla lista
             Integer n = socketNumber.get(nodeId); //old connection number
@@ -82,7 +82,7 @@ public class SocketManager {
         }
     }
 
-    void removeNode(Long disconnectedId){
+    synchronized void removeNode(Long disconnectedId){
         node.checkDisconnectedNode(disconnectedId);
         socketList.remove(disconnectedId);
         socketNumber.remove(disconnectedId);

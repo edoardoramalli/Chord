@@ -83,23 +83,6 @@ public class Node implements NodeInterface, Serializable {
         }
     }
 
-    /*void stabilize() throws IOException {
-        //controllo su null predecessor
-        NodeInterface x = successor.getPredecessor();
-        long nodeIndex = x.getNodeId();
-        long oldSucID = successor.getNodeId();
-        //se x == successor non entro neanche nell'if
-        if (checkInterval(getNodeId(), nodeIndex, oldSucID) && !x.getNodeId().equals(successor.getNodeId())) {
-            try {
-                socketManager.closeCommunicator(successor.getNodeId());
-                successor = socketManager.createConnection(x);
-            } catch (ConnectionErrorException e) {
-                e.printStackTrace();
-            }
-        }
-        successor.notify(this); //questa forse va dentro l'if, perché se non cambio il successore non ho bisogno di fargli la notify
-    }*/
-
     void listStabilize() throws IOException {
         //questo serve per settare il primo successore
         NodeInterface x = successorList.get(0).getPredecessor();
@@ -116,7 +99,7 @@ public class Node implements NodeInterface, Serializable {
         }
         successorList.get(0).notify(this);
 
-        boolean already=false;
+        boolean already = false;
 
         List<NodeInterface> xList; //xList contiene la lista dei successori del successore
         xList = successorList.get(0).getSuccessorList();
@@ -127,7 +110,7 @@ public class Node implements NodeInterface, Serializable {
                         for (NodeInterface internalNode:
                             successorList ) {
                             if (internalNode.getNodeId().equals(node.getNodeId()))
-                                already=true;
+                                already = true;
                         }
                         if (!already) {
                             successorList.add(socketManager.createConnection(node));
@@ -143,8 +126,9 @@ public class Node implements NodeInterface, Serializable {
             for (int i = 1; i < dimSuccessorList && i < xList.size(); i++) {
                 if (!successorList.get(i).getNodeId().equals(xList.get(i - 1).getNodeId())
                         && !xList.get(i-1).getNodeId().equals(nodeId)){
-                    socketManager.closeCommunicator(successorList.get(i).getNodeId());
                     try {
+                        out.println("Il problema è che entra qui");
+                        socketManager.closeCommunicator(successorList.get(i).getNodeId());
                         successorList.set(i, socketManager.createConnection(findSuccessor(xList.get(i-1).getNodeId())));
                     } catch (ConnectionErrorException e) {
                         e.printStackTrace();
