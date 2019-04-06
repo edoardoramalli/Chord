@@ -74,7 +74,7 @@ public class Node implements NodeInterface, Serializable {
         for (NodeInterface node: successorNodeList) {
             if (node.getNodeId().equals(successorList.get(0).getNodeId()) || node.getNodeId().equals(this.nodeId))
                 break;
-            if (successorList.size() <= dimSuccessorList ){
+            if (successorList.size() < dimSuccessorList ){
                 try {
                     successorList.add(socketManager.createConnection(node));
                 } catch (ConnectionErrorException e) {
@@ -105,17 +105,17 @@ public class Node implements NodeInterface, Serializable {
         List<NodeInterface> xList; //xList contiene la lista dei successori del successore
         xList = successorList.get(0).getSuccessorList();
         if (successorList.size() < dimSuccessorList){
-            for (NodeInterface node: xList) {
-                if (!node.getNodeId().equals(nodeId) && successorList.size() < dimSuccessorList) {
+            for (NodeInterface xNode: xList) {
+                if (!xNode.getNodeId().equals(nodeId) && successorList.size() < dimSuccessorList) {
                     try {
-                        for (NodeInterface internalNode:
-                            successorList ) {
-                            if (internalNode.getNodeId().equals(node.getNodeId()))
+                        for (NodeInterface internalNode: successorList ) {
+                            if (internalNode.getNodeId().equals(xNode.getNodeId())){
                                 already = true;
+                                break;
+                            }
                         }
-                        if (!already) {
-                            successorList.add(socketManager.createConnection(node));
-                        }
+                        if (!already)
+                            successorList.add(socketManager.createConnection(xNode));
                         already = false;
                     } catch (ConnectionErrorException e) {
                         e.printStackTrace();
