@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
 
+import static java.lang.System.err;
 import static java.lang.System.out;
 
 public class Node implements NodeInterface, Serializable {
@@ -127,9 +128,8 @@ public class Node implements NodeInterface, Serializable {
                 if (!successorList.get(i).getNodeId().equals(xList.get(i - 1).getNodeId())
                         && !xList.get(i-1).getNodeId().equals(nodeId)){
                     try {
-                        out.println("Il problema è che entra qui");
                         socketManager.closeCommunicator(successorList.get(i).getNodeId());
-                        successorList.set(i, socketManager.createConnection(findSuccessor(xList.get(i-1).getNodeId())));
+                        successorList.set(i, socketManager.createConnection(xList.get(i-1)));
                     } catch (ConnectionErrorException e) {
                         e.printStackTrace();
                     }

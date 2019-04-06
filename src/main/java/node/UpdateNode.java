@@ -22,7 +22,7 @@ public class UpdateNode implements Runnable {
                 e.printStackTrace(); //qui poi devo gestire la disconnessione
             }
             try {
-                TimeUnit.SECONDS.sleep(5);
+                TimeUnit.SECONDS.sleep(3);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
