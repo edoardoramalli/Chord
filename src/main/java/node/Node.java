@@ -1,6 +1,7 @@
 package node;
 
 import exceptions.ConnectionErrorException;
+import exceptions.NodeIdAlreadyExistsException;
 import exceptions.UnexpectedBehaviourException;
 import network.NodeCommunicator;
 import network.SocketManager;
@@ -54,11 +55,13 @@ public class Node implements NodeInterface, Serializable {
         Executors.newCachedThreadPool().submit(new UpdateNode(this));
     }
 
-    public void join(String joinIpAddress, int joinSocketPort) throws ConnectionErrorException, IOException {
+    public void join(String joinIpAddress, int joinSocketPort) throws ConnectionErrorException, IOException, NodeIdAlreadyExistsException {
         out.println("MIO ID: " + nodeId);
         NodeCommunicator node = new NodeCommunicator(joinIpAddress, joinSocketPort, this, hash(joinIpAddress, joinSocketPort));
         predecessor = null;
         NodeInterface successorNode = node.findSuccessor(this.nodeId);
+        if (successorNode.getNodeId().equals(nodeId)) //se find successor ritorna un nodo con lo stesso tuo id significa che esiste già un nodo con il tuo id
+            throw new NodeIdAlreadyExistsException();
         dimFingerTable = node.getDimFingerTable();
         node.close();
         successorList.set(0, socketManager.createConnection(successorNode)); //creo nuova connessione
@@ -74,7 +77,7 @@ public class Node implements NodeInterface, Serializable {
         for (NodeInterface node: successorNodeList) {
             if (node.getNodeId().equals(successorList.get(0).getNodeId()) || node.getNodeId().equals(this.nodeId))
                 break;
-            if (successorList.size() < dimSuccessorList ){
+            if (successorList.size() < dimSuccessorList){
                 try {
                     successorList.add(socketManager.createConnection(node));
                 } catch (ConnectionErrorException e) {
@@ -164,7 +167,7 @@ public class Node implements NodeInterface, Serializable {
 
     private NodeInterface closestPrecedingNodeList(long id) {
         long nodeIndex;
-        long maxClosestId=this.nodeId;
+        long maxClosestId = this.nodeId;
         NodeInterface maxClosestNode=this;
 
         for (int i = successorList.size()-1; i>=0; i-- ){
@@ -211,9 +214,9 @@ public class Node implements NodeInterface, Serializable {
     }
 
     public NodeInterface lookup(Long id) throws IOException {
-        for (int i = 0; i < successorList.size(); i++) {
-            if (id.equals(successorList.get(i).getNodeId()))
-                return successorList.get(i);
+        for (NodeInterface nodeInterface : successorList) {
+            if (id.equals(nodeInterface.getNodeId()))
+                return nodeInterface;
         }
         if (id.equals(predecessor.getNodeId()))
             return predecessor;

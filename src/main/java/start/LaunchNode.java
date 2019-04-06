@@ -1,6 +1,7 @@
 package start;
 
 import exceptions.ConnectionErrorException;
+import exceptions.NodeIdAlreadyExistsException;
 import exceptions.UnexpectedBehaviourException;
 import node.Node;
 import node.NodeInterface;
@@ -51,6 +52,8 @@ public class LaunchNode {
                         exit = true;
                     } catch (ConnectionErrorException e) {
                         out.println("Wrong ip address or port");
+                    } catch (NodeIdAlreadyExistsException e) {
+                        out.println("Node Id already existent");
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
