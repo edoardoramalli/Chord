@@ -37,7 +37,6 @@ public class SocketManager {
                 return searchedNode;
             }
             else{
-                out.println("NUOVO: " + searchedNodeId);
                 NodeCommunicator createdNode;
                 try {
                     createdNode = new NodeCommunicator(connectionNode.getIpAddress(), connectionNode.getSocketPort(), node, connectionNode.getNodeId());
@@ -46,6 +45,11 @@ public class SocketManager {
                 }
                 socketList.put(searchedNodeId, createdNode);
                 socketNumber.put(searchedNodeId, 1); //quando creo un nodo inserisco nella lista <nodeId, 1>
+                out.println("APRO CONNESSIONE -- IP " + createdNode.getIpAddress()
+                        + " -- Porta : " + createdNode.getSocketPort()
+                        + " -- Hash : " + node.hash(createdNode.getIpAddress(),createdNode.getSocketPort())
+                        + " -- Node Number " + (long)Math.pow(2, node.getDimFingerTable())
+                        + " -- ID DAL NODO : " + createdNode.getNodeId());
                 return createdNode;
             }
         }
@@ -54,7 +58,6 @@ public class SocketManager {
     synchronized void createConnection(SocketNode socketNode, String ipAddress){
         NodeInterface createdNode = new NodeCommunicator(socketNode, node);
         socketNode.setMessageHandler((MessageHandler) createdNode);
-        out.println("Handler a posto");
         int port = 0;
         try {
             port = createdNode.getSocketPort();
@@ -62,7 +65,11 @@ public class SocketManager {
             e.printStackTrace();
         }
         createdNode.setNodeId(node.hash(ipAddress, port));
-        out.println("CREO: " + createdNode.getNodeId());
+        out.println("APRO CONNESSIONE -- IP " + ipAddress
+                + " -- Porta : " + port
+                + " -- Hash : " + node.hash(ipAddress,port)
+                + " -- Node Number " + (long)Math.pow(2, node.getDimFingerTable())
+                + " -- ID DAL NODO : " + createdNode.getNodeId());
         socketList.put(createdNode.getNodeId(), createdNode);
         socketNumber.put(createdNode.getNodeId(), 1); //quando creo un nodo inserisco nella lista <nodeId, 1>
     }
@@ -87,4 +94,5 @@ public class SocketManager {
         socketList.remove(disconnectedId);
         socketNumber.remove(disconnectedId);
     }
+
 }
