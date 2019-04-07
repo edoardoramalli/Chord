@@ -38,4 +38,7 @@ public interface NodeInterface extends Serializable {
 
     void addKeyToStore(Map.Entry<Long, Object> keyValue);
 
+    Object findKey(Long key) throws IOException;
+
+    Object retrieveKeyFromStore(Long key);
 }

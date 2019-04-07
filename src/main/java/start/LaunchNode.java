@@ -5,6 +5,7 @@ import exceptions.UnexpectedBehaviourException;
 import node.Node;
 import node.NodeInterface;
 
+import javax.swing.*;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -21,6 +22,7 @@ public class LaunchNode {
     private static final String ADDKEY_COMMAND = "addkey";
     private static final String PRINT_COMMAND = "p";
     private static final String EXIT_COMMAND = "exit";
+    private static final String FIND_COMMAND = "find";
     private static Scanner in = new Scanner(System.in);
 
     public static void main(String[] args){
@@ -88,6 +90,21 @@ public class LaunchNode {
                         e.printStackTrace();
                     }
                     System.out.println("KEY SAVED: " + result);
+                    break;
+                case FIND_COMMAND:
+                    System.out.println("Insert key to find");
+                    Long keyToFind = Long.parseLong(in.nextLine().toLowerCase());
+                    Object value = null;
+                    try {
+                        value = node.findKey(keyToFind);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    if (value==null)
+                        System.out.println("KEY NOT FOUND");
+                    else
+                        System.out.println("VALUE: " + value);
+
                     break;
                 case PRINT_COMMAND:
                     out.println(node);

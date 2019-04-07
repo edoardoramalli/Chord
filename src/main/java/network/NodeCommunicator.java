@@ -353,6 +353,41 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
 
     @Override
     public void addKeyToStore(Map.Entry<Long, Object> keyValue) {
-
     }
+
+    @Override
+    public Object retrieveKeyFromStore(Long key) {
+        return null;
+    }
+
+    @Override
+    public Object findKey(Long key) throws IOException {
+        Long lockId = createLock();
+        synchronized (lockList.get(lockId)){
+            socketNode.sendMessage(new FindKeyRequest(key, lockId));
+            try {
+                lockList.get(lockId).wait();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+        FindKeyResponse findKeyResponse = (FindKeyResponse) messageList.get(lockId);
+        messageList.remove(lockId);
+        return findKeyResponse.getValue();
+    }
+
+    @Override
+    public void handle(FindKeyRequest findKeyRequest) throws IOException {
+        Object value = node.retrieveKeyFromStore(findKeyRequest.getKey());
+        socketNode.sendMessage(new FindKeyResponse(findKeyRequest.getLockId(), value));
+    }
+
+    @Override
+    public void handle(FindKeyResponse findKeyResponse) throws IOException {
+        synchronized (lockList.get(findKeyResponse.getLockId())){
+            messageList.put(findKeyResponse.getLockId(), findKeyResponse);
+            lockList.get(findKeyResponse.getLockId()).notifyAll();
+        }
+    }
+
 }

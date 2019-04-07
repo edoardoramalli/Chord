@@ -5,6 +5,7 @@ import exceptions.UnexpectedBehaviourException;
 import network.NodeCommunicator;
 import network.SocketManager;
 import network.SocketNodeListener;
+import network.message.FindKeyResponse;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -428,7 +429,7 @@ public class Node implements NodeInterface, Serializable {
 
     public NodeInterface addKey(Map.Entry<Long, Object> keyValue) throws IOException {
 
-        if (keyValue.getKey().equals(this.nodeId)){
+        if (keyValue.getKey().equals(this.nodeId) || successorList.get(0).equals(this)){
             addKeyToStore(keyValue);
             return this;
         }
@@ -454,16 +455,30 @@ public class Node implements NodeInterface, Serializable {
         keyStore.put(keyValue.getKey(),keyValue.getValue());
     }
 
+    public Object retrieveKeyFromStore(Long key){
+            return keyStore.get(key);
+    }
+
     public void moveKey() throws IOException {
-        System.out.println("WWWWWWWWWWW");
         for (Map.Entry<Long, Object> keyValue:
              keyStore.entrySet()) {
             if (checkIntervalEquivalence(this.nodeId, keyValue.getKey(), predecessor.getNodeId())) {
                 predecessor.addKey(new AbstractMap.SimpleEntry<>(keyValue.getKey(),keyValue.getValue()));
                 keyStore.remove(keyValue.getKey());
-                System.out.println("TRASFERRR");
             }
         }
+    }
+
+    @Override
+    public Object findKey(Long key) throws IOException {
+
+        if (successorList.get(0).equals(this))
+            return keyStore.get(key);
+
+        if (predecessor!= null && checkIntervalEquivalence(predecessor.getNodeId(), key, nodeId))
+            return keyStore.get(key);
+
+        return findSuccessor(key).findKey(key);
     }
     
 }

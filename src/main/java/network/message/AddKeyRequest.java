@@ -7,7 +7,6 @@ import java.io.Serializable;
 import java.util.Map;
 
 public class AddKeyRequest implements Message, Serializable {
-    private NodeInterface node;
     private Map.Entry<Long, Object> keyValue;
     private Long lockId;
 
