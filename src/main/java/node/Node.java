@@ -8,11 +8,9 @@ import network.SocketNodeListener;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.*;
 
-import java.util.List;
-import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 
 import static java.lang.System.out;
@@ -41,7 +39,7 @@ public class Node implements NodeInterface, Serializable {
         this.next = 0;
         this.nodeId = hash(ipAddress);
         this.socketManager = new SocketManager(this);
-        this.keyStore=new HashMap<>();
+        this.keyStore=new ConcurrentHashMap();
     }
 
     public void create(int m) {
@@ -64,6 +62,10 @@ public class Node implements NodeInterface, Serializable {
         initializeSuccessorList();
         startSocketListener(socketPort);
         createFingerTable();
+        addKeyToStore(new AbstractMap.SimpleEntry<>(new Long(7), 2));
+        addKeyToStore(new AbstractMap.SimpleEntry<>(new Long(2), 5));
+        addKeyToStore(new AbstractMap.SimpleEntry<>(new Long(3), 2));
+        addKeyToStore(new AbstractMap.SimpleEntry<>(new Long(1), 5));
         Executors.newCachedThreadPool().submit(new UpdateNode(this));
     }
 
@@ -206,6 +208,7 @@ public class Node implements NodeInterface, Serializable {
         if (predecessor == null) {
             try {
                 predecessor = socketManager.createConnection(n); //creo connessione aumentando di 1
+              moveKey();
             } catch (ConnectionErrorException e) {
                 e.printStackTrace();
             }
@@ -218,6 +221,7 @@ public class Node implements NodeInterface, Serializable {
                 try {
                     socketManager.closeCommunicator(predecessor.getNodeId());//chiudo connessione verso vecchio predecessore
                     predecessor = socketManager.createConnection(n); //apro connessione verso nuovo predecessore
+                    moveKey();
                 } catch (ConnectionErrorException e) {
                     throw new UnexpectedBehaviourException();
                 }
@@ -420,9 +424,10 @@ public class Node implements NodeInterface, Serializable {
 
     //KEY-VALUE
 
-    private HashMap<Long, Object> keyStore;
+    private ConcurrentHashMap<Long, Object> keyStore;
 
     public NodeInterface addKey(Map.Entry<Long, Object> keyValue) throws IOException {
+
         if (keyValue.getKey().equals(this.nodeId)){
             addKeyToStore(keyValue);
             return this;
@@ -435,7 +440,7 @@ public class Node implements NodeInterface, Serializable {
                 return newNodeKey;
             }
         }
-        if (keyValue.getKey().equals(predecessor.getNodeId()))
+        if (predecessor!= null && keyValue.getKey().equals(predecessor.getNodeId()))
             newNodeKey= predecessor;
         else
             newNodeKey = findSuccessor(keyValue.getKey());
@@ -449,4 +454,16 @@ public class Node implements NodeInterface, Serializable {
         keyStore.put(keyValue.getKey(),keyValue.getValue());
     }
 
+    public void moveKey() throws IOException {
+        System.out.println("WWWWWWWWWWW");
+        for (Map.Entry<Long, Object> keyValue:
+             keyStore.entrySet()) {
+            if (checkIntervalEquivalence(this.nodeId, keyValue.getKey(), predecessor.getNodeId())) {
+                predecessor.addKey(new AbstractMap.SimpleEntry<>(keyValue.getKey(),keyValue.getValue()));
+                keyStore.remove(keyValue.getKey());
+                System.out.println("TRASFERRR");
+            }
+        }
+    }
+    
 }
