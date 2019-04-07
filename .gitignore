@@ -114,3 +114,4 @@ buildNumber.properties
 *.xml
 src/main/java/start/LaunchNode2.java
 src/main/java/start/LaunchNodeJoin.java
+.idea/misc.xml
