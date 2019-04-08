@@ -16,7 +16,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
 
-import static java.lang.System.err;
 import static java.lang.System.out;
 
 public class Node implements NodeInterface, Serializable {
@@ -30,43 +29,57 @@ public class Node implements NodeInterface, Serializable {
     private transient volatile Map<Integer, NodeInterface> fingerTable;
     private transient int dimFingerTable = 3;
     private transient int dimSuccessorList = 3; //todo quanto è lunga la lista?
-    private transient int next;
+    private transient int nextFinger;
     //connection handler
     private transient volatile SocketManager socketManager;
 
     public Node(String ipAddress, int socketPort) {
         this.ipAddress = ipAddress;
-        createSuccessorList();
         this.predecessor = null;
         this.fingerTable = new HashMap<>();
         this.socketPort = socketPort;
-        this.next = 0;
+        this.nextFinger = 0;
+        this.nodeId = -1L;
+        this.socketManager = null;
+    }
+
+    public Node(String ipAddress, int socketPort, int dimFingerTable) {
+        this.ipAddress = ipAddress;
+        this.socketPort = socketPort;
+        this.dimFingerTable = dimFingerTable;
         this.nodeId = hash(ipAddress, socketPort);
-        this.socketManager = new SocketManager(this);
     }
 
     public void create(int m) {
+        dimFingerTable = m;
+        nodeId = hash(ipAddress, socketPort);
         out.println("MIO ID: " + nodeId);
         createSuccessorList();
-        predecessor = null;
-        dimFingerTable = m;
         startSocketListener(socketPort);
         createFingerTable();
+        socketManager = new SocketManager(this);
         Executors.newCachedThreadPool().submit(new UpdateNode(this));
     }
 
-    public void join(String joinIpAddress, int joinSocketPort) throws ConnectionErrorException, IOException, NodeIdAlreadyExistsException {
-        out.println("MIO ID: " + nodeId);
-        NodeCommunicator node = new NodeCommunicator(joinIpAddress, joinSocketPort, this, hash(joinIpAddress, joinSocketPort));
-        predecessor = null;
-        NodeInterface successorNode = node.findSuccessor(this.nodeId);
+    public void join(String joinIpAddress, int joinSocketPort)
+            throws ConnectionErrorException, NodeIdAlreadyExistsException, IOException {
+        out.println("MIO ID SBAGLIATO: " + nodeId);
+        NodeCommunicator nodeTemp = new NodeCommunicator(joinIpAddress, joinSocketPort, this, hash(joinIpAddress, joinSocketPort)); // crea un nodecomunicator temporaneo.
+        dimFingerTable = nodeTemp.getDimFingerTable();
+        this.nodeId = hash(ipAddress, socketPort);
+        out.println("ADESSO HO ID GIUSTO: " + nodeId);
+        createSuccessorList();
+        this.socketManager = new SocketManager(this);
+        NodeInterface successorNode = nodeTemp.findSuccessor(this.nodeId);
         if (successorNode.getNodeId().equals(nodeId)) //se find successor ritorna un nodo con lo stesso tuo id significa che esiste già un nodo con il tuo id
             throw new NodeIdAlreadyExistsException();
-        dimFingerTable = node.getDimFingerTable();
-        node.close();
+        nodeTemp.close();
+
         successorList.set(0, socketManager.createConnection(successorNode)); //creo nuova connessione
         successorList.get(0).notify(this); //serve per settare il predecessore nel successore del nodo
-        initializeSuccessorList();
+
+
+        //initializeSuccessorList();
         startSocketListener(socketPort);
         createFingerTable();
         Executors.newCachedThreadPool().submit(new UpdateNode(this));
@@ -74,6 +87,12 @@ public class Node implements NodeInterface, Serializable {
 
     private void initializeSuccessorList() throws IOException {
         List<NodeInterface> successorNodeList = successorList.get(0).getSuccessorList();
+        ArrayList<Long> successorListID = new ArrayList<>();
+        for (int i = 0;  i < successorList.size(); i++){
+            successorListID.add(successorList.get(i).getNodeId());
+        }
+        out.println("INIZIALIZE " + successorListID.toString());
+
         for (NodeInterface node: successorNodeList) {
             if (node.getNodeId().equals(successorList.get(0).getNodeId()) || node.getNodeId().equals(this.nodeId))
                 break;
@@ -85,7 +104,7 @@ public class Node implements NodeInterface, Serializable {
                 }
             }
         }
-    }
+    } //OK
 
     void listStabilize() throws IOException {
         //questo serve per settare il primo successore
@@ -202,7 +221,6 @@ public class Node implements NodeInterface, Serializable {
             long index = n.getNodeId();
             long predIndex = predecessor.getNodeId();
             if (checkInterval(predIndex, index, getNodeId()) && !(predecessor.getNodeId().equals(n.getNodeId()))) { //entro solo se n è diverso dal predecessore
-                //closeCommunicator(predecessor.getHostId());
                 try {
                     socketManager.closeCommunicator(predecessor.getNodeId());//chiudo connessione verso vecchio predecessore
                     predecessor = socketManager.createConnection(n); //apro connessione verso nuovo predecessore
@@ -226,21 +244,21 @@ public class Node implements NodeInterface, Serializable {
 
     synchronized void fixFingers() throws IOException {
         long idToFind;
-        next = next + 1;
-        if (next > dimFingerTable)
-            next = 1;
+        nextFinger = nextFinger + 1;
+        if (nextFinger > dimFingerTable)
+            nextFinger = 1;
         //fix cast
-        idToFind = (nodeId + ((long) Math.pow(2, next - 1))) % (long) Math.pow(2, dimFingerTable);
+        idToFind = (nodeId + ((long) Math.pow(2, nextFinger - 1))) % (long) Math.pow(2, dimFingerTable);
         NodeInterface node = findSuccessor(idToFind);
-        if (!node.getNodeId().equals(fingerTable.get(next - 1).getNodeId())){ //se il nuovo nodo è diverso da quello già presente
+        if (!node.getNodeId().equals(fingerTable.get(nextFinger - 1).getNodeId())){ //se il nuovo nodo è diverso da quello già presente
             NodeInterface newConnection;
             try {
                 newConnection = socketManager.createConnection(node);
             } catch (ConnectionErrorException e) {
                 throw new UnexpectedBehaviourException();
             }
-            socketManager.closeCommunicator(fingerTable.get(next-1).getNodeId());//chiudo connessione verso il vecchio nodo
-            fingerTable.replace(next-1, newConnection);
+            socketManager.closeCommunicator(fingerTable.get(nextFinger -1).getNodeId());//chiudo connessione verso il vecchio nodo
+            fingerTable.replace(nextFinger -1, newConnection);
         }
         //else non faccio niente, perchè il vecchio nodo della finger è uguale a quello nuovo
     }
