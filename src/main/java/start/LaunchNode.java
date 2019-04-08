@@ -6,9 +6,12 @@ import exceptions.UnexpectedBehaviourException;
 import node.Node;
 import node.NodeInterface;
 
+import javax.swing.*;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.AbstractMap;
+import java.util.Map;
 import java.util.Scanner;
 
 import static java.lang.System.out;
@@ -20,6 +23,7 @@ public class LaunchNode {
     private static final String ADDKEY_COMMAND = "addkey";
     private static final String PRINT_COMMAND = "p";
     private static final String EXIT_COMMAND = "exit";
+    private static final String FIND_COMMAND = "find";
     private static Scanner in = new Scanner(System.in);
 
     public static void main(String[] args){
@@ -72,14 +76,38 @@ public class LaunchNode {
                     Long id = Long.parseLong(in.nextLine().toLowerCase());
                     try {
                         NodeInterface searchedNode = node.lookup(id);
-                        out.println("Searched Node: " + searchedNode.getNodeId());
+                        out.println("Searched Node: " + searchedNode.getNodeId()+ " " + searchedNode.getIpAddress());
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
                     //TODO da fare
                     break;
                 case ADDKEY_COMMAND:
-                    //TODO da fare
+                    out.println("Insert ID of node to find" );
+                    Long key = Long.parseLong(in.nextLine().toLowerCase());
+                    Map.Entry<Long, Object> keyValue = new AbstractMap.SimpleEntry<>(key,2);
+                    NodeInterface result=null;
+                    try {
+                       result = node.addKey(keyValue);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    System.out.println("KEY SAVED: " + result);
+                    break;
+                case FIND_COMMAND:
+                    System.out.println("Insert key to find");
+                    Long keyToFind = Long.parseLong(in.nextLine().toLowerCase());
+                    Object value = null;
+                    try {
+                        value = node.findKey(keyToFind);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    if (value==null)
+                        System.out.println("KEY NOT FOUND");
+                    else
+                        System.out.println("VALUE: " + value);
+
                     break;
                 case PRINT_COMMAND:
                     out.println(node);

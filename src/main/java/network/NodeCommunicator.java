@@ -14,6 +14,7 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Executors;
 
 import static java.lang.System.err;
@@ -322,4 +323,75 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
             lockList.get(getSuccessorListResponse.getLockId()).notifyAll();
         }
     }
+
+    @Override
+    public void handle(AddKeyRequest addKeyRequest) throws IOException {
+        node.addKeyToStore(addKeyRequest.getKeyValue());
+        socketNode.sendMessage(new AddKeyResponse(new Node(node.getIpAddress(), node.getSocketPort()), addKeyRequest.getLockId()));
+    }
+
+    @Override
+    public void handle(AddKeyResponse addKeyResponse) throws IOException {
+        synchronized (lockList.get(addKeyResponse.getLockId())){
+            messageList.put(addKeyResponse.getLockId(), addKeyResponse);
+            lockList.get(addKeyResponse.getLockId()).notifyAll();
+        }
+    }
+
+
+    @Override
+    public NodeInterface addKey(Map.Entry<Long, Object> keyValue) throws IOException {
+        Long lockId = createLock();
+        synchronized (lockList.get(lockId)){
+            socketNode.sendMessage(new AddKeyRequest(keyValue, lockId));
+            try {
+                lockList.get(lockId).wait();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+        AddKeyResponse addKeyResponse = (AddKeyResponse) messageList.get(lockId);
+        messageList.remove(lockId);
+        return addKeyResponse.getNode();
+    }
+
+    @Override
+    public void addKeyToStore(Map.Entry<Long, Object> keyValue) {
+    }
+
+    @Override
+    public Object retrieveKeyFromStore(Long key) {
+        return null;
+    }
+
+    @Override
+    public Object findKey(Long key) throws IOException {
+        Long lockId = createLock();
+        synchronized (lockList.get(lockId)){
+            socketNode.sendMessage(new FindKeyRequest(key, lockId));
+            try {
+                lockList.get(lockId).wait();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+        FindKeyResponse findKeyResponse = (FindKeyResponse) messageList.get(lockId);
+        messageList.remove(lockId);
+        return findKeyResponse.getValue();
+    }
+
+    @Override
+    public void handle(FindKeyRequest findKeyRequest) throws IOException {
+        Object value = node.retrieveKeyFromStore(findKeyRequest.getKey());
+        socketNode.sendMessage(new FindKeyResponse(findKeyRequest.getLockId(), value));
+    }
+
+    @Override
+    public void handle(FindKeyResponse findKeyResponse) throws IOException {
+        synchronized (lockList.get(findKeyResponse.getLockId())){
+            messageList.put(findKeyResponse.getLockId(), findKeyResponse);
+            lockList.get(findKeyResponse.getLockId()).notifyAll();
+        }
+    }
+
 }

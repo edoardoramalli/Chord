@@ -6,14 +6,13 @@ import exceptions.UnexpectedBehaviourException;
 import network.NodeCommunicator;
 import network.SocketManager;
 import network.SocketNodeListener;
+import network.message.FindKeyResponse;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.*;
 
-import java.util.List;
-import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 
 import static java.lang.System.out;
@@ -30,6 +29,7 @@ public class Node implements NodeInterface, Serializable {
     private transient int dimFingerTable = 3;
     private transient int dimSuccessorList = 3; //todo quanto è lunga la lista?
     private transient int nextFinger;
+    private transient volatile ConcurrentHashMap<Long, Object> keyStore;
     //connection handler
     private transient volatile SocketManager socketManager;
 
@@ -41,6 +41,7 @@ public class Node implements NodeInterface, Serializable {
         this.nextFinger = 0;
         this.nodeId = -1L;
         this.socketManager = null;
+        this.keyStore = new ConcurrentHashMap();
     }
 
     public Node(String ipAddress, int socketPort, int dimFingerTable) {
@@ -213,6 +214,7 @@ public class Node implements NodeInterface, Serializable {
         if (predecessor == null) {
             try {
                 predecessor = socketManager.createConnection(n); //creo connessione aumentando di 1
+              moveKey();
             } catch (ConnectionErrorException e) {
                 e.printStackTrace();
             }
@@ -224,6 +226,7 @@ public class Node implements NodeInterface, Serializable {
                 try {
                     socketManager.closeCommunicator(predecessor.getNodeId());//chiudo connessione verso vecchio predecessore
                     predecessor = socketManager.createConnection(n); //apro connessione verso nuovo predecessore
+                    moveKey();
                 } catch (ConnectionErrorException e) {
                     throw new UnexpectedBehaviourException();
                 }
@@ -417,7 +420,71 @@ public class Node implements NodeInterface, Serializable {
         for (int i = 0; i< dimFingerTable; i++)
             string = string +
                     "\t\t" + fingerTable.get(i).getNodeId() + "\n";
+        //KEY
+        string = string + "MY KEY" + "\n";
+        for (Map.Entry<Long, Object> keyValue:
+             keyStore.entrySet()) {
+            string = string + keyValue.getKey() + " " + keyValue.getValue() + "\n";
+        }
+
         string = string + "--------------------------\n";
         return string;
     }
+
+    //KEY-VALUE
+
+    public NodeInterface addKey(Map.Entry<Long, Object> keyValue) throws IOException {
+
+        if (keyValue.getKey().equals(this.nodeId) || successorList.get(0).equals(this)){
+            addKeyToStore(keyValue);
+            return this;
+        }
+        NodeInterface newNodeKey;
+        for (int i = 0; i < successorList.size(); i++) {
+            if (keyValue.getKey().equals(successorList.get(i).getNodeId())) {
+                newNodeKey = successorList.get(i);
+                newNodeKey.addKey(keyValue);
+                return newNodeKey;
+            }
+        }
+        if (predecessor!= null && keyValue.getKey().equals(predecessor.getNodeId()))
+            newNodeKey= predecessor;
+        else
+            newNodeKey = findSuccessor(keyValue.getKey());
+        
+        newNodeKey.addKey(keyValue);
+
+        return newNodeKey;
+    }
+
+    public void addKeyToStore(Map.Entry<Long, Object> keyValue){
+        keyStore.put(keyValue.getKey(),keyValue.getValue());
+    }
+
+    public Object retrieveKeyFromStore(Long key){
+            return keyStore.get(key);
+    }
+
+    public void moveKey() throws IOException {
+        for (Map.Entry<Long, Object> keyValue:
+             keyStore.entrySet()) {
+            if (checkIntervalEquivalence(this.nodeId, keyValue.getKey(), predecessor.getNodeId())) {
+                predecessor.addKey(new AbstractMap.SimpleEntry<>(keyValue.getKey(),keyValue.getValue()));
+                keyStore.remove(keyValue.getKey());
+            }
+        }
+    }
+
+    @Override
+    public Object findKey(Long key) throws IOException {
+
+        if (successorList.get(0).equals(this))
+            return keyStore.get(key);
+
+        if (predecessor!= null && checkIntervalEquivalence(predecessor.getNodeId(), key, nodeId))
+            return keyStore.get(key);
+
+        return findSuccessor(key).findKey(key);
+    }
+    
 }
