@@ -13,6 +13,7 @@ import java.io.Serializable;
 import java.util.*;
 
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executors;
 
 import static java.lang.System.out;
@@ -23,7 +24,7 @@ public class Node implements NodeInterface, Serializable {
     private String ipAddress;
     private int socketPort;
     private Long nodeId;
-    private transient volatile ArrayList<NodeInterface> successorList;
+    private transient volatile CopyOnWriteArrayList<NodeInterface> successorList;
     private transient volatile NodeInterface predecessor;
     private transient volatile Map<Integer, NodeInterface> fingerTable;
     private transient int dimFingerTable = 3;
@@ -47,8 +48,13 @@ public class Node implements NodeInterface, Serializable {
     public Node(String ipAddress, int socketPort, int dimFingerTable) {
         this.ipAddress = ipAddress;
         this.socketPort = socketPort;
+        this.predecessor = null;
+        this.fingerTable = new HashMap<>();
         this.dimFingerTable = dimFingerTable;
         this.nodeId = hash(ipAddress, socketPort);
+        this.socketManager = null;
+        this.keyStore = new ConcurrentHashMap();
+        this.nextFinger = 0;
     }
 
     public void create(int m) {
@@ -80,7 +86,7 @@ public class Node implements NodeInterface, Serializable {
         successorList.get(0).notify(this); //serve per settare il predecessore nel successore del nodo
 
 
-        //initializeSuccessorList();
+        initializeSuccessorList();
         startSocketListener(socketPort);
         createFingerTable();
         Executors.newCachedThreadPool().submit(new UpdateNode(this));
@@ -88,12 +94,6 @@ public class Node implements NodeInterface, Serializable {
 
     private void initializeSuccessorList() throws IOException {
         List<NodeInterface> successorNodeList = successorList.get(0).getSuccessorList();
-        ArrayList<Long> successorListID = new ArrayList<>();
-        for (int i = 0;  i < successorList.size(); i++){
-            successorListID.add(successorList.get(i).getNodeId());
-        }
-        out.println("INIZIALIZE " + successorListID.toString());
-
         for (NodeInterface node: successorNodeList) {
             if (node.getNodeId().equals(successorList.get(0).getNodeId()) || node.getNodeId().equals(this.nodeId))
                 break;
@@ -105,9 +105,9 @@ public class Node implements NodeInterface, Serializable {
                 }
             }
         }
-    } //OK
+    }
 
-    void listStabilize() throws IOException {
+    synchronized void listStabilize() throws IOException {
         //questo serve per settare il primo successore
         NodeInterface x = successorList.get(0).getPredecessor();
         long nodeIndex = x.getNodeId();
@@ -194,6 +194,7 @@ public class Node implements NodeInterface, Serializable {
             nodeIndex = successorList.get(i).getNodeId();
             if (checkInterval3(nodeIndex, id, this.nodeId)) {
                 maxClosestId = nodeIndex;
+                maxClosestNode=successorList.get(i);
                 break;
             }
         }
@@ -336,7 +337,7 @@ public class Node implements NodeInterface, Serializable {
 
     //The successor list is initialized with only this
     private void createSuccessorList(){
-        successorList = new ArrayList<>();
+        successorList = new CopyOnWriteArrayList<>();
         successorList.add(0, this);
     }
 
@@ -413,11 +414,12 @@ public class Node implements NodeInterface, Serializable {
             string = string + "null\n";
         string = string +
                 "SUCCESSOR LIST:";
+        if (successorList!=null)
         for (NodeInterface nodeInterface : successorList)
             string = string + "\t" + nodeInterface.getNodeId();
         string = string + "\n\n" +
                 "FINGER TABLE:\n";
-        for (int i = 0; i< dimFingerTable; i++)
+        for (int i = 0;i<fingerTable.size() && i< dimFingerTable; i++)
             string = string +
                     "\t\t" + fingerTable.get(i).getNodeId() + "\n";
         //KEY
@@ -430,7 +432,6 @@ public class Node implements NodeInterface, Serializable {
         string = string + "--------------------------\n";
         return string;
     }
-
     //KEY-VALUE
 
     public NodeInterface addKey(Map.Entry<Long, Object> keyValue) throws IOException {
