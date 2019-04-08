@@ -115,5 +115,3 @@ buildNumber.properties
 src/main/java/start/LaunchNode2.java
 src/main/java/start/LaunchNodeJoin.java
 .idea/misc.xml
-src/main/main.iml
-*.iml

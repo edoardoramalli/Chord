@@ -36,16 +36,16 @@ public class Node implements NodeInterface, Serializable {
 
     public Node(String ipAddress, int socketPort) {
         this.ipAddress = ipAddress;
+        createSuccessorList();
         this.predecessor = null;
         this.fingerTable = new HashMap<>();
         this.socketPort = socketPort;
         this.next = 0;
-        this.nodeId = -1L;
-        this.socketManager = null;
+        this.nodeId = hash(ipAddress, socketPort);
+        this.socketManager = new SocketManager(this);
     }
 
     public void create(int m) {
-        this.nodeId = hash(ipAddress, socketPort);
         out.println("MIO ID: " + nodeId);
         createSuccessorList();
         predecessor = null;
@@ -55,45 +55,25 @@ public class Node implements NodeInterface, Serializable {
         Executors.newCachedThreadPool().submit(new UpdateNode(this));
     }
 
-    public void join(String joinIpAddress, int joinSocketPort)
-            throws ConnectionErrorException, IOException, NodeIdAlreadyExistsException {
-        this.nodeId = -1L;
-        out.println("MIO ID SBAGLIATO: " + nodeId);
-        NodeCommunicator nodeTemp = new NodeCommunicator(joinIpAddress, joinSocketPort, this, nodeId); // crea un nodecomunicator temporaneo.
-        dimFingerTable = nodeTemp.getDimFingerTable();
-        this.nodeId = hash(ipAddress, socketPort);
-        out.println("ADESSO HO ID GIUSTO: " + nodeId);
-        createSuccessorList();
-        this.socketManager = new SocketManager(this);
+    public void join(String joinIpAddress, int joinSocketPort) throws ConnectionErrorException, IOException, NodeIdAlreadyExistsException {
+        out.println("MIO ID: " + nodeId);
+        NodeCommunicator node = new NodeCommunicator(joinIpAddress, joinSocketPort, this, hash(joinIpAddress, joinSocketPort));
         predecessor = null;
-
-        NodeInterface successorNode = nodeTemp.findSuccessor(this.nodeId);
+        NodeInterface successorNode = node.findSuccessor(this.nodeId);
         if (successorNode.getNodeId().equals(nodeId)) //se find successor ritorna un nodo con lo stesso tuo id significa che esiste già un nodo con il tuo id
             throw new NodeIdAlreadyExistsException();
-        nodeTemp.close();
-
+        dimFingerTable = node.getDimFingerTable();
+        node.close();
         successorList.set(0, socketManager.createConnection(successorNode)); //creo nuova connessione
         successorList.get(0).notify(this); //serve per settare il predecessore nel successore del nodo
-
-
-        // initializeSuccessorList(); NON HA SENSO TANTO SEMMAI SI AGGIORNA DOPO CON LA SUA STABILIZE
-
+        initializeSuccessorList();
         startSocketListener(socketPort);
-
         createFingerTable();
-
         Executors.newCachedThreadPool().submit(new UpdateNode(this));
-
-    } //OK
+    }
 
     private void initializeSuccessorList() throws IOException {
         List<NodeInterface> successorNodeList = successorList.get(0).getSuccessorList();
-        ArrayList<Long> successorListID = new ArrayList<>();
-        for (int i = 0;  i < successorList.size(); i++){
-            successorListID.add(successorList.get(i).getNodeId());
-        }
-        out.println("INIZIALIZE " + successorListID.toString());
-
         for (NodeInterface node: successorNodeList) {
             if (node.getNodeId().equals(successorList.get(0).getNodeId()) || node.getNodeId().equals(this.nodeId))
                 break;
@@ -105,17 +85,13 @@ public class Node implements NodeInterface, Serializable {
                 }
             }
         }
-    } //OK
+    }
 
     void listStabilize() throws IOException {
         //questo serve per settare il primo successore
         NodeInterface x = successorList.get(0).getPredecessor();
-        out.println("XXXXXXXXXXXXXX " + x.getNodeId());
         long nodeIndex = x.getNodeId();
         long oldSucID = successorList.get(0).getNodeId();
-        out.println("OLDDDDDDDDD " + oldSucID);
-        out.println("NEWWWWWWWW " + nodeIndex);
-
         if (checkInterval(getNodeId(), nodeIndex, oldSucID)) {
             try{
                 socketManager.closeCommunicator(oldSucID);
@@ -125,22 +101,12 @@ public class Node implements NodeInterface, Serializable {
                 e.printStackTrace();
             }
         }
-
         successorList.get(0).notify(this);
 
         boolean already = false;
 
         List<NodeInterface> xList; //xList contiene la lista dei successori del successore
         xList = successorList.get(0).getSuccessorList();
-
-        ArrayList<Long> successorListID = new ArrayList<>();
-        for (int i = 0;  i < xList.size(); i++){
-            successorListID.add(xList.get(i).getNodeId());
-        }
-        out.println("LISTA SUCC DEL SUCC STABILIZE : " + successorListID.toString());
-
-
-
         if (successorList.size() < dimSuccessorList){
             for (NodeInterface xNode: xList) {
                 if (!xNode.getNodeId().equals(nodeId) && successorList.size() < dimSuccessorList) {
@@ -173,7 +139,6 @@ public class Node implements NodeInterface, Serializable {
                 }
             }
         }
-
     }
     //catch successor exception--->update listSuccessor
 
@@ -236,8 +201,6 @@ public class Node implements NodeInterface, Serializable {
         else {
             long index = n.getNodeId();
             long predIndex = predecessor.getNodeId();
-            out.println("HO PREDECESSORE NULLO  NODO ID " + n.getNodeId() + "      bohhhh     " + predIndex );
-
             if (checkInterval(predIndex, index, getNodeId()) && !(predecessor.getNodeId().equals(n.getNodeId()))) { //entro solo se n è diverso dal predecessore
                 //closeCommunicator(predecessor.getHostId());
                 try {
@@ -346,9 +309,8 @@ public class Node implements NodeInterface, Serializable {
 
     //The finger table is initialized with this in all positions
     private void createFingerTable() {
-        for (int i = 0; i < dimFingerTable; i++){
+        for (int i = 0; i < dimFingerTable; i++)
             fingerTable.put(i, this);
-        }
     }
 
     //The successor list is initialized with only this
