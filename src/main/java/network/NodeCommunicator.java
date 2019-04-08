@@ -257,7 +257,7 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
     @Override
     public void handle(GetPredecessorRequest getPredecessorRequest) throws IOException {
         NodeInterface predecessor = node.getPredecessor();
-        socketNode.sendMessage(new GetPredecessorResponse(new Node(predecessor.getIpAddress(), predecessor.getSocketPort(), predecessor.getDimFingerTable()), getPredecessorRequest.getLockId()));
+        socketNode.sendMessage(new GetPredecessorResponse(new Node(predecessor.getIpAddress(), predecessor.getSocketPort(), node.getDimFingerTable()), getPredecessorRequest.getLockId()));
     }
 
     @Override
@@ -312,7 +312,7 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
         List<NodeInterface> list = new ArrayList<>();
         for (NodeInterface nodeInterface :
                 node.getSuccessorList()) {
-            list.add(new Node(nodeInterface.getIpAddress(), nodeInterface.getSocketPort(), nodeInterface.getDimFingerTable()));
+            list.add(new Node(nodeInterface.getIpAddress(), nodeInterface.getSocketPort(), node.getDimFingerTable()));
         }
         socketNode.sendMessage(new GetSuccessorListResponse(list, getSuccessorListRequest.getLockId()));
     }

@@ -25,19 +25,19 @@ public class SocketManager {
     public synchronized NodeInterface createConnection(NodeInterface connectionNode) throws IOException, ConnectionErrorException {
         Long searchedNodeId = connectionNode.getNodeId();
         if (searchedNodeId.equals(node.getNodeId())) { //nel caso in cui ritorno me stesso non ho bisogno di aggiornare il numero di connessioni
-            out.println("CREATECONN, RITORNO ME STESSO");
+            out.println("CREO CONNESSIONE: RITORNO ME STESSO");
             return node;
         }
         else {
             NodeInterface searchedNode = socketList.get(searchedNodeId);
             if(searchedNode != null) {
-                out.println("DALLA LISTA: " + searchedNodeId);
+                out.println("CONNESSIONE GIA ESISTENTE VERSO: " + searchedNodeId);
                 int n = socketNumber.get(searchedNodeId); //vecchio numero di connessioni
                 socketNumber.replace(searchedNodeId, n+1); //faccio replace con nodeId e n+1
                 return searchedNode;
             }
             else{
-                out.println("NUOVO: " + searchedNodeId);
+                out.println("NUOVA CONNESSIONE VERSO: " + searchedNodeId);
                 NodeCommunicator createdNode;
                 try {
                     createdNode = new NodeCommunicator(connectionNode.getIpAddress(), connectionNode.getSocketPort(), node, connectionNode.getNodeId());
@@ -51,10 +51,9 @@ public class SocketManager {
         }
     }
 
-    synchronized void createConnection(SocketNode socketNode, String ipAddress){
+    synchronized void createConnection(SocketNode socketNode, String ipAddress) {
         NodeInterface createdNode = new NodeCommunicator(socketNode, node);
         socketNode.setMessageHandler((MessageHandler) createdNode);
-        out.println("Handler a posto");
         int port = 0;
         try {
             port = createdNode.getSocketPort();
@@ -62,9 +61,11 @@ public class SocketManager {
             e.printStackTrace();
         }
         createdNode.setNodeId(node.hash(ipAddress, port));
-        out.println("CREO: " + createdNode.getNodeId());
-        socketList.put(createdNode.getNodeId(), createdNode);
-        socketNumber.put(createdNode.getNodeId(), 1); //quando creo un nodo inserisco nella lista <nodeId, 1>
+        if (!createdNode.getNodeId().equals(node.getNodeId())) {
+            out.println("CREO CONNESSIONE DA: " + createdNode.getNodeId());
+            socketList.put(createdNode.getNodeId(), createdNode);
+            socketNumber.put(createdNode.getNodeId(), 1); //quando creo un nodo inserisco nella lista <nodeId, 1>
+        }
     }
 
     public synchronized void closeCommunicator(Long nodeId) {
@@ -73,6 +74,11 @@ public class SocketManager {
             Integer n = socketNumber.get(nodeId); //old connection number
             if (n != null){
                 if (n == 1) { //removes the connection
+                    try {
+                        socketList.get(nodeId).close();
+                    } catch (IOException e) {
+                        out.println("Code ad Arosio");
+                    }
                     socketNumber.remove(nodeId);
                     socketList.remove(nodeId);
                 } else //decreases the number of connection

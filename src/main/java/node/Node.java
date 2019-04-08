@@ -70,11 +70,10 @@ public class Node implements NodeInterface, Serializable {
 
     public void join(String joinIpAddress, int joinSocketPort)
             throws ConnectionErrorException, NodeIdAlreadyExistsException, IOException {
-        out.println("MIO ID SBAGLIATO: " + nodeId);
         NodeCommunicator nodeTemp = new NodeCommunicator(joinIpAddress, joinSocketPort, this, hash(joinIpAddress, joinSocketPort)); // crea un nodecomunicator temporaneo.
         dimFingerTable = nodeTemp.getDimFingerTable();
         this.nodeId = hash(ipAddress, socketPort);
-        out.println("ADESSO HO ID GIUSTO: " + nodeId);
+        out.println("NODE ID: " + nodeId);
         createSuccessorList();
         this.socketManager = new SocketManager(this);
         NodeInterface successorNode = nodeTemp.findSuccessor(this.nodeId);
