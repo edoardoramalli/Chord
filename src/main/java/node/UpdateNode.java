@@ -3,6 +3,8 @@ package node;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
+import static java.lang.System.out;
+
 public class UpdateNode implements Runnable {
     private Node node;
 

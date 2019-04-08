@@ -93,4 +93,14 @@ public class SocketManager {
         socketList.remove(disconnectedId);
         socketNumber.remove(disconnectedId);
     }
+
+    @Override
+    public String toString() {
+        String string = "SOCKET OPEN\n";
+        for (Map.Entry it:
+        socketList.entrySet()){
+            string = string + "Node id: " + it.getKey() + "\tNumber conn:" + socketNumber.get(it.getKey());
+        }
+        return string;
+    }
 }
