@@ -436,8 +436,8 @@ public class Node implements NodeInterface, Serializable {
     //KEY-VALUE
 
     public NodeInterface addKey(Map.Entry<Long, Object> keyValue) throws IOException {
-
-        if (keyValue.getKey().equals(this.nodeId) || successorList.get(0).equals(this)){
+        Long hashKey = keyValue.getKey()%(long)Math.pow(2, dimFingerTable);
+        if (hashKey.equals(this.nodeId) || successorList.get(0).equals(this)){
             addKeyToStore(keyValue);
             return this;
         }
@@ -449,10 +449,10 @@ public class Node implements NodeInterface, Serializable {
                 return newNodeKey;
             }
         }*/
-        if (predecessor!= null && keyValue.getKey().equals(predecessor.getNodeId()))
+        if (predecessor!= null && hashKey.equals(predecessor.getNodeId()))
             newNodeKey= predecessor;
         else
-            newNodeKey = findSuccessor(keyValue.getKey());
+            newNodeKey = findSuccessor(hashKey);
 
         if (newNodeKey.getNodeId().equals(nodeId)) {
             addKeyToStore(keyValue);
@@ -474,7 +474,8 @@ public class Node implements NodeInterface, Serializable {
     public void moveKey() throws IOException {
         for (Map.Entry<Long, Object> keyValue:
              keyStore.entrySet()) {
-            if (checkIntervalEquivalence(this.nodeId, keyValue.getKey(), predecessor.getNodeId())) {
+            Long hashKey = keyValue.getKey()%(long)Math.pow(2, dimFingerTable);
+            if (checkIntervalEquivalence(this.nodeId, hashKey, predecessor.getNodeId())) {
                 predecessor.addKey(new AbstractMap.SimpleEntry<>(keyValue.getKey(),keyValue.getValue()));
                 keyStore.remove(keyValue.getKey());
             }
@@ -483,13 +484,14 @@ public class Node implements NodeInterface, Serializable {
 
     @Override
     public Object findKey(Long key) throws IOException {
+        Long hashKey = key%(long)Math.pow(2, dimFingerTable);
         if (successorList.get(0).equals(this))
             return keyStore.get(key);
 
         if (predecessor!= null && checkIntervalEquivalence(predecessor.getNodeId(), key, nodeId))
             return keyStore.get(key);
 
-        return findSuccessor(key).findKey(key);
+        return findSuccessor(hashKey).findKey(key);
     }
     
 }
