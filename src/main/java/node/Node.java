@@ -488,7 +488,7 @@ public class Node implements NodeInterface, Serializable {
         if (successorList.get(0).equals(this))
             return keyStore.get(key);
 
-        if (predecessor!= null && checkIntervalEquivalence(predecessor.getNodeId(), key, nodeId))
+        if (predecessor!= null && checkIntervalEquivalence(predecessor.getNodeId(), hashKey, nodeId))
             return keyStore.get(key);
 
         return findSuccessor(hashKey).findKey(key);
