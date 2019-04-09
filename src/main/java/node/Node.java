@@ -43,6 +43,7 @@ public class Node implements NodeInterface, Serializable {
         this.nodeId = -1L;
         this.socketManager = null;
         this.keyStore = new ConcurrentHashMap();
+
     }
 
     public Node(String ipAddress, int socketPort, int dimFingerTable) {
@@ -55,6 +56,7 @@ public class Node implements NodeInterface, Serializable {
         this.socketManager = null;
         this.keyStore = new ConcurrentHashMap();
         this.nextFinger = 0;
+
     }
 
     public void create(int m) {
@@ -440,20 +442,24 @@ public class Node implements NodeInterface, Serializable {
             return this;
         }
         NodeInterface newNodeKey;
-        for (int i = 0; i < successorList.size(); i++) {
+      /*  for (int i = 0; i < successorList.size(); i++) {
             if (keyValue.getKey().equals(successorList.get(i).getNodeId())) {
                 newNodeKey = successorList.get(i);
                 newNodeKey.addKey(keyValue);
                 return newNodeKey;
             }
-        }
+        }*/
         if (predecessor!= null && keyValue.getKey().equals(predecessor.getNodeId()))
             newNodeKey= predecessor;
         else
             newNodeKey = findSuccessor(keyValue.getKey());
-        
-        newNodeKey.addKey(keyValue);
 
+        if (newNodeKey.getNodeId().equals(nodeId)) {
+            addKeyToStore(keyValue);
+            return this;
+        }
+
+        newNodeKey.addKey(keyValue);
         return newNodeKey;
     }
 
@@ -462,7 +468,7 @@ public class Node implements NodeInterface, Serializable {
     }
 
     public Object retrieveKeyFromStore(Long key){
-            return keyStore.get(key);
+        return keyStore.get( key);
     }
 
     public void moveKey() throws IOException {
@@ -477,7 +483,6 @@ public class Node implements NodeInterface, Serializable {
 
     @Override
     public Object findKey(Long key) throws IOException {
-
         if (successorList.get(0).equals(this))
             return keyStore.get(key);
 

@@ -369,7 +369,7 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
     public Object findKey(Long key) throws IOException {
         Long lockId = createLock();
         synchronized (lockList.get(lockId)){
-            socketNode.sendMessage(new FindKeyRequest(key, lockId));
+            socketNode.sendMessage(new FindKeyRequest(lockId, key));
             try {
                 lockList.get(lockId).wait();
             } catch (InterruptedException e) {
