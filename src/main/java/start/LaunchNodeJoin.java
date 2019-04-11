@@ -50,8 +50,8 @@ public class LaunchNodeJoin {
                     break;
                 case JOIN_COMMAND:
                     out.println("Insert ip address of node");
-                    //String ipAddress = "127.0.0.1";
-                    String ipAddress = "172.20.10.2";
+                    String ipAddress = "127.0.0.1";
+                    //String ipAddress = "172.20.10.2";
                     out.println("Insert socket port of node");
                     //int socketPort = Integer.parseInt(in.nextLine().toLowerCase());
                     int socketPort = 8008;
