@@ -292,12 +292,6 @@ public class Node implements NodeInterface, Serializable {
         }
     }
 
-    //TODO da implementare
-    @Override
-    public void checkPredecessor() {
-
-    }
-
     public void checkDisconnectedNode(Long disconnectedId){
         CopyOnWriteArrayList<NodeInterface> successorListClone = new CopyOnWriteArrayList<>(successorList);
         for (NodeInterface nodeInterface : successorListClone)

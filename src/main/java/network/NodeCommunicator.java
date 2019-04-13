@@ -82,7 +82,7 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
         }
         socketNode.close();
         joinNodeSocket.close();
-        node.getSocketManager().closeCommunicator(nodeId, "close");
+        node.getSocketManager().closeCommunicator(nodeId);
     }
 
     //non usato
@@ -103,11 +103,6 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
                 Thread.currentThread().interrupt();
             }
         }
-    }
-
-    @Override
-    public void checkPredecessor() {
-
     }
 
     @Override
@@ -294,7 +289,7 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
     public void handle(CloseMessage closeMessage) throws IOException {
         socketNode.sendMessage(new TerminatedMethodMessage(closeMessage.getLockId()));
         socketNode.close();
-        node.getSocketManager().closeCommunicator(nodeId, "handle close");
+        node.getSocketManager().closeCommunicator(nodeId);
     }
 
     @Override
