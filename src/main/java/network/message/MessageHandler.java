@@ -43,8 +43,4 @@ public interface MessageHandler {
     void handle(FindKeyResponse findKeyResponse) throws IOException;
 
     void handle(FindKeyRequest findKeyRequest) throws IOException;
-
-    void handle(GetNumberActiveConnectionRequest getNumberActiveConnectionRequest) throws IOException;
-
-    void handle(GetNumberActiveConnectionResponse getNumberActiveConnectionResponse) throws IOException;
 }

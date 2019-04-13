@@ -29,8 +29,6 @@ public interface NodeInterface extends Serializable {
 
     Long getNodeId();
 
-    Integer getNumberActiveConnection(Long id) throws IOException;
-
     void close() throws IOException;
 
     List<NodeInterface> getSuccessorList() throws IOException;

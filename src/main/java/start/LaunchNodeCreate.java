@@ -118,7 +118,6 @@ public class LaunchNodeCreate {
                     break;
                 case PRINT_COMMAND:
                     out.println(node);
-                    out.println(node.getSocketManager());
                     break;
                 case EXIT_COMMAND:
                     exit = true;

@@ -173,22 +173,6 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
         return findSuccessorResponse.getNode();
     }
 
-   @Override
-   public Integer getNumberActiveConnection(Long id) throws IOException {
-       Long lockId = createLock();
-       synchronized (lockList.get(lockId)){
-           socketNode.sendMessage(new GetNumberActiveConnectionRequest(id, lockId));
-           try {
-               lockList.get(lockId).wait();
-           } catch (InterruptedException e) {
-               Thread.currentThread().interrupt();
-           }
-       }
-       GetNumberActiveConnectionResponse getNumberActiveConnectionResponse = (GetNumberActiveConnectionResponse) messageList.get(lockId);
-       messageList.remove(lockId);
-       return getNumberActiveConnectionResponse.getNumberOfConnetion();
-   }
-
     @Override
     public NodeInterface getPredecessor() throws IOException {
         Long lockId = createLock();
@@ -410,21 +394,5 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
             lockList.get(findKeyResponse.getLockId()).notifyAll();
         }
     }
-
-    @Override
-    public void handle(GetNumberActiveConnectionRequest getNumberActiveConnectionRequest) throws IOException {
-        Integer numberOfConnection = node.getSocketManager().getSocketNumber().get(getNumberActiveConnectionRequest.getId());
-        socketNode.sendMessage(new GetNumberActiveConnectionResponse(numberOfConnection, getNumberActiveConnectionRequest.getLockId()));
-    }
-
-    @Override
-    public void handle(GetNumberActiveConnectionResponse getNumberActiveConnectionResponse) throws IOException {
-        synchronized (lockList.get(getNumberActiveConnectionResponse.getLockId())){
-            messageList.put(getNumberActiveConnectionResponse.getLockId(), getNumberActiveConnectionResponse);
-            lockList.get(getNumberActiveConnectionResponse.getLockId()).notifyAll();
-        }
-    }
-
-
 
 }

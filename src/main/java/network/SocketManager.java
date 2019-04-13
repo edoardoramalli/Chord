@@ -31,13 +31,13 @@ public class SocketManager {
         else {
             NodeInterface searchedNode = socketList.get(searchedNodeId);
             if(searchedNode != null) {
+                out.println("CONNESSIONE GIA ESISTENTE VERSO: " + searchedNodeId);
                 int n = socketNumber.get(searchedNodeId); //vecchio numero di connessioni
                 socketNumber.replace(searchedNodeId, n+1); //faccio replace con nodeId e n+1
-                out.println("CONNESSIONE GIA ESISTENTE VERSO: " + searchedNodeId + " Numero Conn = " + socketNumber.get(connectionNode.getNodeId()));
-
                 return searchedNode;
             }
             else{
+                out.println("NUOVA CONNESSIONE VERSO: " + searchedNodeId);
                 NodeCommunicator createdNode;
                 try {
                     createdNode = new NodeCommunicator(connectionNode.getIpAddress(), connectionNode.getSocketPort(), node, connectionNode.getNodeId());
@@ -46,7 +46,6 @@ public class SocketManager {
                 }
                 socketList.put(searchedNodeId, createdNode);
                 socketNumber.put(searchedNodeId, 1); //quando creo un nodo inserisco nella lista <nodeId, 1>
-                out.println("NUOVA CONNESSIONE VERSO: " + searchedNodeId + " Numero Conn = " + socketNumber.get(connectionNode.getNodeId()));
                 return createdNode;
             }
         }
@@ -76,22 +75,15 @@ public class SocketManager {
             if (n != null){
                 if (n == 1) { //removes the connection
                     try {
-                        Integer num = socketList.get(nodeId).getNumberActiveConnection(node.getNodeId());
-                        out.println("Numero di Conn. di " + node.getNodeId() + " Verso " + nodeId + " = " + num.toString());
-                        if ( num == 0 ){
-                            socketList.get(nodeId).close();
-                        }
+                        socketList.get(nodeId).close();
                     } catch (IOException e) {
                         out.println("Code ad Arosio");
                     }
                     socketNumber.remove(nodeId);
                     socketList.remove(nodeId);
-                    out.println("Rimossa Connessione Verso : " + nodeId);
-                    out.println("DUNQUE CONNESSIONI VERSO : " + nodeId + " SONO "+ socketNumber.get(nodeId));
-                } else {//decreases the number of connection
+                } else //decreases the number of connection
                     socketNumber.replace(nodeId, n-1);
-                    out.println("Rimossa 1 Connessione Verso : " + nodeId);
-                }
+                out.println("RIMOSSO: " + nodeId);
             }
         }
     }
@@ -102,16 +94,12 @@ public class SocketManager {
         socketNumber.remove(disconnectedId);
     }
 
-    public Map<Long, Integer> getSocketNumber() {
-        return socketNumber;
-    }
-
     @Override
     public String toString() {
-        String string = "SOCKET OPEN : \n";
+        String string = "SOCKET OPEN\n";
         for (Map.Entry it:
         socketList.entrySet()){
-            string = string + "- Node id: " + it.getKey() + "\tNumber conn: " + socketNumber.get(it.getKey()) + "\n";
+            string = string + "Node id: " + it.getKey() + "\tNumber conn:" + socketNumber.get(it.getKey());
         }
         return string;
     }

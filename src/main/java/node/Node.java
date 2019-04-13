@@ -368,12 +368,6 @@ public class Node implements NodeInterface, Serializable {
     }
 
     @Override
-    public Integer getNumberActiveConnection(Long id){
-        return this.getSocketManager().getSocketNumber().get(id);
-    }
-
-
-    @Override
     public int getDimFingerTable() {
         return dimFingerTable;
     }
@@ -499,7 +493,5 @@ public class Node implements NodeInterface, Serializable {
 
         return findSuccessor(hashKey).findKey(key);
     }
-
-
     
 }
