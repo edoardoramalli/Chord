@@ -36,7 +36,7 @@ public class LaunchNodeCreate {
             //String choice = "join";
             out.println("Select port"); //poi aggiungo controllo
             //int mySocketPort =  Integer.parseInt(in.nextLine());
-            int mySocketPort = 8008;
+            int mySocketPort = 10000;
             try {
                 node = new Node(InetAddress.getLocalHost().getHostAddress(), mySocketPort);
                 //node = new Node("130.25.123.98", mySocketPort);
@@ -57,7 +57,7 @@ public class LaunchNodeCreate {
                     String ipAddress = "192.168.43.162";
                     out.println("Insert socket port of node");
                     //int socketPort = Integer.parseInt(in.nextLine().toLowerCase());
-                    int socketPort = 8009;
+                    int socketPort = 10000;
                     try {
                         node.join(ipAddress, socketPort);
                         exit = true;
@@ -118,6 +118,7 @@ public class LaunchNodeCreate {
                     break;
                 case PRINT_COMMAND:
                     out.println(node);
+                    out.println(node.getSocketManager());
                     break;
                 case EXIT_COMMAND:
                     exit = true;

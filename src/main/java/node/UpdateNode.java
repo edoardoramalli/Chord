@@ -3,8 +3,6 @@ package node;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
-import static java.lang.System.out;
-
 public class UpdateNode implements Runnable {
     private Node node;
 
@@ -24,7 +22,7 @@ public class UpdateNode implements Runnable {
                 e.printStackTrace(); //qui poi devo gestire la disconnessione
             }
             try {
-                TimeUnit.SECONDS.sleep(3);
+                TimeUnit.SECONDS.sleep(2);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }

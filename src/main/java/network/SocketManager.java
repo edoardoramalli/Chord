@@ -1,6 +1,7 @@
 package network;
 
 import exceptions.ConnectionErrorException;
+import exceptions.UnexpectedBehaviourException;
 import network.message.MessageHandler;
 import node.Node;
 import node.NodeInterface;
@@ -9,6 +10,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import static java.lang.System.err;
 import static java.lang.System.out;
 
 public class SocketManager {
@@ -25,19 +27,19 @@ public class SocketManager {
     public synchronized NodeInterface createConnection(NodeInterface connectionNode) throws IOException, ConnectionErrorException {
         Long searchedNodeId = connectionNode.getNodeId();
         if (searchedNodeId.equals(node.getNodeId())) { //nel caso in cui ritorno me stesso non ho bisogno di aggiornare il numero di connessioni
-            out.println("CREO CONNESSIONE: RITORNO ME STESSO");
+            out.println("NUOVA CONNESSIONE: RITORNO ME STESSO");
             return node;
         }
         else {
             NodeInterface searchedNode = socketList.get(searchedNodeId);
             if(searchedNode != null) {
-                out.println("CONNESSIONE GIA ESISTENTE VERSO: " + searchedNodeId);
+                out.println("DALLA LISTA: " + searchedNodeId + ", NUM CONNECTION: " + (socketNumber.get(searchedNodeId)+1));
                 int n = socketNumber.get(searchedNodeId); //vecchio numero di connessioni
                 socketNumber.replace(searchedNodeId, n+1); //faccio replace con nodeId e n+1
                 return searchedNode;
             }
             else{
-                out.println("NUOVA CONNESSIONE VERSO: " + searchedNodeId);
+                out.println("NUOVA: " + searchedNodeId);
                 NodeCommunicator createdNode;
                 try {
                     createdNode = new NodeCommunicator(connectionNode.getIpAddress(), connectionNode.getSocketPort(), node, connectionNode.getNodeId());
@@ -54,18 +56,14 @@ public class SocketManager {
     synchronized void createConnection(SocketNode socketNode, String ipAddress) {
         NodeInterface createdNode = new NodeCommunicator(socketNode, node);
         socketNode.setMessageHandler((MessageHandler) createdNode);
-        int port = 0;
+        int port;
         try {
             port = createdNode.getSocketPort();
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new UnexpectedBehaviourException();
         }
         createdNode.setNodeId(node.hash(ipAddress, port));
-        if (!createdNode.getNodeId().equals(node.getNodeId())) {
-            out.println("CREO CONNESSIONE DA: " + createdNode.getNodeId());
-            socketList.put(createdNode.getNodeId(), createdNode);
-            socketNumber.put(createdNode.getNodeId(), 1); //quando creo un nodo inserisco nella lista <nodeId, 1>
-        }
+        out.println("CREO: " + createdNode.getNodeId());
     }
 
     public synchronized void closeCommunicator(Long nodeId) {
@@ -74,16 +72,13 @@ public class SocketManager {
             Integer n = socketNumber.get(nodeId); //old connection number
             if (n != null){
                 if (n == 1) { //removes the connection
-                    try {
-                        socketList.get(nodeId).close();
-                    } catch (IOException e) {
-                        out.println("Code ad Arosio");
-                    }
                     socketNumber.remove(nodeId);
                     socketList.remove(nodeId);
-                } else //decreases the number of connection
-                    socketNumber.replace(nodeId, n-1);
-                out.println("RIMOSSO: " + nodeId);
+                    out.println("RIMOSSO: " + nodeId);
+                } else { //decreases the number of connection
+                    socketNumber.replace(nodeId, n - 1);
+                    out.println("DIMINUISCO: " + nodeId + ", NUM CONNECTION: " + socketNumber.get(nodeId));
+                }
             }
         }
     }
@@ -99,7 +94,7 @@ public class SocketManager {
         String string = "SOCKET OPEN\n";
         for (Map.Entry it:
         socketList.entrySet()){
-            string = string + "Node id: " + it.getKey() + "\tNumber conn:" + socketNumber.get(it.getKey());
+            string = string + "Node id: " + it.getKey() + "\tNumber conn: " + socketNumber.get(it.getKey()) + "\n";
         }
         return string;
     }

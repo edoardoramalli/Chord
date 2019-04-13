@@ -9,9 +9,6 @@ import java.io.*;
 import java.net.Socket;
 import java.util.concurrent.Executors;
 
-import static java.lang.System.err;
-import static java.lang.System.out;
-
 public class SocketNode implements Runnable, Serializable {
     private transient ObjectOutputStream socketOutput;
     private transient ObjectInputStream socketInput;
@@ -63,7 +60,7 @@ public class SocketNode implements Runnable, Serializable {
             return message;*/
             return (Message) socketInput.readObject();
         } catch (IOException e) {
-            out.println("Entro qui");
+            //out.println("Entro qui");
             //e.printStackTrace();
             connected = false;
             messageHandler.nodeDisconnected();
