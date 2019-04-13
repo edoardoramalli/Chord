@@ -93,6 +93,11 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
     }
 
     @Override
+    public  void sendToController (String text){
+
+    }
+
+    @Override
     public void notify(NodeInterface node) throws IOException {
         Long lockId = createLock();
         synchronized (lockList.get(lockId)){
@@ -295,7 +300,8 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
     @Override
     public void handle(GetPredecessorRequest getPredecessorRequest) throws IOException {
         NodeInterface predecessor = node.getPredecessor();
-        socketNode.sendMessage(new GetPredecessorResponse(new Node(predecessor.getIpAddress(), predecessor.getSocketPort(), node.getDimFingerTable()), getPredecessorRequest.getLockId()));
+        socketNode.sendMessage(new GetPredecessorResponse(new Node(predecessor.getIpAddress(),
+                predecessor.getSocketPort(), node.getDimFingerTable()), getPredecessorRequest.getLockId()));
     }
 
     @Override
@@ -308,7 +314,9 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
 
     @Override
     public void handle(GetDimFingerTableRequest getDimFingerTableRequest) throws IOException {
-        socketNode.sendMessage(new GetDimFingerTableResponse(node.getDimFingerTable(), getDimFingerTableRequest.getLockId()));
+        socketNode.sendMessage(new GetDimFingerTableResponse(node.getDimFingerTable(),
+                getDimFingerTableRequest.getLockId()));
+
     }
 
     @Override
