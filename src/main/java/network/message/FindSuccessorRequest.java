@@ -1,12 +1,9 @@
 package network.message;
 
-import node.NodeInterface;
-
 import java.io.IOException;
 import java.io.Serializable;
 
 public class FindSuccessorRequest implements Message, Serializable {
-    private NodeInterface node;
     private long id;
     private Long lockId;
 

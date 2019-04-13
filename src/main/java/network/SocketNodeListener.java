@@ -1,5 +1,6 @@
 package network;
 
+import exceptions.UnexpectedBehaviourException;
 import node.Node;
 
 import java.io.IOException;

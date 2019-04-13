@@ -15,7 +15,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executors;
 
-import static java.lang.System.err;
 import static java.lang.System.out;
 
 public class Node implements NodeInterface, Serializable {
@@ -111,6 +110,10 @@ public class Node implements NodeInterface, Serializable {
     synchronized void listStabilize() throws IOException {
         //questo serve per settare il primo successore
         NodeInterface x = successorList.get(0).getPredecessor();
+        if (x == null) {
+            successorList.get(0).notify(this);
+            return;
+        }
         long nodeIndex = x.getNodeId();
         long oldSucID = successorList.get(0).getNodeId();
         if (checkInterval(getNodeId(), nodeIndex, oldSucID)) {
@@ -119,7 +122,7 @@ public class Node implements NodeInterface, Serializable {
                 successorList.set(0, socketManager.createConnection(x));
             }
             catch (ConnectionErrorException e){
-                e.printStackTrace();
+                throw new UnexpectedBehaviourException();
             }
         }
         successorList.get(0).notify(this);
@@ -142,7 +145,7 @@ public class Node implements NodeInterface, Serializable {
                             successorList.add(socketManager.createConnection(xNode));
                         already = false;
                     } catch (ConnectionErrorException e) {
-                        e.printStackTrace();
+                        throw new UnexpectedBehaviourException();
                     }
                 }
             }
@@ -155,7 +158,7 @@ public class Node implements NodeInterface, Serializable {
                         socketManager.closeCommunicator(successorList.get(i).getNodeId());
                         successorList.set(i, socketManager.createConnection(xList.get(i-1)));
                     } catch (ConnectionErrorException e) {
-                        e.printStackTrace();
+                        throw new UnexpectedBehaviourException();
                     }
                 }
             }
@@ -208,7 +211,7 @@ public class Node implements NodeInterface, Serializable {
                 predecessor = socketManager.createConnection(n); //creo connessione
                 moveKey();
             } catch (ConnectionErrorException e) {
-                e.printStackTrace();
+                throw new UnexpectedBehaviourException();
             }
         }
         else {

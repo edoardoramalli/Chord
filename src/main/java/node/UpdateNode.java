@@ -1,5 +1,7 @@
 package node;
 
+import exceptions.UnexpectedBehaviourException;
+
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
@@ -19,15 +21,13 @@ public class UpdateNode implements Runnable {
                 for (int i = 0; i < node.getDimFingerTable(); i++)
                     node.fixFingers();
             } catch (IOException e) {
-                e.printStackTrace(); //qui poi devo gestire la disconnessione
+                throw new UnexpectedBehaviourException();
             }
             try {
-                TimeUnit.SECONDS.sleep(2);
+                TimeUnit.SECONDS.sleep(1);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
-            if(false)
-                break;
         }
     }
 }

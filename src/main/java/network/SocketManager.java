@@ -10,7 +10,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import static java.lang.System.err;
 import static java.lang.System.out;
 
 public class SocketManager {
@@ -62,7 +61,16 @@ public class SocketManager {
         } catch (IOException e) {
             throw new UnexpectedBehaviourException();
         }
-        createdNode.setNodeId(node.hash(ipAddress, port));
+        Long createdNodeId = node.hash(ipAddress, port);
+        if (!createdNodeId.equals(node.getNodeId()))
+            createdNode.setNodeId(createdNodeId);
+        else {
+            try {
+                createdNode.close();
+            } catch (IOException e) {
+                throw new UnexpectedBehaviourException();
+            }
+        }
         out.println("CREO: " + createdNode.getNodeId());
     }
 

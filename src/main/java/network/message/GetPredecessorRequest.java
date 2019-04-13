@@ -1,7 +1,5 @@
 package network.message;
 
-import node.NodeInterface;
-
 import java.io.IOException;
 import java.io.Serializable;
 

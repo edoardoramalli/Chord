@@ -55,18 +55,13 @@ public class SocketNode implements Runnable, Serializable {
 
     private Message getMessage() {
         try {
-            /*Message message = (Message) socketInput.readObject();
-            err.println(message);
-            return message;*/
             return (Message) socketInput.readObject();
         } catch (IOException e) {
-            //out.println("Entro qui");
-            //e.printStackTrace();
             connected = false;
             messageHandler.nodeDisconnected();
             this.close();
         } catch (ClassNotFoundException e) {
-            e.printStackTrace();
+            throw new UnexpectedBehaviourException();
         }
         return null;
     }
@@ -75,7 +70,6 @@ public class SocketNode implements Runnable, Serializable {
         socketOutput.reset();
         socketOutput.writeObject(message);
         socketOutput.flush();
-        //out.println(message);
     }
 
     void close() {
