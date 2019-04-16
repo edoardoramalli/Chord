@@ -93,11 +93,6 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
     }
 
     @Override
-    public  void sendToController (String text){
-
-    }
-
-    @Override
     public void notify(NodeInterface node) throws IOException {
         Long lockId = createLock();
         synchronized (lockList.get(lockId)){
