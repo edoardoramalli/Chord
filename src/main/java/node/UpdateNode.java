@@ -5,6 +5,8 @@ import exceptions.UnexpectedBehaviourException;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
+import static java.lang.System.out;
+
 public class UpdateNode implements Runnable {
     private Node node;
 
@@ -24,7 +26,7 @@ public class UpdateNode implements Runnable {
                 throw new UnexpectedBehaviourException();
             }
             try {
-                TimeUnit.SECONDS.sleep(1);
+                TimeUnit.MILLISECONDS.sleep(1200);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }

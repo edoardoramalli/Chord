@@ -1,5 +1,6 @@
 package node;
 
+import exceptions.TimerExpiredException;
 import network.SocketManager;
 
 import java.io.IOException;
@@ -11,11 +12,11 @@ public interface NodeInterface extends Serializable {
 
     SocketManager getSocketManager();
 
-    void notify(NodeInterface node) throws IOException;
+    void notify(NodeInterface node) throws IOException, TimerExpiredException;
 
     NodeInterface findSuccessor(Long id) throws IOException;
 
-    NodeInterface getPredecessor() throws IOException;
+    NodeInterface getPredecessor() throws IOException, TimerExpiredException;
 
     String getIpAddress() throws IOException;
 
@@ -29,7 +30,7 @@ public interface NodeInterface extends Serializable {
 
     void close() throws IOException;
 
-    List<NodeInterface> getSuccessorList() throws IOException;
+    List<NodeInterface> getSuccessorList() throws IOException, TimerExpiredException;
 
     //Key
 

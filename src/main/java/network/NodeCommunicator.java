@@ -1,6 +1,7 @@
 package network;
 
 import exceptions.ConnectionErrorException;
+import exceptions.TimerExpiredException;
 import exceptions.UnexpectedBehaviourException;
 import network.message.*;
 import node.Node;
@@ -14,8 +15,7 @@ import java.net.Socket;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 
 import static java.lang.System.err;
 import static java.lang.System.out;
@@ -31,6 +31,8 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
     //è una map <lockId, Message> in questo modo il metodo chiamante può accedere
     // al suo valore di ritorno tramite il lockId
     private transient volatile HashMap<Long, Message> messageList;
+
+    private static final int TIMEOUT = 1000; //in milliseconds
 
     private synchronized Long createLock(){
         lockList.put(lockID, new Object());
@@ -93,18 +95,36 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
     }
 
     @Override
-    public void notify(NodeInterface node) throws IOException {
+    public void notify(NodeInterface node) throws IOException, TimerExpiredException {
         Long lockId = createLock();
-        synchronized (lockList.get(lockId)){
-            socketNode.sendMessage(new NotifyRequest(node, lockId));
-            try {
-                lockList.get(lockId).wait();
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
+
+        final ExecutorService service = Executors.newSingleThreadExecutor();
+        try {
+            final Future<?> f = service.submit(() -> {
+                synchronized (lockList.get(lockId)){
+                    try {
+                        socketNode.sendMessage(new NotifyRequest(node, lockId));
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    try {
+                        lockList.get(lockId).wait();
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    }
+                }
+            });
+
+            f.get(TIMEOUT, TimeUnit.MILLISECONDS);
+        } catch (final TimeoutException e) {
+            out.println("Timer scaduto NOTIFY");
+            throw new TimerExpiredException();
+        } catch (InterruptedException | ExecutionException e) {
+            Thread.currentThread().interrupt();
         }
     }
 
+    //TODO DA METTERE TIMER
     @Override
     public String getIpAddress() throws IOException {
         Long lockId = createLock();
@@ -121,6 +141,7 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
         return getIpAddressResponse.getIpAddress();
     }
 
+    //TODO DA METTERE TIMER
     @Override
     public int getSocketPort() throws IOException {
         Long lockId = createLock();
@@ -137,6 +158,7 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
         return getSocketPortResponse.getSocketPort();
     }
 
+    //TODO DA METTERE TIMER
     @Override
     public int getDimFingerTable() throws IOException {
         Long lockId = createLock();
@@ -153,6 +175,7 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
         return getDimFingerTableResponse.getDimFingerTable();
     }
 
+    //TODO DA METTERE TIMER
     @Override
     public NodeInterface findSuccessor(Long id) throws IOException {
         Long lockId = createLock();
@@ -170,15 +193,32 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
     }
 
     @Override
-    public NodeInterface getPredecessor() throws IOException {
+    public NodeInterface getPredecessor() throws TimerExpiredException {
         Long lockId = createLock();
-        synchronized (lockList.get(lockId)){
-            socketNode.sendMessage(new GetPredecessorRequest(lockId));
-            try {
-                lockList.get(lockId).wait();
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
+
+        final ExecutorService service = Executors.newSingleThreadExecutor();
+        try {
+            final Future<?> f = service.submit(() -> {
+                synchronized (lockList.get(lockId)){
+                    try {
+                        socketNode.sendMessage(new GetPredecessorRequest(lockId));
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    try {
+                        lockList.get(lockId).wait();
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    }
+                }
+            });
+
+            f.get(TIMEOUT, TimeUnit.MILLISECONDS);
+        } catch (final TimeoutException e) {
+            out.println("Timer scaduto GET PREDECESSOR");
+            throw new TimerExpiredException();
+        } catch (InterruptedException | ExecutionException e) {
+            Thread.currentThread().interrupt();
         }
         GetPredecessorResponse getPredecessorResponse = (GetPredecessorResponse) messageList.get(lockId);
         messageList.remove(lockId);
@@ -192,15 +232,32 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
     }
 
     @Override
-    public List<NodeInterface> getSuccessorList() throws IOException {
+    public List<NodeInterface> getSuccessorList() throws IOException, TimerExpiredException {
         Long lockId = createLock();
-        synchronized (lockList.get(lockId)){
-            socketNode.sendMessage(new GetSuccessorListRequest(lockId));
-            try {
-                lockList.get(lockId).wait();
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
+
+        final ExecutorService service = Executors.newSingleThreadExecutor();
+        try {
+            final Future<?> f = service.submit(() -> {
+                synchronized (lockList.get(lockId)){
+                    try {
+                        socketNode.sendMessage(new GetSuccessorListRequest(lockId));
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    try {
+                        lockList.get(lockId).wait();
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    }
+                }
+            });
+
+            f.get(TIMEOUT, TimeUnit.MILLISECONDS);
+        } catch (final TimeoutException e) {
+            out.println("Timer scaduto GET SUCCESSOR LIST");
+            throw new TimerExpiredException();
+        } catch (InterruptedException | ExecutionException e) {
+            Thread.currentThread().interrupt();
         }
         GetSuccessorListResponse getSuccessorListResponse = (GetSuccessorListResponse) messageList.get(lockId);
         messageList.remove(lockId);
@@ -213,6 +270,7 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
         node.getSocketManager().removeNode(nodeId);
     }
 
+    //TODO DA METTERE TIMER
     @Override
     public NodeInterface addKey(Map.Entry<Long, Object> keyValue) throws IOException {
         Long lockId = createLock();
@@ -229,6 +287,7 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
         return addKeyResponse.getNode();
     }
 
+    //TODO DA METTERE TIMER
     @Override
     public void addKeyToStore(Map.Entry<Long, Object> keyValue) {
     }
@@ -238,6 +297,7 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
         return null;
     }
 
+    //TODO DA METTERE TIMER
     @Override
     public Object findKey(Long key) throws IOException {
         Long lockId = createLock();
@@ -274,7 +334,11 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
 
     @Override
     public void handle(NotifyRequest notifyRequest) throws IOException {
-        node.notify(notifyRequest.getNode());
+        try {
+            node.notify(notifyRequest.getNode());
+        } catch (TimerExpiredException e) {
+            throw new UnexpectedBehaviourException();
+        }
         socketNode.sendMessage(new TerminatedMethodMessage(notifyRequest.getLockId()));
     }
 
@@ -294,7 +358,12 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
 
     @Override
     public void handle(GetPredecessorRequest getPredecessorRequest) throws IOException {
-        NodeInterface predecessor = node.getPredecessor();
+        NodeInterface predecessor;
+        try {
+            predecessor = node.getPredecessor();
+        } catch (TimerExpiredException e) {
+            throw new UnexpectedBehaviourException();
+        }
         if (predecessor != null)
             socketNode.sendMessage(new GetPredecessorResponse(new Node(predecessor.getIpAddress(), predecessor.getSocketPort(), node.getDimFingerTable()), getPredecessorRequest.getLockId()));
         else
@@ -351,9 +420,13 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
     @Override
     public void handle(GetSuccessorListRequest getSuccessorListRequest) throws IOException {
         CopyOnWriteArrayList<NodeInterface> list = new CopyOnWriteArrayList<>();
-        for (NodeInterface nodeInterface :
-                node.getSuccessorList()) {
-            list.add(new Node(nodeInterface.getIpAddress(), nodeInterface.getSocketPort(), node.getDimFingerTable()));
+        try {
+            for (NodeInterface nodeInterface :
+                    node.getSuccessorList()) {
+                list.add(new Node(nodeInterface.getIpAddress(), nodeInterface.getSocketPort(), node.getDimFingerTable()));
+            }
+        } catch (TimerExpiredException e) {
+            throw new UnexpectedBehaviourException();
         }
         socketNode.sendMessage(new GetSuccessorListResponse(list, getSuccessorListRequest.getLockId()));
     }
