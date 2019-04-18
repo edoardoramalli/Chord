@@ -14,8 +14,10 @@ public class SocketNode implements Runnable, Serializable {
     private transient ObjectInputStream socketInput;
     private transient volatile MessageHandler messageHandler;
     private transient volatile boolean connected;
+    private final boolean connectionIn;
 
     SocketNode(NodeInterface node, Socket socketIn){
+        this.connectionIn = true;
         try {
             this.socketInput = new ObjectInputStream(socketIn.getInputStream());
             this.socketOutput = new ObjectOutputStream(socketIn.getOutputStream());
@@ -35,6 +37,7 @@ public class SocketNode implements Runnable, Serializable {
         this.socketInput = socketInput;
         this.socketOutput = socketOutput;
         this.connected = true;
+        this.connectionIn = false;
     }
 
     @Override
@@ -58,7 +61,8 @@ public class SocketNode implements Runnable, Serializable {
             return (Message) socketInput.readObject();
         } catch (IOException e) {
             connected = false;
-            messageHandler.nodeDisconnected();
+            if (!connectionIn)
+                messageHandler.nodeDisconnected();
             this.close();
         } catch (ClassNotFoundException e) {
             throw new UnexpectedBehaviourException();

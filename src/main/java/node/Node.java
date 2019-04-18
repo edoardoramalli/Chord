@@ -2,15 +2,14 @@ package node;
 
 import exceptions.ConnectionErrorException;
 import exceptions.NodeIdAlreadyExistsException;
+import exceptions.TimerExpiredException;
 import exceptions.UnexpectedBehaviourException;
 import network.NodeCommunicator;
 import network.SocketManager;
 import network.SocketNodeListener;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.io.Serializable;
-import java.net.Socket;
 import java.util.*;
 
 import java.util.concurrent.ConcurrentHashMap;
@@ -27,9 +26,6 @@ public class Node implements NodeInterface, Serializable {
     private Long nodeId;
     private transient volatile CopyOnWriteArrayList<NodeInterface> successorList;
     private transient volatile NodeInterface predecessor;
-
-
-
     private transient volatile Map<Integer, NodeInterface> fingerTable;
     private transient int dimFingerTable = 3;
     private transient int dimSuccessorList = 3; //todo quanto è lunga la lista?
@@ -37,10 +33,6 @@ public class Node implements NodeInterface, Serializable {
     private transient volatile ConcurrentHashMap<Long, Object> keyStore;
     //connection handler
     private transient volatile SocketManager socketManager;
-
-    private transient volatile PrintWriter outBuffer;
-    private transient volatile Socket socketController;
-    private transient volatile boolean stable = true;
 
     public Node(String ipAddress, int socketPort) {
         this.ipAddress = ipAddress;
@@ -64,46 +56,8 @@ public class Node implements NodeInterface, Serializable {
         this.socketManager = null;
         this.keyStore = new ConcurrentHashMap();
         this.nextFinger = 0;
-    }
-
-    private void OpenController (){
-        try{
-            this.socketController = new Socket("127.0.0.1", 59898);
-            this.sendToController("#Connected");
-        } catch (Exception e){
-            out.println("ERRORE CONTROLLER");
-        }
-    }
-
-    public void sendToController(String text) {
-        try {
-            this.outBuffer = new PrintWriter(this.socketController.getOutputStream(), true);
-            outBuffer.println(this.nodeId + text);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
 
     }
-
-    public void updateStable(boolean listSucc, boolean listFiger){
-        boolean local;
-        if (listSucc && listFiger){
-            local = true;
-        }
-        else{
-            local = false;
-        }
-        if (stable != local){
-            stable = local;
-            if (!stable){
-                this.sendToController("#NotStable");
-            }
-            else{
-                this.sendToController("#Stable");
-            }
-        }
-    }
-
 
     public void create(int m) {
         dimFingerTable = m;
@@ -114,9 +68,6 @@ public class Node implements NodeInterface, Serializable {
         createFingerTable();
         socketManager = new SocketManager(this);
         Executors.newCachedThreadPool().submit(new UpdateNode(this));
-        OpenController ();
-
-
     }
 
     public void join(String joinIpAddress, int joinSocketPort)
@@ -128,26 +79,31 @@ public class Node implements NodeInterface, Serializable {
         dimFingerTable = nodeTemp.getDimFingerTable();
         this.nodeId = hash(ipAddress, socketPort);
         out.println("NODE ID: " + nodeId);
-
         createSuccessorList();
         this.socketManager = new SocketManager(this);
         NodeInterface successorNode = nodeTemp.findSuccessor(this.nodeId);
         if (successorNode.getNodeId().equals(nodeId)) //se find successor ritorna un nodo con lo stesso tuo id significa che esiste già un nodo con il tuo id
             throw new NodeIdAlreadyExistsException();
-
         nodeTemp.close();
-        OpenController ();
 
         successorList.set(0, socketManager.createConnection(successorNode)); //creo nuova connessione
         initializeSuccessorList();
-        successorList.get(0).notify(this); //serve per settare il predecessore nel successore del nodo
-
+        try {
+            successorList.get(0).notify(this); //serve per settare il predecessore nel successore del nodo
+        } catch (TimerExpiredException e) {
+            e.printStackTrace(); //TODO se il nodo a cui stiamo facendo la prima notify cade cosa facciamo?
+        }
 
         Executors.newCachedThreadPool().submit(new UpdateNode(this));
     }
 
     private void initializeSuccessorList() throws IOException {
-        List<NodeInterface> successorNodeList = successorList.get(0).getSuccessorList();
+        List<NodeInterface> successorNodeList = null;
+        try {
+            successorNodeList = successorList.get(0).getSuccessorList();
+        } catch (TimerExpiredException e) {
+            e.printStackTrace(); //TODO da vedere cosa fare
+        }
         for (NodeInterface node: successorNodeList) {
             if (node.getNodeId().equals(successorList.get(0).getNodeId()) || node.getNodeId().equals(this.nodeId))
                 break;
@@ -162,11 +118,20 @@ public class Node implements NodeInterface, Serializable {
     }
 
     synchronized void listStabilize() throws IOException {
-
         //questo serve per settare il primo successore
-        NodeInterface x = successorList.get(0).getPredecessor();
+        out.println("---------->");
+        NodeInterface x;
+        try {
+            x = successorList.get(0).getPredecessor();
+        } catch (TimerExpiredException e) { //se il timer scade non faccio niente
+            return;
+        }
         if (x == null) {
-            successorList.get(0).notify(this);
+            try {
+                successorList.get(0).notify(this);
+            } catch (TimerExpiredException ignore){
+                return;
+            }
             return;
         }
         long nodeIndex = x.getNodeId();
@@ -180,12 +145,20 @@ public class Node implements NodeInterface, Serializable {
                 throw new UnexpectedBehaviourException();
             }
         }
-        successorList.get(0).notify(this);
+        try {
+            successorList.get(0).notify(this);
+        } catch (TimerExpiredException e) {
+            return;
+        }
 
         boolean already = false;
 
         List<NodeInterface> xList; //xList contiene la lista dei successori del successore
-        xList = successorList.get(0).getSuccessorList();
+        try {
+            xList = successorList.get(0).getSuccessorList();
+        } catch (TimerExpiredException e) {
+            return;
+        }
         if (successorList.size() < dimSuccessorList){
             for (NodeInterface xNode: xList) {
                 if (!xNode.getNodeId().equals(nodeId) && successorList.size() < dimSuccessorList) {
@@ -426,10 +399,6 @@ public class Node implements NodeInterface, Serializable {
         return successorList;
     }
 
-    public Map<Integer, NodeInterface> getFingerTable() {
-        return fingerTable;
-    }
-
     public Long hash(String ipAddress, int socketPort) {
         Long ipNumber = ipToLong(ipAddress) + socketPort;
         Long numberNodes = (long)Math.pow(2, dimFingerTable);
@@ -536,5 +505,4 @@ public class Node implements NodeInterface, Serializable {
 
         return findSuccessor(hashKey).findKey(key);
     }
-
 }
