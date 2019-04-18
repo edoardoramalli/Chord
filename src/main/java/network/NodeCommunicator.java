@@ -24,6 +24,7 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
     private transient Socket joinNodeSocket;
     private transient NodeInterface node; //mio nodo
     private transient Long nodeId; //questo è il nodeId dell'altro
+    private transient String ipAddress; //ipAddress dell'altro nodo
     private transient SocketNode socketNode;
     private transient volatile HashMap<Long, Object> lockList = new HashMap<>();
     private transient volatile Long lockID = 0L;
@@ -43,6 +44,7 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
     public NodeCommunicator(String joinIpAddress, int joinSocketPort, NodeInterface node, long id) throws ConnectionErrorException {
         this.node = node;
         this.nodeId = id;
+        this.ipAddress = joinIpAddress;
         this.messageList = new HashMap<>();
         try {
             joinNodeSocket = new Socket(joinIpAddress, joinSocketPort);
@@ -62,10 +64,11 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
     }
 
     //used by SocketNode, when StartSocketListener accepts a new connection
-    NodeCommunicator(SocketNode socketNode, NodeInterface node){
+    NodeCommunicator(SocketNode socketNode, NodeInterface node, String ipAddress){
         this.socketNode = socketNode;
         this.node = node;
         this.messageList = new HashMap<>();
+        this.ipAddress = ipAddress;
     }
 
     public void setNodeId(Long nodeId) {
@@ -124,68 +127,103 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
         }
     }
 
-    //TODO DA METTERE TIMER
     @Override
-    public String getIpAddress() throws IOException {
-        Long lockId = createLock();
-        synchronized (lockList.get(lockId)){
-            socketNode.sendMessage(new GetIpAddressRequest(lockId));
-            try {
-                lockList.get(lockId).wait();
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-        }
-        GetIpAddressResponse getIpAddressResponse = (GetIpAddressResponse) messageList.get(lockId);
-        messageList.remove(lockId);
-        return getIpAddressResponse.getIpAddress();
+    public String getIpAddress(){
+        return ipAddress;
     }
 
-    //TODO DA METTERE TIMER
     @Override
-    public int getSocketPort() throws IOException {
+    public int getSocketPort() throws IOException, TimerExpiredException {
         Long lockId = createLock();
-        synchronized (lockList.get(lockId)){
-            socketNode.sendMessage(new GetSocketPortRequest(lockId));
-            try {
-                lockList.get(lockId).wait();
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
+
+        final ExecutorService service = Executors.newSingleThreadExecutor();
+        try {
+            final Future<?> f = service.submit(() -> {
+                synchronized (lockList.get(lockId)){
+                    try {
+                        socketNode.sendMessage(new GetSocketPortRequest(lockId));
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    try {
+                        lockList.get(lockId).wait();
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    }
+                }
+            });
+
+            f.get(TIMEOUT, TimeUnit.MILLISECONDS);
+        } catch (final TimeoutException e) {
+            out.println("Timer scaduto GETSOCKET PORT");
+            throw new TimerExpiredException();
+        } catch (InterruptedException | ExecutionException e) {
+            Thread.currentThread().interrupt();
         }
         GetSocketPortResponse getSocketPortResponse = (GetSocketPortResponse) messageList.get(lockId);
         messageList.remove(lockId);
         return getSocketPortResponse.getSocketPort();
     }
 
-    //TODO DA METTERE TIMER
     @Override
-    public int getDimFingerTable() throws IOException {
+    public int getDimFingerTable() throws IOException, TimerExpiredException {
         Long lockId = createLock();
-        synchronized (lockList.get(lockId)){
-            socketNode.sendMessage(new GetDimFingerTableRequest(lockId));
-            try {
-                lockList.get(lockId).wait();
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
+
+        final ExecutorService service = Executors.newSingleThreadExecutor();
+        try {
+            final Future<?> f = service.submit(() -> {
+                synchronized (lockList.get(lockId)){
+                    try {
+                        socketNode.sendMessage(new GetDimFingerTableRequest(lockId));
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    try {
+                        lockList.get(lockId).wait();
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    }
+                }
+            });
+
+            f.get(TIMEOUT, TimeUnit.MILLISECONDS);
+        } catch (final TimeoutException e) {
+            out.println("Timer scaduto GET DIM FINGER TABLE");
+            throw new TimerExpiredException();
+        } catch (InterruptedException | ExecutionException e) {
+            Thread.currentThread().interrupt();
         }
         GetDimFingerTableResponse getDimFingerTableResponse = (GetDimFingerTableResponse) messageList.get(lockId);
         messageList.remove(lockId);
         return getDimFingerTableResponse.getDimFingerTable();
     }
 
-    //TODO DA METTERE TIMER
     @Override
-    public NodeInterface findSuccessor(Long id) throws IOException {
+    public NodeInterface findSuccessor(Long id) throws IOException, TimerExpiredException {
         Long lockId = createLock();
-        synchronized (lockList.get(lockId)){
-            socketNode.sendMessage(new FindSuccessorRequest(id, lockId));
-            try {
-                lockList.get(lockId).wait();
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
+        final ExecutorService service = Executors.newSingleThreadExecutor();
+        try {
+            final Future<?> f = service.submit(() -> {
+                synchronized (lockList.get(lockId)){
+                    try {
+                        socketNode.sendMessage(new FindSuccessorRequest(id, lockId));
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    try {
+                        lockList.get(lockId).wait();
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    }
+                }
+            });
+
+            f.get(TIMEOUT, TimeUnit.MILLISECONDS);
+        } catch (final TimeoutException e) {
+            out.println("Timer scaduto FIND SUCCESSOR");
+            throw new TimerExpiredException();
+        } catch (InterruptedException | ExecutionException e) {
+            Thread.currentThread().interrupt();
         }
         FindSuccessorResponse findSuccessorResponse = (FindSuccessorResponse) messageList.get(lockId);
         messageList.remove(lockId);
@@ -294,7 +332,7 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
 
     @Override
     public Object retrieveKeyFromStore(Long key) {
-        return null;
+        return null; //TODO perchè null?
     }
 
     //TODO DA METTERE TIMER
@@ -318,9 +356,19 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
 
     @Override
     public void handle(FindSuccessorRequest findSuccessorRequest) throws IOException {
-        NodeInterface nodeInterface = node.findSuccessor(findSuccessorRequest.getId());
-        NodeInterface nodeTemp = new Node(nodeInterface.getIpAddress(),
-                nodeInterface.getSocketPort(), node.getDimFingerTable());
+        NodeInterface nodeInterface = null;
+        try {
+            nodeInterface = node.findSuccessor(findSuccessorRequest.getId());
+        } catch (TimerExpiredException e) {
+            e.printStackTrace();
+        }
+        NodeInterface nodeTemp = null;
+        try {
+            nodeTemp = new Node(nodeInterface.getIpAddress(),
+                    nodeInterface.getSocketPort(), node.getDimFingerTable());
+        } catch (TimerExpiredException e) {
+            e.printStackTrace();
+        }
         socketNode.sendMessage(new FindSuccessorResponse(nodeTemp, findSuccessorRequest.getLockId()));
     }
 
@@ -364,8 +412,13 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
         } catch (TimerExpiredException e) {
             throw new UnexpectedBehaviourException();
         }
-        if (predecessor != null)
-            socketNode.sendMessage(new GetPredecessorResponse(new Node(predecessor.getIpAddress(), predecessor.getSocketPort(), node.getDimFingerTable()), getPredecessorRequest.getLockId()));
+        if (predecessor != null) {
+            try {
+                socketNode.sendMessage(new GetPredecessorResponse(new Node(predecessor.getIpAddress(), predecessor.getSocketPort(), node.getDimFingerTable()), getPredecessorRequest.getLockId()));
+            } catch (TimerExpiredException e) {
+                e.printStackTrace();
+            }
+        }
         else
             socketNode.sendMessage(new GetPredecessorResponse(null, getPredecessorRequest.getLockId()));
     }
@@ -380,7 +433,11 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
 
     @Override
     public void handle(GetDimFingerTableRequest getDimFingerTableRequest) throws IOException {
-        socketNode.sendMessage(new GetDimFingerTableResponse(node.getDimFingerTable(), getDimFingerTableRequest.getLockId()));
+        try {
+            socketNode.sendMessage(new GetDimFingerTableResponse(node.getDimFingerTable(), getDimFingerTableRequest.getLockId()));
+        } catch (TimerExpiredException e) {
+            throw new UnexpectedBehaviourException();
+        }
     }
 
     @Override
@@ -406,7 +463,11 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
 
     @Override
     public void handle(GetSocketPortRequest getSocketPortRequest) throws IOException {
-        socketNode.sendMessage(new GetSocketPortResponse(node.getSocketPort(), getSocketPortRequest.getLockId()));
+        try {
+            socketNode.sendMessage(new GetSocketPortResponse(node.getSocketPort(), getSocketPortRequest.getLockId()));
+        } catch (TimerExpiredException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -442,7 +503,11 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
     @Override
     public void handle(AddKeyRequest addKeyRequest) throws IOException {
         node.addKeyToStore(addKeyRequest.getKeyValue());
-        socketNode.sendMessage(new AddKeyResponse(new Node(node.getIpAddress(), node.getSocketPort()), addKeyRequest.getLockId()));
+        try {
+            socketNode.sendMessage(new AddKeyResponse(new Node(node.getIpAddress(), node.getSocketPort()), addKeyRequest.getLockId()));
+        } catch (TimerExpiredException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override

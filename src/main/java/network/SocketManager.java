@@ -1,6 +1,7 @@
 package network;
 
 import exceptions.ConnectionErrorException;
+import exceptions.TimerExpiredException;
 import exceptions.UnexpectedBehaviourException;
 import network.message.MessageHandler;
 import node.Node;
@@ -42,7 +43,7 @@ public class SocketManager {
                 NodeCommunicator createdNode;
                 try {
                     createdNode = new NodeCommunicator(connectionNode.getIpAddress(), connectionNode.getSocketPort(), node, connectionNode.getNodeId());
-                } catch (ConnectionErrorException e) {
+                } catch (ConnectionErrorException | TimerExpiredException e) {
                     throw new ConnectionErrorException();
                 }
                 socketList.put(searchedNodeId, createdNode);
@@ -53,12 +54,15 @@ public class SocketManager {
     }
 
     synchronized void createConnection(SocketNode socketNode, String ipAddress) {
-        NodeInterface createdNode = new NodeCommunicator(socketNode, node);
+        NodeInterface createdNode = new NodeCommunicator(socketNode, node, ipAddress);
         socketNode.setMessageHandler((MessageHandler) createdNode);
         int port;
         try {
             port = createdNode.getSocketPort();
         } catch (IOException e) {
+            throw new UnexpectedBehaviourException();
+        } catch (TimerExpiredException e) {
+            e.printStackTrace();
             throw new UnexpectedBehaviourException();
         }
         Long createdNodeId = node.hash(ipAddress, port);

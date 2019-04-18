@@ -76,12 +76,21 @@ public class Node implements NodeInterface, Serializable {
         createFingerTable();
 
         NodeCommunicator nodeTemp = new NodeCommunicator(joinIpAddress, joinSocketPort, this, hash(joinIpAddress, joinSocketPort)); // crea un nodecomunicator temporaneo.
-        dimFingerTable = nodeTemp.getDimFingerTable();
+        try {
+            dimFingerTable = nodeTemp.getDimFingerTable();
+        } catch (TimerExpiredException e) {
+            throw new ConnectionErrorException();
+        }
         this.nodeId = hash(ipAddress, socketPort);
         out.println("NODE ID: " + nodeId);
         createSuccessorList();
         this.socketManager = new SocketManager(this);
-        NodeInterface successorNode = nodeTemp.findSuccessor(this.nodeId);
+        NodeInterface successorNode;
+        try {
+            successorNode = nodeTemp.findSuccessor(this.nodeId);
+        } catch (TimerExpiredException e) {
+            throw new ConnectionErrorException();
+        }
         if (successorNode.getNodeId().equals(nodeId)) //se find successor ritorna un nodo con lo stesso tuo id significa che esiste già un nodo con il tuo id
             throw new NodeIdAlreadyExistsException();
         nodeTemp.close();
@@ -204,7 +213,12 @@ public class Node implements NodeInterface, Serializable {
         nextNode = closestPrecedingNodeList(id);
         if (this == nextNode)
             return this;
-        return nextNode.findSuccessor(id);
+        try {
+            return nextNode.findSuccessor(id);
+        } catch (TimerExpiredException e) {
+            e.printStackTrace();
+            return null; //TODO da vedere cosa far ritornare
+        }
     }
 
     private NodeInterface closestPrecedingNodeList(long id) {

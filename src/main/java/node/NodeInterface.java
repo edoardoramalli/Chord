@@ -14,15 +14,15 @@ public interface NodeInterface extends Serializable {
 
     void notify(NodeInterface node) throws IOException, TimerExpiredException;
 
-    NodeInterface findSuccessor(Long id) throws IOException;
+    NodeInterface findSuccessor(Long id) throws IOException, TimerExpiredException;
 
     NodeInterface getPredecessor() throws IOException, TimerExpiredException;
 
-    String getIpAddress() throws IOException;
+    String getIpAddress();
 
-    int getSocketPort() throws IOException;
+    int getSocketPort() throws IOException, TimerExpiredException;
 
-    int getDimFingerTable() throws IOException;
+    int getDimFingerTable() throws IOException, TimerExpiredException;
 
     void setNodeId(Long nodeId);
 
