@@ -96,23 +96,18 @@ public class Node implements NodeInterface, Serializable {
         nodeTemp.close();
 
         successorList.set(0, socketManager.createConnection(successorNode)); //creo nuova connessione
-        initializeSuccessorList();
         try {
+            initializeSuccessorList();
             successorList.get(0).notify(this); //serve per settare il predecessore nel successore del nodo
         } catch (TimerExpiredException e) {
-            e.printStackTrace(); //TODO se il nodo a cui stiamo facendo la prima notify cade cosa facciamo?
+            throw new ConnectionErrorException(); //TODO se il nodo a cui stiamo facendo la prima notify cade cosa facciamo?
         }
 
         Executors.newCachedThreadPool().submit(new UpdateNode(this));
     }
 
-    private void initializeSuccessorList() throws IOException {
-        List<NodeInterface> successorNodeList = null;
-        try {
-            successorNodeList = successorList.get(0).getSuccessorList();
-        } catch (TimerExpiredException e) {
-            e.printStackTrace(); //TODO da vedere cosa fare
-        }
+    private void initializeSuccessorList() throws IOException, TimerExpiredException {
+        List<NodeInterface> successorNodeList = successorList.get(0).getSuccessorList();
         for (NodeInterface node: successorNodeList) {
             if (node.getNodeId().equals(successorList.get(0).getNodeId()) || node.getNodeId().equals(this.nodeId))
                 break;
@@ -386,6 +381,16 @@ public class Node implements NodeInterface, Serializable {
     @Override
     public String getIpAddress() {
         return ipAddress;
+    }
+
+    @Override
+    public int getInitialSocketPort() throws IOException, TimerExpiredException {
+        throw new UnexpectedBehaviourException(); //Non usato
+    }
+
+    @Override
+    public void setSocketPort(int socketPort) {
+        throw new UnexpectedBehaviourException(); //Non usato
     }
 
     @Override

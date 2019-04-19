@@ -43,7 +43,7 @@ public class SocketManager {
                 NodeCommunicator createdNode;
                 try {
                     createdNode = new NodeCommunicator(connectionNode.getIpAddress(), connectionNode.getSocketPort(), node, connectionNode.getNodeId());
-                } catch (ConnectionErrorException | TimerExpiredException e) {
+                } catch (ConnectionErrorException e) {
                     throw new ConnectionErrorException();
                 }
                 socketList.put(searchedNodeId, createdNode);
@@ -58,16 +58,18 @@ public class SocketManager {
         socketNode.setMessageHandler((MessageHandler) createdNode);
         int port;
         try {
-            port = createdNode.getSocketPort();
+            port = createdNode.getInitialSocketPort();
         } catch (IOException e) {
             throw new UnexpectedBehaviourException();
         } catch (TimerExpiredException e) {
-            e.printStackTrace();
+            e.printStackTrace(); //TODO da vedere cosa fare
             throw new UnexpectedBehaviourException();
         }
         Long createdNodeId = node.hash(ipAddress, port);
-        if (!createdNodeId.equals(node.getNodeId()))
+        if (!createdNodeId.equals(node.getNodeId())) {
             createdNode.setNodeId(createdNodeId);
+            createdNode.setSocketPort(port);
+        }
         else {
             try {
                 createdNode.close();

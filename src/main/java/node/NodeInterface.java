@@ -20,7 +20,11 @@ public interface NodeInterface extends Serializable {
 
     String getIpAddress();
 
-    int getSocketPort() throws IOException, TimerExpiredException;
+    int getInitialSocketPort() throws IOException, TimerExpiredException;
+
+    void setSocketPort(int socketPort);
+
+    int getSocketPort();
 
     int getDimFingerTable() throws IOException, TimerExpiredException;
 

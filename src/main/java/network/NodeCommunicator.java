@@ -25,6 +25,7 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
     private transient NodeInterface node; //mio nodo
     private transient Long nodeId; //questo è il nodeId dell'altro
     private transient String ipAddress; //ipAddress dell'altro nodo
+    private transient int socketPort; //socketPort dell'altro nodo
     private transient SocketNode socketNode;
     private transient volatile HashMap<Long, Object> lockList = new HashMap<>();
     private transient volatile Long lockID = 0L;
@@ -45,6 +46,7 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
         this.node = node;
         this.nodeId = id;
         this.ipAddress = joinIpAddress;
+        this.socketPort = joinSocketPort;
         this.messageList = new HashMap<>();
         try {
             joinNodeSocket = new Socket(joinIpAddress, joinSocketPort);
@@ -71,8 +73,14 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
         this.ipAddress = ipAddress;
     }
 
+    @Override
     public void setNodeId(Long nodeId) {
         this.nodeId = nodeId;
+    }
+
+    @Override
+    public void setSocketPort(int socketPort) {
+        this.socketPort = socketPort;
     }
 
     public void close() throws IOException {
@@ -133,7 +141,7 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
     }
 
     @Override
-    public int getSocketPort() throws IOException, TimerExpiredException {
+    public int getInitialSocketPort() throws IOException, TimerExpiredException {
         Long lockId = createLock();
 
         final ExecutorService service = Executors.newSingleThreadExecutor();
@@ -163,6 +171,11 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
         GetSocketPortResponse getSocketPortResponse = (GetSocketPortResponse) messageList.get(lockId);
         messageList.remove(lockId);
         return getSocketPortResponse.getSocketPort();
+    }
+
+    @Override
+    public int getSocketPort(){
+        return socketPort;
     }
 
     @Override
@@ -463,11 +476,7 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
 
     @Override
     public void handle(GetSocketPortRequest getSocketPortRequest) throws IOException {
-        try {
-            socketNode.sendMessage(new GetSocketPortResponse(node.getSocketPort(), getSocketPortRequest.getLockId()));
-        } catch (TimerExpiredException e) {
-            e.printStackTrace();
-        }
+        socketNode.sendMessage(new GetSocketPortResponse(node.getSocketPort(), getSocketPortRequest.getLockId()));
     }
 
     @Override
@@ -503,11 +512,8 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
     @Override
     public void handle(AddKeyRequest addKeyRequest) throws IOException {
         node.addKeyToStore(addKeyRequest.getKeyValue());
-        try {
-            socketNode.sendMessage(new AddKeyResponse(new Node(node.getIpAddress(), node.getSocketPort()), addKeyRequest.getLockId()));
-        } catch (TimerExpiredException e) {
-            e.printStackTrace();
-        }
+        socketNode.sendMessage(new AddKeyResponse(new Node(node.getIpAddress(), node.getSocketPort()), addKeyRequest.getLockId()));
+
     }
 
     @Override
