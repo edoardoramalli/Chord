@@ -40,12 +40,7 @@ public class SocketManager {
             }
             else{
                 out.println("NUOVA: " + searchedNodeId);
-                NodeCommunicator createdNode;
-                try {
-                    createdNode = new NodeCommunicator(connectionNode.getIpAddress(), connectionNode.getSocketPort(), node, connectionNode.getNodeId());
-                } catch (ConnectionErrorException e) {
-                    throw new ConnectionErrorException();
-                }
+                NodeCommunicator createdNode = new NodeCommunicator(connectionNode.getIpAddress(), connectionNode.getSocketPort(), node, connectionNode.getNodeId());
                 socketList.put(searchedNodeId, createdNode);
                 socketNumber.put(searchedNodeId, 1); //quando creo un nodo inserisco nella lista <nodeId, 1>
                 return createdNode;

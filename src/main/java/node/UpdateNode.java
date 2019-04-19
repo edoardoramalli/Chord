@@ -1,5 +1,6 @@
 package node;
 
+import exceptions.TimerExpiredException;
 import exceptions.UnexpectedBehaviourException;
 
 import java.io.IOException;
@@ -18,8 +19,12 @@ public class UpdateNode implements Runnable {
     public void run() {
         while (true){
             try {
-                if (node.getPredecessor() != null)
-                    node.listStabilize();
+                if (node.getPredecessor() != null) {
+                    try {
+                        node.listStabilize();
+                    } catch (TimerExpiredException ignored) {
+                    }
+                }
                 for (int i = 0; i < node.getDimFingerTable(); i++)
                     node.fixFingers();
             } catch (IOException e) {

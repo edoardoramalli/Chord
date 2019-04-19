@@ -121,21 +121,13 @@ public class Node implements NodeInterface, Serializable {
         }
     }
 
-    synchronized void listStabilize() throws IOException {
+    synchronized void listStabilize() throws IOException, TimerExpiredException {
         //questo serve per settare il primo successore
         out.println("---------->");
         NodeInterface x;
-        try {
-            x = successorList.get(0).getPredecessor();
-        } catch (TimerExpiredException e) { //se il timer scade non faccio niente
-            return;
-        }
+        x = successorList.get(0).getPredecessor();
         if (x == null) {
-            try {
-                successorList.get(0).notify(this);
-            } catch (TimerExpiredException ignore){
-                return;
-            }
+            successorList.get(0).notify(this);
             return;
         }
         long nodeIndex = x.getNodeId();
@@ -149,20 +141,12 @@ public class Node implements NodeInterface, Serializable {
                 throw new UnexpectedBehaviourException();
             }
         }
-        try {
-            successorList.get(0).notify(this);
-        } catch (TimerExpiredException e) {
-            return;
-        }
+        successorList.get(0).notify(this);
 
         boolean already = false;
 
         List<NodeInterface> xList; //xList contiene la lista dei successori del successore
-        try {
-            xList = successorList.get(0).getSuccessorList();
-        } catch (TimerExpiredException e) {
-            return;
-        }
+        xList = successorList.get(0).getSuccessorList();
         if (successorList.size() < dimSuccessorList){
             for (NodeInterface xNode: xList) {
                 if (!xNode.getNodeId().equals(nodeId) && successorList.size() < dimSuccessorList) {
@@ -369,7 +353,7 @@ public class Node implements NodeInterface, Serializable {
     }
 
     @Override
-    public void close() throws IOException {
+    public void close() {
         //do nothing
     }
 
@@ -384,7 +368,7 @@ public class Node implements NodeInterface, Serializable {
     }
 
     @Override
-    public int getInitialSocketPort() throws IOException, TimerExpiredException {
+    public int getInitialSocketPort() {
         throw new UnexpectedBehaviourException(); //Non usato
     }
 
