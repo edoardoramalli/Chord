@@ -9,7 +9,9 @@ import network.SocketManager;
 import network.SocketNodeListener;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.io.Serializable;
+import java.net.Socket;
 import java.util.*;
 
 import java.util.concurrent.ConcurrentHashMap;
@@ -33,6 +35,10 @@ public class Node implements NodeInterface, Serializable {
     private transient volatile ConcurrentHashMap<Long, Object> keyStore;
     //connection handler
     private transient volatile SocketManager socketManager;
+
+    private transient volatile PrintWriter outBuffer;
+    private transient volatile Socket socketController;
+    private transient volatile boolean stable = true;
 
     public Node(String ipAddress, int socketPort) {
         this.ipAddress = ipAddress;
@@ -68,6 +74,7 @@ public class Node implements NodeInterface, Serializable {
         createFingerTable();
         socketManager = new SocketManager(this);
         Executors.newCachedThreadPool().submit(new UpdateNode(this));
+        openController();
     }
 
     public void join(String joinIpAddress, int joinSocketPort)
@@ -94,6 +101,7 @@ public class Node implements NodeInterface, Serializable {
         if (successorNode.getNodeId().equals(nodeId)) //se find successor ritorna un nodo con lo stesso tuo id significa che esiste già un nodo con il tuo id
             throw new NodeIdAlreadyExistsException();
         nodeTemp.close();
+        openController();
 
         successorList.set(0, socketManager.createConnection(successorNode)); //creo nuova connessione
         try {
@@ -382,6 +390,10 @@ public class Node implements NodeInterface, Serializable {
         return socketPort;
     }
 
+    public Map<Integer, NodeInterface> getFingerTable() {
+        return fingerTable;
+    }
+
     @Override
     public int getDimFingerTable() {
         return dimFingerTable;
@@ -448,6 +460,43 @@ public class Node implements NodeInterface, Serializable {
         string = string + "--------------------------\n";
         return string;
     }
+
+    //CONTROLLER
+
+    private void openController(){
+        try{
+            this.socketController = new Socket("127.0.0.1", 59898);
+            this.sendToController("#Connected");
+        } catch (Exception e){
+            out.println("ERRORE CONTROLLER");
+        }
+    }
+
+    @Override
+    public void sendToController(String text) {
+        try {
+            this.outBuffer = new PrintWriter(this.socketController.getOutputStream(), true);
+            outBuffer.println(this.nodeId + text);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    public void updateStable(boolean listSucc, boolean listFiger){
+        boolean local;
+        local = listSucc && listFiger;
+        if (stable != local){
+            stable = local;
+            if (!stable){
+                this.sendToController("#NotStable");
+            }
+            else{
+                this.sendToController("#Stable");
+            }
+        }
+    }
+
     //KEY-VALUE
 
     public NodeInterface addKey(Map.Entry<Long, Object> keyValue) throws IOException {

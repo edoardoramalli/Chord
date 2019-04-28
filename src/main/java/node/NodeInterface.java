@@ -36,6 +36,10 @@ public interface NodeInterface extends Serializable {
 
     List<NodeInterface> getSuccessorList() throws IOException, TimerExpiredException;
 
+    //Controller
+
+    void sendToController (String text);
+
     //Key
 
     public NodeInterface addKey(Map.Entry<Long, Object> keyValue) throws IOException;
