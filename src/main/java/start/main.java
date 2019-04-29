@@ -1,7 +1,20 @@
-/*package start;
+package start;
 
-import com.sun.xml.internal.bind.v2.TODO;
+import exceptions.ConnectionErrorException;
+import exceptions.NodeIdAlreadyExistsException;
+import exceptions.UnexpectedBehaviourException;
+import node.Controller;
+import node.Node;
 import org.apache.commons.cli.*;
+
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.ServerSocket;
+import java.net.UnknownHostException;
+import java.util.concurrent.Executors;
+
+
+import static java.lang.System.out;
 
 public class main {
     public static void main(String[] args) {
@@ -29,11 +42,11 @@ public class main {
         options.addOption(localPortOpt);
 
         Option controllerIPOpt = new Option("cip", "contrip", true, "Controller IP");
-        controllerIPOpt.setRequired(true);
+        controllerIPOpt.setRequired(false);
         options.addOption(controllerIPOpt);
 
         Option controllerPortOpt = new Option("cp", "contrport", true, "Controller Port");
-        controllerPortOpt.setRequired(true);
+        controllerPortOpt.setRequired(false);
         options.addOption(controllerPortOpt);
 
         Option typeOpt = new Option("t", "type", true, "Type Node");
@@ -68,40 +81,80 @@ public class main {
 
 
         localPort = Integer.parseInt(cmd.getOptionValue("port"));
-        controllerIP = cmd.getOptionValue("contrip");
-        controllerPort = Integer.parseInt(cmd.getOptionValue("contrport"));
         type = Integer.parseInt(cmd.getOptionValue("type"));
+
+        Node node = null;
 
         switch (type) {
             case 0:
-                // Controller
+                Controller.Collector coll = new Controller.Collector();
+
+                try (ServerSocket listener = new ServerSocket(localPort)) {
+                    System.out.println("The Controller server is running on Port " + localPort + " ...");
+                    while (true) {
+                        Executors.newCachedThreadPool().submit(new Controller(listener.accept(), coll));
+                    }
+                } catch (IOException e) {
+
+                }
                 break;
             case 1:
                 // Create
+                controllerIP = cmd.getOptionValue("contrip");
+                controllerPort = Integer.parseInt(cmd.getOptionValue("contrport"));
+                try {
+                    node = new Node(InetAddress.getLocalHost().getHostAddress(), localPort,
+                            controllerIP, controllerPort);
+                } catch (UnknownHostException e) {
+                    throw new UnexpectedBehaviourException();
+                }
                 dimFingerTable = Integer.parseInt(cmd.getOptionValue("dim"));
                 if (dimFingerTable <= 0) {
                     System.err.println("Dim Finger Table can not be negative");
+                    return;
                 }
+                out.println("-----------------------------");
+                out.println("Node Create : Local Port " + localPort + " - Dim " + dimFingerTable + " - ControllerIP " +controllerIP
+                        + " - ControllerPort " + controllerPort);
+                out.println("-----------------------------");
+                node.create(dimFingerTable);
                 break;
             case 2:
                 //join
                 //TODO Magari aggiungere controlli
+
+                controllerIP = cmd.getOptionValue("contrip");
+                controllerPort = Integer.parseInt(cmd.getOptionValue("contrport"));
                 joinIP = cmd.getOptionValue("joinip");
                 joinPort = Integer.parseInt(cmd.getOptionValue("joinport"));
+
+                try {
+                    node = new Node(InetAddress.getLocalHost().getHostAddress(), localPort,
+                            controllerIP, controllerPort);
+                } catch (UnknownHostException e) {
+                    throw new UnexpectedBehaviourException();
+                }
+
+                out.println("-----------------------------");
+                out.println("Node Join : Local Port " + localPort + " - ControllerIP " +controllerIP
+                        + " - ControllerPort " + controllerPort + " - JoinIP " +joinIP + " - JoinPort " + joinPort);
+                out.println("-----------------------------");
+
+                try {
+                    node.join(joinIP, joinPort);
+                } catch (ConnectionErrorException e) {
+                    out.println("Wrong ip address or port");
+                } catch (NodeIdAlreadyExistsException e) {
+                    out.println("Node Id already existent");
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
                 break;
         }
 
-
-        System.out.println(localPort);
-        System.out.println(controllerIP);
-        System.out.println(controllerPort);
-        System.out.println(type);
-
-        System.out.println(joinIP);
-        System.out.println(joinPort);
-        System.out.println(dimFingerTable);
+        return;
 
 
     }
 }
-*/

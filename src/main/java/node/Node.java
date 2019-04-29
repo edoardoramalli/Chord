@@ -40,6 +40,9 @@ public class Node implements NodeInterface, Serializable {
     private transient volatile Socket socketController;
     private transient volatile boolean stable = true;
 
+    private transient volatile String ipController;
+    private transient volatile int portController;
+
     public Node(String ipAddress, int socketPort) {
         this.ipAddress = ipAddress;
         this.predecessor = null;
@@ -53,15 +56,16 @@ public class Node implements NodeInterface, Serializable {
     }
 
     public Node(String ipAddress, int socketPort, int dimFingerTable) {
-        this.ipAddress = ipAddress;
-        this.socketPort = socketPort;
-        this.predecessor = null;
-        this.fingerTable = new HashMap<>();
+        this(ipAddress,socketPort);
         this.dimFingerTable = dimFingerTable;
         this.nodeId = hash(ipAddress, socketPort);
-        this.socketManager = null;
-        this.keyStore = new ConcurrentHashMap();
-        this.nextFinger = 0;
+
+    }
+
+    public Node(String ipAddress, int socketPort, String ipController, int portController) {
+        this(ipAddress,socketPort);
+        this.ipController = ipController;
+        this.portController = portController;
 
     }
 
@@ -131,7 +135,6 @@ public class Node implements NodeInterface, Serializable {
 
     synchronized void listStabilize() throws IOException, TimerExpiredException {
         //questo serve per settare il primo successore
-        out.println("---------->");
         NodeInterface x;
         x = successorList.get(0).getPredecessor();
         if (x == null) {
@@ -465,7 +468,7 @@ public class Node implements NodeInterface, Serializable {
 
     private void openController(){
         try{
-            this.socketController = new Socket("127.0.0.1", 59898);
+            this.socketController = new Socket(ipController, portController);
             this.sendToController("#Connected");
         } catch (Exception e){
             out.println("ERRORE CONTROLLER");
