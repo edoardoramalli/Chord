@@ -16,7 +16,7 @@ import java.util.concurrent.Executors;
 
 import static java.lang.System.out;
 
-public class main {
+public class Main {
     public static void main(String[] args) {
 
         // Local Port

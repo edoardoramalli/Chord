@@ -469,6 +469,7 @@ public class Node implements NodeInterface, Serializable {
     private void openController(){
         try{
             this.socketController = new Socket(ipController, portController);
+            //this.socketController = new Socket("127.0.0.1", 59898);
             this.sendToController("#Connected");
         } catch (Exception e){
             out.println("ERRORE CONTROLLER");
