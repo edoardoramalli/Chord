@@ -1,19 +1,14 @@
 package node;
 
-import java.io.*;
 import java.net.*;
 
 import java.io.IOException;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.time.LocalTime;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
-
-
 
 public class Controller extends Thread {
     private ArrayList<String> socketList;
@@ -22,7 +17,7 @@ public class Controller extends Thread {
     private Semaphore trafficLight;
     private Semaphore timeSem;
     private Socket socket; //socket di connessione con il client
-    private LocalTime starTime, endTime;
+    private LocalTime starTime, endTime; //TODO non usati si possono togliere?
     private Collector c;
 
 
@@ -80,9 +75,9 @@ public class Controller extends Thread {
         }
     }
 
-    public void parseInput(String input) {
+    private void parseInput(String input) {
         String [] split = input.split("#");
-        String NodeId = split[0];
+        String nodeId = split[0];
         switch (split[1]) {
             case "Connected":
                 try {
@@ -91,8 +86,8 @@ public class Controller extends Thread {
                     timeSem.release();
 
                     trafficLight.acquire();
-                    socketMap.put(socket,NodeId);
-                    socketList.add(NodeId);
+                    socketMap.put(socket,nodeId);
+                    socketList.add(nodeId);
                     Collections.sort(socketList);
                     System.out.println("Nodi Connessi ("+ socketList.size() + ") : " + socketList  + " " + LocalTime.now());
                     trafficLight.release();
@@ -104,7 +99,7 @@ public class Controller extends Thread {
             case "NotStable":
                 try {
                     trafficLight.acquire();
-                    stableNet.put(NodeId,"False");
+                    stableNet.put(nodeId,"False");
                     System.out.println("Stabilità : " + stableNet.toString());
                     trafficLight.release();
                 } catch (InterruptedException e) {
@@ -114,7 +109,7 @@ public class Controller extends Thread {
             case "Stable":
                 try {
                     trafficLight.acquire();
-                    stableNet.put(NodeId,"True");
+                    stableNet.put(nodeId,"True");
                     System.out.println("Stabilità : " + stableNet.toString() + " " + LocalTime.now());
                     Set<String> values = new HashSet<>(stableNet.values());
                     boolean isUnique = values.size() == 1;
@@ -148,6 +143,7 @@ public class Controller extends Thread {
         }
     }
 
+    //TODO questo non possiamo farlo diventare una classe?
     public static class Collector {
         private ArrayList<String> socketList = new ArrayList<>();
         private HashMap<Socket, String> socketMap = new HashMap<>();

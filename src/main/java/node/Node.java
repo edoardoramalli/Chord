@@ -393,7 +393,7 @@ public class Node implements NodeInterface, Serializable {
         return socketPort;
     }
 
-    public Map<Integer, NodeInterface> getFingerTable() {
+    Map<Integer, NodeInterface> getFingerTable() {
         return fingerTable;
     }
 
@@ -487,7 +487,7 @@ public class Node implements NodeInterface, Serializable {
 
     }
 
-    public void updateStable(boolean listSucc, boolean listFiger){
+    void updateStable(boolean listSucc, boolean listFiger){
         boolean local;
         local = listSucc && listFiger;
         if (stable != local){
