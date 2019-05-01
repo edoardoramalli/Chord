@@ -186,7 +186,6 @@ public class Controller extends Thread {
             return timeSem;
         }
 
-
         public void setStartTime(LocalTime startTime) {
             this.startTime = startTime;
         }
