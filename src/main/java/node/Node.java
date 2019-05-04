@@ -56,14 +56,14 @@ public class Node implements NodeInterface, Serializable {
     }
 
     public Node(String ipAddress, int socketPort, int dimFingerTable) {
-        this(ipAddress,socketPort);
+        this(ipAddress, socketPort);
         this.dimFingerTable = dimFingerTable;
         this.nodeId = hash(ipAddress, socketPort);
 
     }
 
     public Node(String ipAddress, int socketPort, String ipController, int portController) {
-        this(ipAddress,socketPort);
+        this(ipAddress, socketPort);
         this.ipController = ipController;
         this.portController = portController;
 
@@ -72,7 +72,7 @@ public class Node implements NodeInterface, Serializable {
     public void create(int m) {
         dimFingerTable = m;
         nodeId = hash(ipAddress, socketPort);
-        out.println("MIO ID: " + nodeId);
+        out.println("ID: " + nodeId);
         createSuccessorList();
         startSocketListener(socketPort);
         createFingerTable();
@@ -93,7 +93,7 @@ public class Node implements NodeInterface, Serializable {
             throw new ConnectionErrorException();
         }
         this.nodeId = hash(ipAddress, socketPort);
-        out.println("NODE ID: " + nodeId);
+        out.println("ID: " + nodeId);
         createSuccessorList();
         this.socketManager = new SocketManager(this);
         NodeInterface successorNode;
@@ -120,10 +120,10 @@ public class Node implements NodeInterface, Serializable {
 
     private void initializeSuccessorList() throws IOException, TimerExpiredException {
         List<NodeInterface> successorNodeList = successorList.get(0).getSuccessorList();
-        for (NodeInterface node: successorNodeList) {
+        for (NodeInterface node : successorNodeList) {
             if (node.getNodeId().equals(successorList.get(0).getNodeId()) || node.getNodeId().equals(this.nodeId))
                 break;
-            if (successorList.size() < dimSuccessorList){
+            if (successorList.size() < dimSuccessorList) {
                 try {
                     successorList.add(socketManager.createConnection(node));
                 } catch (ConnectionErrorException e) {
@@ -144,11 +144,10 @@ public class Node implements NodeInterface, Serializable {
         long nodeIndex = x.getNodeId();
         long oldSucID = successorList.get(0).getNodeId();
         if (checkInterval(getNodeId(), nodeIndex, oldSucID)) {
-            try{
+            try {
                 socketManager.closeCommunicator(oldSucID);
                 successorList.set(0, socketManager.createConnection(x));
-            }
-            catch (ConnectionErrorException e){
+            } catch (ConnectionErrorException e) {
                 throw new UnexpectedBehaviourException();
             }
         }
@@ -158,12 +157,12 @@ public class Node implements NodeInterface, Serializable {
 
         List<NodeInterface> xList; //xList contiene la lista dei successori del successore
         xList = successorList.get(0).getSuccessorList();
-        if (successorList.size() < dimSuccessorList){
-            for (NodeInterface xNode: xList) {
+        if (successorList.size() < dimSuccessorList) {
+            for (NodeInterface xNode : xList) {
                 if (!xNode.getNodeId().equals(nodeId) && successorList.size() < dimSuccessorList) {
                     try {
-                        for (NodeInterface internalNode: successorList ) {
-                            if (internalNode.getNodeId().equals(xNode.getNodeId())){
+                        for (NodeInterface internalNode : successorList) {
+                            if (internalNode.getNodeId().equals(xNode.getNodeId())) {
                                 already = true;
                                 break;
                             }
@@ -176,14 +175,13 @@ public class Node implements NodeInterface, Serializable {
                     }
                 }
             }
-        }
-        else {
+        } else {
             for (int i = 1; i < dimSuccessorList && i < xList.size(); i++) {
                 if (!successorList.get(i).getNodeId().equals(xList.get(i - 1).getNodeId())
-                        && !xList.get(i-1).getNodeId().equals(nodeId)){
+                        && !xList.get(i - 1).getNodeId().equals(nodeId)) {
                     try {
                         socketManager.closeCommunicator(successorList.get(i).getNodeId());
-                        successorList.set(i, socketManager.createConnection(xList.get(i-1)));
+                        successorList.set(i, socketManager.createConnection(xList.get(i - 1)));
                     } catch (ConnectionErrorException e) {
                         throw new UnexpectedBehaviourException();
                     }
@@ -216,11 +214,11 @@ public class Node implements NodeInterface, Serializable {
         long maxClosestId = this.nodeId;
         NodeInterface maxClosestNode = this;
 
-        for (int i = successorList.size()-1; i>=0; i-- ){
+        for (int i = successorList.size() - 1; i >= 0; i--) {
             nodeIndex = successorList.get(i).getNodeId();
             if (checkInterval3(nodeIndex, id, this.nodeId)) {
                 maxClosestId = nodeIndex;
-                maxClosestNode=successorList.get(i);
+                maxClosestNode = successorList.get(i);
                 break;
             }
         }
@@ -228,7 +226,7 @@ public class Node implements NodeInterface, Serializable {
         for (int i = dimFingerTable - 1; i >= 0; i--) {
             nodeIndex = fingerTable.get(i).getNodeId();
             if (checkInterval3(nodeIndex, id, this.nodeId))
-                if (checkInterval3(maxClosestId,nodeIndex,id))
+                if (checkInterval3(maxClosestId, nodeIndex, id))
                     return fingerTable.get(i);
                 else
                     break;
@@ -245,8 +243,7 @@ public class Node implements NodeInterface, Serializable {
             } catch (ConnectionErrorException e) {
                 throw new UnexpectedBehaviourException();
             }
-        }
-        else {
+        } else {
             long index = n.getNodeId();
             long predIndex = predecessor.getNodeId();
             if (checkInterval(predIndex, index, getNodeId()) && !(predecessor.getNodeId().equals(n.getNodeId()))) { //entro solo se n è diverso dal predecessore
@@ -279,12 +276,12 @@ public class Node implements NodeInterface, Serializable {
         //fix cast
         idToFind = (nodeId + ((long) Math.pow(2, nextFinger - 1))) % (long) Math.pow(2, dimFingerTable);
         NodeInterface node = findSuccessor(idToFind);
-        if (!node.getNodeId().equals(fingerTable.get(nextFinger - 1).getNodeId())){ //se il nuovo nodo è diverso da quello già presente
+        if (!node.getNodeId().equals(fingerTable.get(nextFinger - 1).getNodeId())) { //se il nuovo nodo è diverso da quello già presente
             NodeInterface newConnection;
             try {
-                socketManager.closeCommunicator(fingerTable.get(nextFinger -1).getNodeId());//chiudo connessione verso il vecchio nodo
+                socketManager.closeCommunicator(fingerTable.get(nextFinger - 1).getNodeId());//chiudo connessione verso il vecchio nodo
                 newConnection = socketManager.createConnection(node);
-                fingerTable.replace(nextFinger -1, newConnection);
+                fingerTable.replace(nextFinger - 1, newConnection);
             } catch (ConnectionErrorException e) {
                 throw new UnexpectedBehaviourException();
             }
@@ -296,7 +293,7 @@ public class Node implements NodeInterface, Serializable {
         if (pred == succ)
             return true;
         if (pred > succ) {
-            return (index > pred && index < Math.pow(2, dimFingerTable) ) || (index >= 0 && index < succ);
+            return (index > pred && index < Math.pow(2, dimFingerTable)) || (index >= 0 && index < succ);
         } else {
             return index > pred && index < succ;
         }
@@ -308,7 +305,7 @@ public class Node implements NodeInterface, Serializable {
         if (pred == succ)
             return true;
         if (pred > succ) {
-            return (index > pred && index < Math.pow(2, dimFingerTable) ) || (index >= 0 && index <= succ);
+            return (index > pred && index < Math.pow(2, dimFingerTable)) || (index >= 0 && index <= succ);
         } else {
             return index > pred && index <= succ;
         }
@@ -321,13 +318,13 @@ public class Node implements NodeInterface, Serializable {
             return false;
         if (pred > succ) {
             //controllate se il >=0 ha senso, l'ho messo in tutte e 3 le check
-            return (index > pred && index < Math.pow(2, dimFingerTable) ) || (index >= 0 && index < succ);
+            return (index > pred && index < Math.pow(2, dimFingerTable)) || (index >= 0 && index < succ);
         } else {
             return index > pred && index < succ;
         }
     }
 
-    public void checkDisconnectedNode(Long disconnectedId){
+    public void checkDisconnectedNode(Long disconnectedId) {
         CopyOnWriteArrayList<NodeInterface> successorListClone = new CopyOnWriteArrayList<>(successorList);
         for (NodeInterface nodeInterface : successorListClone)
             if (nodeInterface.getNodeId().equals(disconnectedId)) //se il nodo disconnesso è il successore lo metto = this
@@ -353,7 +350,7 @@ public class Node implements NodeInterface, Serializable {
     }
 
     //The successor list is initialized with only this
-    private void createSuccessorList(){
+    private void createSuccessorList() {
         successorList = new CopyOnWriteArrayList<>();
         successorList.add(0, this);
     }
@@ -419,8 +416,8 @@ public class Node implements NodeInterface, Serializable {
 
     public Long hash(String ipAddress, int socketPort) {
         Long ipNumber = ipToLong(ipAddress) + socketPort;
-        Long numberNodes = (long)Math.pow(2, dimFingerTable);
-        return ipNumber%numberNodes;
+        Long numberNodes = (long) Math.pow(2, dimFingerTable);
+        return ipNumber % numberNodes;
     }
 
     private long ipToLong(String ipAddress) {
@@ -445,18 +442,18 @@ public class Node implements NodeInterface, Serializable {
             string = string + "null\n";
         string = string +
                 "SUCCESSOR LIST:";
-        if (successorList!=null)
+        if (successorList != null)
             for (NodeInterface nodeInterface : successorList)
                 string = string + "\t" + nodeInterface.getNodeId();
         string = string + "\n\n" +
                 "FINGER TABLE:\n";
-        for (int i = 0;i<fingerTable.size() && i< dimFingerTable; i++)
+        for (int i = 0; i < fingerTable.size() && i < dimFingerTable; i++)
             string = string +
                     "\t\t" + fingerTable.get(i).getNodeId() + "\n";
         //KEY
         string = string + "MY KEY" + "\n";
-        for (Map.Entry<Long, Object> keyValue:
-             keyStore.entrySet()) {
+        for (Map.Entry<Long, Object> keyValue :
+                keyStore.entrySet()) {
             string = string + keyValue.getKey() + " " + keyValue.getValue() + "\n";
         }
 
@@ -466,12 +463,12 @@ public class Node implements NodeInterface, Serializable {
 
     //CONTROLLER
 
-    private void openController(){
-        try{
+    private void openController() {
+        try {
             this.socketController = new Socket(ipController, portController);
             //this.socketController = new Socket("127.0.0.1", 59898);
             this.sendToController("#Connected");
-        } catch (Exception e){
+        } catch (Exception e) {
             out.println("ERRORE CONTROLLER");
         }
     }
@@ -487,15 +484,14 @@ public class Node implements NodeInterface, Serializable {
 
     }
 
-    public void updateStable(boolean listSucc, boolean listFiger){
+    public void updateStable(boolean listSucc, boolean listFiger) {
         boolean local;
         local = listSucc && listFiger;
-        if (stable != local){
+        if (stable != local) {
             stable = local;
-            if (!stable){
+            if (!stable) {
                 this.sendToController("#NotStable");
-            }
-            else{
+            } else {
                 this.sendToController("#Stable");
             }
         }
@@ -504,8 +500,8 @@ public class Node implements NodeInterface, Serializable {
     //KEY-VALUE
 
     public NodeInterface addKey(Map.Entry<Long, Object> keyValue) throws IOException {
-        Long hashKey = keyValue.getKey()%(long)Math.pow(2, dimFingerTable);
-        if (hashKey.equals(this.nodeId) || successorList.get(0).equals(this)){
+        Long hashKey = keyValue.getKey() % (long) Math.pow(2, dimFingerTable);
+        if (hashKey.equals(this.nodeId) || successorList.get(0).equals(this)) {
             addKeyToStore(keyValue);
             return this;
         }
@@ -517,8 +513,8 @@ public class Node implements NodeInterface, Serializable {
                 return newNodeKey;
             }
         }*/
-        if (predecessor!= null && hashKey.equals(predecessor.getNodeId()))
-            newNodeKey= predecessor;
+        if (predecessor != null && hashKey.equals(predecessor.getNodeId()))
+            newNodeKey = predecessor;
         else
             newNodeKey = findSuccessor(hashKey);
 
@@ -531,20 +527,20 @@ public class Node implements NodeInterface, Serializable {
         return newNodeKey;
     }
 
-    public void addKeyToStore(Map.Entry<Long, Object> keyValue){
-        keyStore.put(keyValue.getKey(),keyValue.getValue());
+    public void addKeyToStore(Map.Entry<Long, Object> keyValue) {
+        keyStore.put(keyValue.getKey(), keyValue.getValue());
     }
 
-    public Object retrieveKeyFromStore(Long key){
-        return keyStore.get( key);
+    public Object retrieveKeyFromStore(Long key) {
+        return keyStore.get(key);
     }
 
     public void moveKey() throws IOException {
-        for (Map.Entry<Long, Object> keyValue:
-             keyStore.entrySet()) {
-            Long hashKey = keyValue.getKey()%(long)Math.pow(2, dimFingerTable);
+        for (Map.Entry<Long, Object> keyValue :
+                keyStore.entrySet()) {
+            Long hashKey = keyValue.getKey() % (long) Math.pow(2, dimFingerTable);
             if (checkIntervalEquivalence(this.nodeId, hashKey, predecessor.getNodeId())) {
-                predecessor.addKey(new AbstractMap.SimpleEntry<>(keyValue.getKey(),keyValue.getValue()));
+                predecessor.addKey(new AbstractMap.SimpleEntry<>(keyValue.getKey(), keyValue.getValue()));
                 keyStore.remove(keyValue.getKey());
             }
         }
@@ -552,11 +548,11 @@ public class Node implements NodeInterface, Serializable {
 
     @Override
     public Object findKey(Long key) throws IOException {
-        Long hashKey = key%(long)Math.pow(2, dimFingerTable);
+        Long hashKey = key % (long) Math.pow(2, dimFingerTable);
         if (successorList.get(0).equals(this))
             return keyStore.get(key);
 
-        if (predecessor!= null && checkIntervalEquivalence(predecessor.getNodeId(), hashKey, nodeId))
+        if (predecessor != null && checkIntervalEquivalence(predecessor.getNodeId(), hashKey, nodeId))
             return keyStore.get(key);
 
         return findSuccessor(hashKey).findKey(key);

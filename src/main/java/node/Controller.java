@@ -1,16 +1,11 @@
 package node;
 
-import java.io.*;
+
 import java.net.*;
-
 import java.io.IOException;
-
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.time.LocalTime;
 import java.util.*;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 
 
@@ -71,6 +66,7 @@ public class Controller extends Thread {
                 socketList.remove(exitNode);
                 stableNet.remove(exitNode);
                 System.out.println("Nodi Connessi ("+ socketList.size() + ") : " + socketList  + " " + LocalTime.now());
+                System.out.println("Nodi Connessi ("+ socketList.size() + ") " + LocalTime.now());
                 trafficLight.release();
 
             } catch (InterruptedException e) {
@@ -95,6 +91,7 @@ public class Controller extends Thread {
                     socketList.add(NodeId);
                     Collections.sort(socketList);
                     System.out.println("Nodi Connessi ("+ socketList.size() + ") : " + socketList  + " " + LocalTime.now());
+                    System.out.println("Nodi Connessi ("+ socketList.size() + ") " + LocalTime.now());
                     trafficLight.release();
 
                 } catch (InterruptedException e) {
@@ -121,9 +118,10 @@ public class Controller extends Thread {
                     if (isUnique){
                         timeSem.acquire();
                         c.setEndTime(LocalTime.now());
-                        Long elapsed = Duration.between(c.getStartTime(), c.getEndTime()).getSeconds();
+                        Long elapsed = Duration.between(c.getStartTime(), c.getEndTime()).toMillis();
                         timeSem.release();
-                        System.out.println("Tempo per Stabilizzarsi : " + elapsed + " sec.");
+                        double pass = elapsed / 1000.0;
+                        System.out.println("Tempo per Stabilizzarsi : " + pass + " sec.");
                     }
                     trafficLight.release();
                 } catch (InterruptedException e) {
@@ -133,18 +131,6 @@ public class Controller extends Thread {
             default:
                 break;
 
-        }
-    }
-
-    public static void main(String[] args) throws Exception {
-
-        Collector coll = new Collector();
-
-        try (ServerSocket listener = new ServerSocket(59898)) {
-            System.out.println("The Controller server is running...");
-            while (true) {
-                Executors.newCachedThreadPool().submit(new Controller(listener.accept(), coll));
-            }
         }
     }
 

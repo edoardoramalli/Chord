@@ -109,3 +109,6 @@ buildNumber.properties
 *.xml
 *.iml
 .DS_Store
+*.jar
+*.jar
+*.MF
