@@ -3,6 +3,7 @@ package start;
 import exceptions.ConnectionErrorException;
 import exceptions.NodeIdAlreadyExistsException;
 import exceptions.UnexpectedBehaviourException;
+import node.Collector;
 import node.Controller;
 import node.Node;
 import org.apache.commons.cli.*;
@@ -87,7 +88,7 @@ public class Main {
 
         switch (type) {
             case 0:
-                Controller.Collector coll = new Controller.Collector();
+                Collector coll = new Collector();
 
                 try (ServerSocket listener = new ServerSocket(localPort)) {
                     System.out.println("The Controller server is running on Port " + localPort + " ...");
