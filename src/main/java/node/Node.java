@@ -29,7 +29,7 @@ public class Node implements NodeInterface, Serializable {
     private transient volatile CopyOnWriteArrayList<NodeInterface> successorList;
     private transient volatile NodeInterface predecessor;
     private transient volatile Map<Integer, NodeInterface> fingerTable;
-    private transient int dimFingerTable = 3;
+    private transient int dimFingerTable;
     private transient int dimSuccessorList = 3; //todo quanto è lunga la lista?
     private transient int nextFinger;
     private transient volatile ConcurrentHashMap<Long, Object> keyStore;
@@ -84,7 +84,6 @@ public class Node implements NodeInterface, Serializable {
     public void join(String joinIpAddress, int joinSocketPort)
             throws ConnectionErrorException, NodeIdAlreadyExistsException, IOException {
         startSocketListener(socketPort);
-        createFingerTable();
 
         NodeCommunicator nodeTemp = new NodeCommunicator(joinIpAddress, joinSocketPort, this, hash(joinIpAddress, joinSocketPort)); // crea un nodecomunicator temporaneo.
         try {
@@ -92,6 +91,7 @@ public class Node implements NodeInterface, Serializable {
         } catch (TimerExpiredException e) {
             throw new ConnectionErrorException();
         }
+        createFingerTable();
         this.nodeId = hash(ipAddress, socketPort);
         out.println("ID: " + nodeId);
         createSuccessorList();
@@ -486,7 +486,6 @@ public class Node implements NodeInterface, Serializable {
 
     public void updateStable(boolean listSucc, boolean listFiger) {
         boolean local;
-        out.println("Succ " + listSucc + " Finger " + listFiger);
         local = listSucc && listFiger;
         if (stable != local) {
             stable = local;
