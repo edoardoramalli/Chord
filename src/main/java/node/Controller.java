@@ -7,7 +7,7 @@ import java.time.LocalTime;
 import java.util.*;
 import java.util.concurrent.Semaphore;
 
-public class Controller extends Thread {
+public class Controller implements Runnable {
     private ArrayList<String> socketList;
     private HashMap<Socket, String> socketMap;
     private HashMap<String, String> stableNet;
@@ -71,7 +71,7 @@ public class Controller extends Thread {
         }
     }
 
-    public void parseInput(String input) {
+    private void parseInput(String input) {
         String [] split = input.split("#");
         String nodeId = split[0];
         switch (split[1]) {

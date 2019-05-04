@@ -6,15 +6,17 @@ import exceptions.UnexpectedBehaviourException;
 import node.Collector;
 import node.Controller;
 import node.Node;
+import node.NodeInterface;
 import org.apache.commons.cli.*;
 
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.UnknownHostException;
+import java.util.Scanner;
 import java.util.concurrent.Executors;
 
-
+import static java.lang.System.err;
 import static java.lang.System.out;
 
 public class Main {
@@ -28,13 +30,13 @@ public class Main {
         // Controller Port
         // Dim Finger Table
 
-        int localPort = -1;
-        String controllerIP = "";
-        int controllerPort = -1;
-        String joinIP = "";
-        int joinPort = -1;
-        int dimFingerTable = -1;
-        int type = -1;
+        int localPort;
+        String controllerIP;
+        int controllerPort;
+        String joinIP;
+        int joinPort;
+        int dimFingerTable;
+        int type;
 
         Options options = new Options();
 
@@ -66,6 +68,9 @@ public class Main {
         dimFingerTableOpt.setRequired(false);
         options.addOption(dimFingerTableOpt);
 
+        Option debugOpt = new Option("deb", "debug", false, "Debug option");
+        debugOpt.setRequired(false);
+        options.addOption(debugOpt);
 
         CommandLineParser parser = new DefaultParser();
         HelpFormatter formatter = new HelpFormatter();
@@ -74,31 +79,29 @@ public class Main {
         try {
             cmd = parser.parse(options, args);
         } catch (ParseException e) {
-            System.out.println(e.getMessage());
+            out.println(e.getMessage());
             formatter.printHelp("utility-name", options);
 
             System.exit(1);
         }
 
-
         localPort = Integer.parseInt(cmd.getOptionValue("port"));
         type = Integer.parseInt(cmd.getOptionValue("type"));
 
-        Node node = null;
+        Node node;
 
         switch (type) {
             case 0:
                 Collector coll = new Collector();
 
                 try (ServerSocket listener = new ServerSocket(localPort)) {
-                    System.out.println("The Controller server is running on Port " + localPort + " ...");
+                    out.println("The Controller server is running on Port " + localPort + " ...");
                     while (true) {
                         Executors.newCachedThreadPool().submit(new Controller(listener.accept(), coll));
                     }
-                } catch (IOException e) {
-
+                } catch (IOException e){
+                    throw new UnexpectedBehaviourException();
                 }
-                break;
             case 1:
                 // Create
                 controllerIP = cmd.getOptionValue("contrip");
@@ -111,7 +114,7 @@ public class Main {
                 }
                 dimFingerTable = Integer.parseInt(cmd.getOptionValue("dim"));
                 if (dimFingerTable <= 0) {
-                    System.err.println("Dim Finger Table can not be negative");
+                    err.println("Dim Finger Table can not be negative");
                     return;
                 }
                 out.println("-----------------------------");
@@ -119,6 +122,10 @@ public class Main {
                         + " - ControllerPort " + controllerPort);
                 out.println("-----------------------------");
                 node.create(dimFingerTable);
+
+                if (cmd.hasOption("debug"))
+                    debugInterface(node);
+
                 break;
             case 2:
                 //join
@@ -151,6 +158,28 @@ public class Main {
                     e.printStackTrace();
                 }
                 break;
+            default:
+                throw new UnexpectedBehaviourException();
+        }
+    }
+
+    private static void debugInterface(Node node){
+        Scanner in = new Scanner(System.in);
+        boolean exit = false;
+        while (!exit){
+            //out.println("Select 'lookup', 'addKey', 'p' or 'exit'" );
+            String choice = in.nextLine().toLowerCase();
+            switch (choice) {
+                case "p":
+                    out.println(node);
+                    out.println(node.getSocketManager());
+                    break;
+                case "exit":
+                    exit = true;
+                    break;
+                default:
+                    out.println("Command not valid or empty. Insert new command");
+            }
         }
     }
 }
