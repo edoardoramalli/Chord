@@ -486,6 +486,7 @@ public class Node implements NodeInterface, Serializable {
 
     public void updateStable(boolean listSucc, boolean listFiger) {
         boolean local;
+        out.println("Succ " + listSucc + " Finger " + listFiger);
         local = listSucc && listFiger;
         if (stable != local) {
             stable = local;
