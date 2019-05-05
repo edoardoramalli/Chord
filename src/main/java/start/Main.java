@@ -175,6 +175,13 @@ public class Main {
                     out.println(node.getSocketManager());
                     break;
                 case "exit":
+                    try {
+                        node.leave();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    } catch (ConnectionErrorException e) {
+                        e.printStackTrace();
+                    }
                     exit = true;
                     break;
                 default:
