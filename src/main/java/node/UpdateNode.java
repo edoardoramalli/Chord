@@ -16,6 +16,10 @@ public class UpdateNode implements Runnable {
         this.node = node;
     }
 
+    public static void setUpdate(boolean b) {
+        bool=b;
+    }
+
     @Override
     public void run() {
         boolean equalFinger = false;

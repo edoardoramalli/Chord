@@ -157,6 +157,10 @@ public class Main {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+
+                if (cmd.hasOption("debug"))
+                    debugInterface(node);
+
                 break;
             default:
                 throw new UnexpectedBehaviourException();

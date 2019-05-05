@@ -588,7 +588,7 @@ public class Node implements NodeInterface, Serializable {
     public void leave() throws IOException, ConnectionErrorException {
         out.println("Now I'm leaving\n\n");
         transferKey();
-        //UpdateNode.setUpdate(false);
+        UpdateNode.setUpdate(false);
 
         successorList.get(0).updateAfterLeave(nodeId,predecessor);
 
