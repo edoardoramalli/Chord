@@ -131,7 +131,7 @@ public class Node implements NodeInterface, Serializable {
 
     synchronized void listStabilize() throws IOException, TimerExpiredException {
         //questo serve per settare il primo successore
-        out.println("---------->");
+       // out.println("---------->");
         NodeInterface x;
         x = successorList.get(0).getPredecessor();
         if (x == null) {
@@ -142,6 +142,7 @@ public class Node implements NodeInterface, Serializable {
         long oldSucID = successorList.get(0).getNodeId();
         if (checkInterval(getNodeId(), nodeIndex, oldSucID)) {
             try{
+                
                 socketManager.closeCommunicator(oldSucID);
                 successorList.set(0, socketManager.createConnection(x));
             }
@@ -248,6 +249,8 @@ public class Node implements NodeInterface, Serializable {
             long predIndex = predecessor.getNodeId();
             if (checkInterval(predIndex, index, getNodeId()) && !(predecessor.getNodeId().equals(n.getNodeId()))) { //entro solo se n è diverso dal predecessore
                 try {
+//                    if (oldpred!=null && oldpred.equals(n.getNodeId()))
+//                        return;
                     socketManager.closeCommunicator(predecessor.getNodeId());//chiudo connessione verso vecchio predecessore
                     predecessor = socketManager.createConnection(n); //apro connessione verso nuovo predecessore
                     moveKey();
@@ -557,4 +560,58 @@ public class Node implements NodeInterface, Serializable {
 
         return findSuccessor(hashKey).findKey(key);
     }
+
+
+    public void leave() throws IOException, ConnectionErrorException {
+        out.println("Now I'm leaving\n\n");
+        transferKey();
+        UpdateNode.setUpdate(false);
+
+        successorList.get(0).updateAfterLeave(nodeId,predecessor);
+
+        predecessor.updateAfterLeave(nodeId,successorList.get(successorList.size()-1));
+    }
+
+    public void transferKey() throws IOException {
+        for (Map.Entry<Long, Object> keyValue:
+                keyStore.entrySet()) {
+            successorList.get(0).addKey(new AbstractMap.SimpleEntry<>(keyValue.getKey(),keyValue.getValue()));
+            keyStore.remove(keyValue);
+        }
+    }
+
+    Long oldpred=null;
+
+    public synchronized void updateAfterLeave(Long oldNodeID, NodeInterface newNode) throws IOException, ConnectionErrorException {
+
+
+        if (oldNodeID.equals(predecessor.getNodeId())){
+            out.println("My predecessor left");
+            if (successorList.contains(predecessor)) {
+                successorList.remove(predecessor);
+                socketManager.closeCommunicator(oldNodeID);
+            }
+            oldpred=predecessor.getNodeId();
+            predecessor = socketManager.createConnection(newNode);
+            socketManager.closeCommunicator(oldNodeID);
+            out.println(this.toString());
+
+        }
+
+        if (oldNodeID.equals(successorList.get(0).getNodeId())){
+            out.println("My successor left");
+            successorList.remove(0);
+            NodeInterface newCommunicator=socketManager.createConnection(newNode);
+            if (!successorList.contains(newCommunicator) && !newCommunicator.getNodeId().equals(nodeId))
+                successorList.add(newCommunicator);
+            socketManager.closeCommunicator(oldNodeID);
+
+            out.println(this.toString());
+
+        }
+
+
+
+    }
+
 }

@@ -14,6 +14,7 @@ import static java.lang.System.out;
 
 public class UpdateNode implements Runnable {
     private Node node;
+    private static Boolean bool=true;
 
     UpdateNode(Node node){
         this.node = node;
@@ -23,7 +24,7 @@ public class UpdateNode implements Runnable {
     public void run() {
         boolean equalFinger = false;
         boolean equalList = false;
-        while (true) {
+        while (bool) {
             if (node.getPredecessor() != null) {
                 //Get Old List Value to be compared at the end
                 ArrayList<Long> oldSuccList = new ArrayList<>();
@@ -83,5 +84,9 @@ public class UpdateNode implements Runnable {
     //TODO questo serve?
     public static <T> boolean listEqualsIgnoreOrder(List<T> list1, List<T> list2) {
         return new HashSet<>(list1).equals(new HashSet<>(list2));
+    }
+
+    public static void setUpdate(Boolean boolo){
+        bool=boolo;
     }
 }

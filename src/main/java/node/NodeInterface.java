@@ -1,5 +1,6 @@
 package node;
 
+import exceptions.ConnectionErrorException;
 import exceptions.TimerExpiredException;
 import network.SocketManager;
 
@@ -49,4 +50,6 @@ public interface NodeInterface extends Serializable {
     Object findKey(Long key) throws IOException;
 
     Object retrieveKeyFromStore(Long key);
+
+    void updateAfterLeave(Long oldNodeID, NodeInterface newNode) throws IOException, ConnectionErrorException;
 }
