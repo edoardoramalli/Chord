@@ -10,6 +10,7 @@ import java.util.concurrent.TimeUnit;
 
 public class UpdateNode implements Runnable {
     private Node node;
+    private static Boolean bool=true;
 
     UpdateNode(Node node){
         this.node = node;
@@ -19,7 +20,7 @@ public class UpdateNode implements Runnable {
     public void run() {
         boolean equalFinger = false;
         boolean equalList = false;
-        while (true) {
+        while (bool) {
             if (node.getPredecessor() != null) {
                 //Get Old List Value to be compared at the end
                 ArrayList<Long> oldSuccList = new ArrayList<>();

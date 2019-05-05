@@ -50,7 +50,12 @@ public class LaunchNodeJoin {
                     break;
                 case JOIN_COMMAND:
                     out.println("Insert ip address of node");
-                    String ipAddress = "127.0.0.1";
+                    String ipAddress = null;
+                    try {
+                        ipAddress = InetAddress.getLocalHost().getHostAddress();
+                    } catch (UnknownHostException e) {
+                        e.printStackTrace();
+                    }
                     //String ipAddress = "172.20.10.2";
                     out.println("Insert socket port of node");
                     //int socketPort = Integer.parseInt(in.nextLine().toLowerCase());
@@ -118,6 +123,13 @@ public class LaunchNodeJoin {
                     out.println(node.getSocketManager());
                     break;
                 case EXIT_COMMAND:
+                    try {
+                        node.leave();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    } catch (ConnectionErrorException e) {
+                        e.printStackTrace();
+                    }
                     exit = true;
                     break;
                 default:

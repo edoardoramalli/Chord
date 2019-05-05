@@ -542,4 +542,30 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
             lockList.get(findKeyResponse.getLockId()).notifyAll();
         }
     }
+
+
+    //LEAVE
+
+
+
+    @Override
+    public void updateAfterLeave(Long oldNodeID, NodeInterface newNode) throws IOException, ConnectionErrorException {
+        Long lockId = createLock();
+
+            NodeInterface newNod= new Node(newNode.getIpAddress(), newNode.getSocketPort());
+            newNod.setNodeId(newNode.getNodeId());
+            socketNode.sendMessage(new LeaveRequest(oldNodeID, newNod, lockId));
+
+    }
+
+    @Override
+    public void handle(LeaveRequest leaveRequest) throws IOException{
+        try {
+            node.updateAfterLeave(leaveRequest.getNodeId(), leaveRequest.getNewNode());
+        } catch (IOException | ConnectionErrorException e) {
+            e.printStackTrace();
+        }
+    }
+
+
 }
