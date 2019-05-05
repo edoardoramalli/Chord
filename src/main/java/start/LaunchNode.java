@@ -6,7 +6,6 @@ import exceptions.UnexpectedBehaviourException;
 import node.Node;
 import node.NodeInterface;
 
-import javax.swing.*;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;

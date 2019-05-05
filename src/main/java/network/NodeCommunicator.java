@@ -322,7 +322,7 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
 
     @Override
     public void nodeDisconnected() {
-        out.println("Entro qui, disconnesso: " + nodeId);
+        //out.println("Entro qui, disconnesso: " + nodeId);
         node.getSocketManager().removeNode(nodeId);
     }
 

@@ -27,19 +27,19 @@ public class SocketManager {
     public synchronized NodeInterface createConnection(NodeInterface connectionNode) throws IOException, ConnectionErrorException {
         Long searchedNodeId = connectionNode.getNodeId();
         if (searchedNodeId.equals(node.getNodeId())) { //nel caso in cui ritorno me stesso non ho bisogno di aggiornare il numero di connessioni
-            out.println("NUOVA CONNESSIONE: RITORNO ME STESSO");
+            //out.println("NUOVA CONNESSIONE: RITORNO ME STESSO");
             return node;
         }
         else {
             NodeInterface searchedNode = socketList.get(searchedNodeId);
             if(searchedNode != null) {
-                out.println("DALLA LISTA: " + searchedNodeId + ", NUM CONNECTION: " + (socketNumber.get(searchedNodeId)+1));
+                //out.println("DALLA LISTA: " + searchedNodeId + ", NUM CONNECTION: " + (socketNumber.get(searchedNodeId)+1));
                 int n = socketNumber.get(searchedNodeId); //vecchio numero di connessioni
                 socketNumber.replace(searchedNodeId, n+1); //faccio replace con nodeId e n+1
                 return searchedNode;
             }
             else{
-                out.println("NUOVA: " + searchedNodeId);
+                //out.println("NUOVA: " + searchedNodeId);
                 NodeCommunicator createdNode = new NodeCommunicator(connectionNode.getIpAddress(), connectionNode.getSocketPort(), node, connectionNode.getNodeId());
                 socketList.put(searchedNodeId, createdNode);
                 socketNumber.put(searchedNodeId, 1); //quando creo un nodo inserisco nella lista <nodeId, 1>
@@ -72,7 +72,7 @@ public class SocketManager {
                 throw new UnexpectedBehaviourException();
             }
         }
-        out.println("CREO: " + createdNode.getNodeId());
+        //out.println("CREO: " + createdNode.getNodeId());
     }
 
     public synchronized void closeCommunicator(Long nodeId) {
@@ -83,10 +83,10 @@ public class SocketManager {
                 if (n == 1) { //removes the connection
                     socketNumber.remove(nodeId);
                     socketList.remove(nodeId);
-                    out.println("RIMOSSO: " + nodeId);
+                    //out.println("RIMOSSO: " + nodeId);
                 } else { //decreases the number of connection
                     socketNumber.replace(nodeId, n - 1);
-                    out.println("DIMINUISCO: " + nodeId + ", NUM CONNECTION: " + socketNumber.get(nodeId));
+                    //out.println("DIMINUISCO: " + nodeId + ", NUM CONNECTION: " + socketNumber.get(nodeId));
                 }
             }
         }

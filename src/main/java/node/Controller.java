@@ -1,30 +1,21 @@
 package node;
 
-import java.io.*;
 import java.net.*;
-
 import java.io.IOException;
-
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.time.LocalTime;
 import java.util.*;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 
-
-
-public class Controller extends Thread {
+public class Controller implements Runnable {
     private ArrayList<String> socketList;
     private HashMap<Socket, String> socketMap;
     private HashMap<String, String> stableNet;
     private Semaphore trafficLight;
     private Semaphore timeSem;
     private Socket socket; //socket di connessione con il client
-    private LocalTime starTime, endTime;
+    private LocalTime starTime, endTime; //todo questi si possono togliere?
     private Collector c;
-
 
     public Controller(Socket socket, Collector c) {
         this.socket = socket;
@@ -35,7 +26,6 @@ public class Controller extends Thread {
         this.stableNet = c.getStableNet();
         this.timeSem = c.getTimeSem();
     }
-
 
     @Override
     public void run() {
@@ -70,7 +60,8 @@ public class Controller extends Thread {
                 socketMap.remove(socket);
                 socketList.remove(exitNode);
                 stableNet.remove(exitNode);
-                System.out.println("Nodi Connessi ("+ socketList.size() + ") : " + socketList  + " " + LocalTime.now());
+                //System.out.println("Nodi Connessi ("+ socketList.size() + ") : " + socketList  + " " + LocalTime.now());
+                System.out.println("Nodi Connessi ("+ socketList.size() + ") " + LocalTime.now());
                 trafficLight.release();
 
             } catch (InterruptedException e) {
@@ -80,9 +71,9 @@ public class Controller extends Thread {
         }
     }
 
-    public void parseInput(String input) {
+    private void parseInput(String input) {
         String [] split = input.split("#");
-        String NodeId = split[0];
+        String nodeId = split[0];
         switch (split[1]) {
             case "Connected":
                 try {
@@ -91,10 +82,11 @@ public class Controller extends Thread {
                     timeSem.release();
 
                     trafficLight.acquire();
-                    socketMap.put(socket,NodeId);
-                    socketList.add(NodeId);
+                    socketMap.put(socket,nodeId);
+                    socketList.add(nodeId);
                     Collections.sort(socketList);
-                    System.out.println("Nodi Connessi ("+ socketList.size() + ") : " + socketList  + " " + LocalTime.now());
+                    //System.out.println("Nodi Connessi ("+ socketList.size() + ") : " + socketList  + " " + LocalTime.now());
+                    System.out.println("Nodi Connessi ("+ socketList.size() + ") " + LocalTime.now());
                     trafficLight.release();
 
                 } catch (InterruptedException e) {
@@ -104,8 +96,8 @@ public class Controller extends Thread {
             case "NotStable":
                 try {
                     trafficLight.acquire();
-                    stableNet.put(NodeId,"False");
-                    System.out.println("Stabilità : " + stableNet.toString());
+                    stableNet.put(nodeId,"False");
+                    //System.out.println("Stabilità : " + stableNet.toString());
                     trafficLight.release();
                 } catch (InterruptedException e) {
                     e.printStackTrace();
@@ -114,16 +106,17 @@ public class Controller extends Thread {
             case "Stable":
                 try {
                     trafficLight.acquire();
-                    stableNet.put(NodeId,"True");
-                    System.out.println("Stabilità : " + stableNet.toString() + " " + LocalTime.now());
+                    stableNet.put(nodeId,"True");
+                    //System.out.println("Stabilità : " + stableNet.toString() + " " + LocalTime.now());
                     Set<String> values = new HashSet<>(stableNet.values());
                     boolean isUnique = values.size() == 1;
                     if (isUnique){
                         timeSem.acquire();
                         c.setEndTime(LocalTime.now());
-                        Long elapsed = Duration.between(c.getStartTime(), c.getEndTime()).getSeconds();
+                        Long elapsed = Duration.between(c.getStartTime(), c.getEndTime()).toMillis();
                         timeSem.release();
-                        System.out.println("Tempo per Stabilizzarsi : " + elapsed + " sec.");
+                        double pass = elapsed / 1000.0;
+                        System.out.println("Tempo per Stabilizzarsi : " + pass + " sec.");
                     }
                     trafficLight.release();
                 } catch (InterruptedException e) {
@@ -132,67 +125,6 @@ public class Controller extends Thread {
                 break;
             default:
                 break;
-
-        }
-    }
-
-    public static void main(String[] args) throws Exception {
-
-        Collector coll = new Collector();
-
-        try (ServerSocket listener = new ServerSocket(59898)) {
-            System.out.println("The Controller server is running...");
-            while (true) {
-                Executors.newCachedThreadPool().submit(new Controller(listener.accept(), coll));
-            }
-        }
-    }
-
-    public static class Collector {
-        private ArrayList<String> socketList = new ArrayList<>();
-        private HashMap<Socket, String> socketMap = new HashMap<>();
-        private Semaphore trafficLight = new Semaphore(1);
-        private Semaphore timeSem = new Semaphore(1);
-        private HashMap<String, String> stableNet = new HashMap<>();
-        private LocalTime startTime;
-        private LocalTime endTime;
-
-
-        public ArrayList<String> getSocketList() {
-            return socketList;
-        }
-
-        public Semaphore getTrafficLight() {
-            return trafficLight;
-        }
-
-        public HashMap<String, String> getStableNet() {
-            return stableNet;
-        }
-
-        public HashMap<Socket, String> getSocketMap() {
-            return socketMap;
-        }
-
-        public LocalTime getStartTime() {
-            return startTime;
-        }
-
-        public LocalTime getEndTime() {
-            return endTime;
-        }
-
-        public Semaphore getTimeSem() {
-            return timeSem;
-        }
-
-
-        public void setStartTime(LocalTime startTime) {
-            this.startTime = startTime;
-        }
-
-        public void setEndTime(LocalTime endTime) {
-            this.endTime = endTime;
         }
     }
 }

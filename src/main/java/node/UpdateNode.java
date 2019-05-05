@@ -5,12 +5,8 @@ import exceptions.UnexpectedBehaviourException;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-
-import static java.lang.System.out;
 
 public class UpdateNode implements Runnable {
     private Node node;
@@ -61,16 +57,12 @@ public class UpdateNode implements Runnable {
                     throw new UnexpectedBehaviourException();
                 }
             }
-
             ArrayList<Long> newFingerTableList = new ArrayList<>();
             for (Map.Entry<Integer, NodeInterface> entry : node.getFingerTable().entrySet())
                 newFingerTableList.add(entry.getValue().getNodeId());
-
             equalFinger = oldFingerTableList.equals(newFingerTableList);  //The Order matters
-
             oldFingerTableList.clear();
             newFingerTableList.clear();
-
             node.updateStable(equalList, equalFinger);
 
             try {
@@ -79,14 +71,5 @@ public class UpdateNode implements Runnable {
                 Thread.currentThread().interrupt();
             }
         }
-    }
-
-    //TODO questo serve?
-    public static <T> boolean listEqualsIgnoreOrder(List<T> list1, List<T> list2) {
-        return new HashSet<>(list1).equals(new HashSet<>(list2));
-    }
-
-    public static void setUpdate(Boolean boolo){
-        bool=boolo;
     }
 }
