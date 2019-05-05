@@ -135,6 +135,7 @@ public class Node implements NodeInterface, Serializable {
 
     synchronized void listStabilize() throws IOException, TimerExpiredException {
         //questo serve per settare il primo successore
+        // out.println("---------->");
         NodeInterface x;
         x = successorList.get(0).getPredecessor();
         if (x == null) {
@@ -144,10 +145,12 @@ public class Node implements NodeInterface, Serializable {
         long nodeIndex = x.getNodeId();
         long oldSucID = successorList.get(0).getNodeId();
         if (checkInterval(getNodeId(), nodeIndex, oldSucID)) {
-            try {
+            try{
+
                 socketManager.closeCommunicator(oldSucID);
                 successorList.set(0, socketManager.createConnection(x));
-            } catch (ConnectionErrorException e) {
+            }
+            catch (ConnectionErrorException e){
                 throw new UnexpectedBehaviourException();
             }
         }
@@ -157,16 +160,17 @@ public class Node implements NodeInterface, Serializable {
 
         List<NodeInterface> xList; //xList contiene la lista dei successori del successore
         xList = successorList.get(0).getSuccessorList();
-        if (successorList.size() < dimSuccessorList) {
-            for (NodeInterface xNode : xList) {
+        if (successorList.size() < dimSuccessorList){
+            for (NodeInterface xNode: xList) {
                 if (!xNode.getNodeId().equals(nodeId) && successorList.size() < dimSuccessorList) {
                     try {
-                        for (NodeInterface internalNode : successorList) {
-                            if (internalNode.getNodeId().equals(xNode.getNodeId())) {
+                        for (NodeInterface internalNode: successorList ) {
+                            if (internalNode.getNodeId().equals(xNode.getNodeId())){
                                 already = true;
                                 break;
                             }
                         }
+
                         if (!already)
                             successorList.add(socketManager.createConnection(xNode));
                         already = false;
@@ -175,21 +179,41 @@ public class Node implements NodeInterface, Serializable {
                     }
                 }
             }
-        } else {
-            for (int i = 1; i < dimSuccessorList && i < xList.size(); i++) {
+        }
+        else {
+            int i;
+            already=false;
+
+            for (i= 1; i < dimSuccessorList && i < xList.size(); i++) {
                 if (!successorList.get(i).getNodeId().equals(xList.get(i - 1).getNodeId())
-                        && !xList.get(i - 1).getNodeId().equals(nodeId)) {
+                        && !xList.get(i-1).getNodeId().equals(nodeId)){
                     try {
-                        socketManager.closeCommunicator(successorList.get(i).getNodeId());
-                        successorList.set(i, socketManager.createConnection(xList.get(i - 1)));
+                        for (int index = 0; index < i; index++) {
+                            if (successorList.get(index).getNodeId().equals(xList.get(i-1).getNodeId())) {
+                                already = true;
+                                break;
+                            }
+                            if (!already) {
+                                socketManager.closeCommunicator(successorList.get(i).getNodeId());
+                                successorList.set(i, socketManager.createConnection(xList.get(i - 1)));
+                            }
+                            already= false;
+                        }
                     } catch (ConnectionErrorException e) {
                         throw new UnexpectedBehaviourException();
                     }
                 }
             }
         }
+        CopyOnWriteArrayList<NodeInterface> deleteList = (CopyOnWriteArrayList<NodeInterface>) successorList.clone();
+        for (int z=1; z < successorList.size(); z++){
+            if (successorList.get(z).equals(successorList.get(z-1)))
+                deleteList.remove(successorList.get(z));
+        }
+        successorList=deleteList;
     }
     //catch successor exception--->update listSuccessor
+
 
     @Override
     public NodeInterface findSuccessor(Long id) throws IOException {
@@ -564,11 +588,12 @@ public class Node implements NodeInterface, Serializable {
     public void leave() throws IOException, ConnectionErrorException {
         out.println("Now I'm leaving\n\n");
         transferKey();
-        UpdateNode.setUpdate(false);
+        //UpdateNode.setUpdate(false);
 
         successorList.get(0).updateAfterLeave(nodeId,predecessor);
 
         predecessor.updateAfterLeave(nodeId,successorList.get(successorList.size()-1));
+        close();
     }
 
     public void transferKey() throws IOException {
