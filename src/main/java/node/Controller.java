@@ -60,7 +60,7 @@ public class Controller implements Runnable {
                 socketMap.remove(socket);
                 socketList.remove(exitNode);
                 stableNet.remove(exitNode);
-                System.out.println("Nodi Connessi ("+ socketList.size() + ") : " + socketList  + " " + LocalTime.now());
+                //System.out.println("Nodi Connessi ("+ socketList.size() + ") : " + socketList  + " " + LocalTime.now());
                 System.out.println("Nodi Connessi ("+ socketList.size() + ") " + LocalTime.now());
                 trafficLight.release();
 
@@ -85,7 +85,7 @@ public class Controller implements Runnable {
                     socketMap.put(socket,nodeId);
                     socketList.add(nodeId);
                     Collections.sort(socketList);
-                    System.out.println("Nodi Connessi ("+ socketList.size() + ") : " + socketList  + " " + LocalTime.now());
+                    //System.out.println("Nodi Connessi ("+ socketList.size() + ") : " + socketList  + " " + LocalTime.now());
                     System.out.println("Nodi Connessi ("+ socketList.size() + ") " + LocalTime.now());
                     trafficLight.release();
 
@@ -97,7 +97,7 @@ public class Controller implements Runnable {
                 try {
                     trafficLight.acquire();
                     stableNet.put(nodeId,"False");
-                    System.out.println("Stabilità : " + stableNet.toString());
+                    //System.out.println("Stabilità : " + stableNet.toString());
                     trafficLight.release();
                 } catch (InterruptedException e) {
                     e.printStackTrace();
@@ -107,7 +107,7 @@ public class Controller implements Runnable {
                 try {
                     trafficLight.acquire();
                     stableNet.put(nodeId,"True");
-                    System.out.println("Stabilità : " + stableNet.toString() + " " + LocalTime.now());
+                    //System.out.println("Stabilità : " + stableNet.toString() + " " + LocalTime.now());
                     Set<String> values = new HashSet<>(stableNet.values());
                     boolean isUnique = values.size() == 1;
                     if (isUnique){
