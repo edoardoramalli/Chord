@@ -413,14 +413,14 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
         NodeInterface nodeInterface = null;
         try {
             nodeInterface = node.findSuccessor(findSuccessorRequest.getId());
-        } catch (TimerExpiredException e) {
+        } catch (TimerExpiredException e) { //TODO gestire eccezione
             e.printStackTrace();
         }
         NodeInterface nodeTemp = null;
         try {
             nodeTemp = new Node(nodeInterface.getIpAddress(),
                     nodeInterface.getSocketPort(), node.getDimFingerTable());
-        } catch (TimerExpiredException e) {
+        } catch (TimerExpiredException e) { //TODO gestire eccezione
             e.printStackTrace();
         }
         socketNode.sendMessage(new FindSuccessorResponse(nodeTemp, findSuccessorRequest.getLockId()));

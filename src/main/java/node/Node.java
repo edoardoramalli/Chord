@@ -182,7 +182,7 @@ public class Node implements NodeInterface, Serializable {
         }
         else {
             int i;
-            already=false;
+            already = false;
 
             for (i= 1; i < dimSuccessorList && i < xList.size(); i++) {
                 if (!successorList.get(i).getNodeId().equals(xList.get(i - 1).getNodeId())
@@ -206,7 +206,7 @@ public class Node implements NodeInterface, Serializable {
             }
         }
         CopyOnWriteArrayList<NodeInterface> deleteList = (CopyOnWriteArrayList<NodeInterface>) successorList.clone();
-        for (int z=1; z < successorList.size(); z++){
+        for (int z = 1; z < successorList.size(); z++){
             if (successorList.get(z).equals(successorList.get(z-1)))
                 deleteList.remove(successorList.get(z));
         }
@@ -509,9 +509,9 @@ public class Node implements NodeInterface, Serializable {
 
     }
 
-    public void updateStable(boolean listSucc, boolean listFiger) {
+    void updateStable(boolean listSucc, boolean listFinger) {
         boolean local;
-        local = listSucc && listFiger;
+        local = listSucc && listFinger;
         if (stable != local) {
             stable = local;
             if (!stable) {
@@ -564,10 +564,10 @@ public class Node implements NodeInterface, Serializable {
         return keyStore.get(key);
     }
 
-    public void moveKey() throws IOException {
+    private void moveKey() throws IOException {
         for (Map.Entry<Long, Object> keyValue :
                 keyStore.entrySet()) {
-            Long hashKey = keyValue.getKey() % (long) Math.pow(2, dimFingerTable);
+            long hashKey = keyValue.getKey() % (long) Math.pow(2, dimFingerTable);
             if (checkIntervalEquivalence(this.nodeId, hashKey, predecessor.getNodeId())) {
                 try {
                     predecessor.addKey(new AbstractMap.SimpleEntry<>(keyValue.getKey(), keyValue.getValue()));

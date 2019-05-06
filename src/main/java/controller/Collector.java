@@ -1,4 +1,4 @@
-package node;
+package controller;
 
 import java.net.Socket;
 import java.time.LocalTime;

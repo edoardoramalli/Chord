@@ -3,8 +3,8 @@ package start;
 import exceptions.ConnectionErrorException;
 import exceptions.NodeIdAlreadyExistsException;
 import exceptions.UnexpectedBehaviourException;
-import node.Collector;
-import node.Controller;
+import controller.Collector;
+import controller.Controller;
 import node.Node;
 import org.apache.commons.cli.*;
 
