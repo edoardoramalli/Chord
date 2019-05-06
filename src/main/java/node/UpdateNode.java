@@ -71,7 +71,7 @@ public class UpdateNode implements Runnable {
             node.updateStable(equalList, equalFinger);
 
             try {
-                TimeUnit.MILLISECONDS.sleep(1200);
+                TimeUnit.MILLISECONDS.sleep(3000);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }

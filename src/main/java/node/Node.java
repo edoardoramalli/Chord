@@ -86,7 +86,7 @@ public class Node implements NodeInterface, Serializable {
         NodeCommunicator nodeTemp = new NodeCommunicator(joinIpAddress, joinSocketPort,
                 this, hash(joinIpAddress, joinSocketPort)); // crea un nodecomunicator temporaneo.
         try {
-            dimFingerTable = nodeTemp.getDimFingerTable();
+            dimFingerTable = nodeTemp.getInitialDimFingerTable();
         } catch (TimerExpiredException e) {
             throw new ConnectionErrorException();
         }
@@ -450,13 +450,6 @@ public class Node implements NodeInterface, Serializable {
             return this;
         }
         NodeInterface newNodeKey;
-      /*  for (int i = 0; i < successorList.size(); i++) {
-            if (keyValue.getKey().equals(successorList.get(i).getNodeId())) {
-                newNodeKey = successorList.get(i);
-                newNodeKey.addKey(keyValue);
-                return newNodeKey;
-            }
-        }*/
         if (predecessor != null && hashKey.equals(predecessor.getNodeId()))
             newNodeKey = predecessor;
         else
@@ -495,7 +488,7 @@ public class Node implements NodeInterface, Serializable {
 
     @Override
     public Object findKey(Long key) throws IOException, TimerExpiredException {
-        Long hashKey = key % (long) Math.pow(2, dimFingerTable);
+        long hashKey = key % (long) Math.pow(2, dimFingerTable);
         if (successorList.get(0).equals(this))
             return keyStore.get(key);
 
@@ -562,8 +555,13 @@ public class Node implements NodeInterface, Serializable {
         return nodeId;
     }
 
+    /**
+     * Not used in this class
+     */
     @Override
-    public void close() { }
+    public void close() {
+        throw new UnexpectedBehaviourException();
+    }
 
     @Override
     public NodeInterface getPredecessor() {
@@ -575,14 +573,24 @@ public class Node implements NodeInterface, Serializable {
         return ipAddress;
     }
 
+    /**
+     * Not used in this class
+     *
+     * @return .
+     */
     @Override
     public int getInitialSocketPort() {
-        throw new UnexpectedBehaviourException(); //Non usato
+        throw new UnexpectedBehaviourException();
     }
 
+    /**
+     * Not used in this class
+     *
+     * @param socketPort .
+     */
     @Override
     public void setSocketPort(int socketPort) {
-        throw new UnexpectedBehaviourException(); //Non usato
+        throw new UnexpectedBehaviourException();
     }
 
     @Override
@@ -592,6 +600,16 @@ public class Node implements NodeInterface, Serializable {
 
     Map<Integer, NodeInterface> getFingerTable() {
         return fingerTable;
+    }
+
+    /**
+     * Not used in this class
+     *
+     * @return .
+     */
+    @Override
+    public int getInitialDimFingerTable() {
+        throw new UnexpectedBehaviourException();
     }
 
     @Override

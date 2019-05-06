@@ -26,6 +26,7 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
     private transient Long nodeId; //questo è il nodeId dell'altro
     private transient String ipAddress; //ipAddress dell'altro nodo
     private transient int socketPort; //socketPort dell'altro nodo
+    private transient int dimFingerTable;
     private transient SocketNode socketNode;
     private transient volatile HashMap<Long, Object> lockList = new HashMap<>();
     private transient volatile Long lockID = 0L;
@@ -48,6 +49,7 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
         this.ipAddress = joinIpAddress;
         this.socketPort = joinSocketPort;
         this.messageList = new HashMap<>();
+        this.dimFingerTable = node.getDimFingerTable();
         try {
             joinNodeSocket = new Socket(joinIpAddress, joinSocketPort);
         } catch (IOException e) {
@@ -71,6 +73,7 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
         this.node = node;
         this.messageList = new HashMap<>();
         this.ipAddress = ipAddress;
+        this.dimFingerTable = node.getDimFingerTable();
     }
 
     @Override
@@ -98,7 +101,11 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
         node.getSocketManager().closeCommunicator(nodeId);
     }
 
-    //non usato
+    /**
+     * Not used in this class
+     *
+     * @return .
+     */
     @Override
     public SocketManager getSocketManager() {
         err.println("ERRORE DENTRO GETSOCKETMANAGER in NODECOMMUNICATOR");
@@ -140,7 +147,7 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
     }
 
     @Override
-    public int getInitialSocketPort() throws IOException, TimerExpiredException {
+    public int getInitialSocketPort() throws TimerExpiredException {
         Long lockId = createLock();
         final ExecutorService service = Executors.newSingleThreadExecutor();
         try {
@@ -177,7 +184,7 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
     }
 
     @Override
-    public int getDimFingerTable() throws TimerExpiredException {
+    public int getInitialDimFingerTable() throws TimerExpiredException {
         Long lockId = createLock();
         final ExecutorService service = Executors.newSingleThreadExecutor();
         try {
@@ -206,6 +213,11 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
         GetDimFingerTableResponse getDimFingerTableResponse = (GetDimFingerTableResponse) messageList.get(lockId);
         messageList.remove(lockId);
         return getDimFingerTableResponse.getDimFingerTable();
+    }
+
+    @Override
+    public int getDimFingerTable() {
+        return dimFingerTable;
     }
 
     @Override
@@ -309,7 +321,11 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
         return getSuccessorListResponse.getSuccessorList();
     }
 
-    //non utilizzato
+    /**
+     * Not used in this class
+     *
+     * @param text .
+     */
     @Override
     public void sendToController(String text) {
         throw new UnexpectedBehaviourException();
@@ -353,12 +369,22 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
         return addKeyResponse.getNode();
     }
 
+    /**
+     * Not used in this class
+     *
+     * @param keyValue .
+     */
     @Override
     public void addKeyToStore(Map.Entry<Long, Object> keyValue) {
-        throw new UnexpectedBehaviourException(); //non utilizzato?
+        throw new UnexpectedBehaviourException();
     }
 
-    //non usìtilizzato
+    /**
+     * Not used in this class
+     *
+     * @param key .
+     * @return .
+     */
     @Override
     public Object retrieveKeyFromStore(Long key) {
         throw new UnexpectedBehaviourException();
@@ -400,11 +426,9 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
     @Override
     public void updateAfterLeave(Long oldNodeID, NodeInterface newNode) throws IOException, ConnectionErrorException {
         Long lockId = createLock();
-
         NodeInterface newNod= new Node(newNode.getIpAddress(), newNode.getSocketPort());
         newNod.setNodeId(newNode.getNodeId());
         socketNode.sendMessage(new LeaveRequest(oldNodeID, newNod, lockId));
-
     }
 
     //---------> Handling of Messages
@@ -417,13 +441,7 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
         } catch (TimerExpiredException e) { //TODO gestire eccezione
             e.printStackTrace();
         }
-        NodeInterface nodeTemp = null;
-        try {
-            nodeTemp = new Node(nodeInterface.getIpAddress(),
-                    nodeInterface.getSocketPort(), node.getDimFingerTable());
-        } catch (TimerExpiredException e) { //TODO gestire eccezione
-            e.printStackTrace();
-        }
+        NodeInterface nodeTemp = new Node(nodeInterface.getIpAddress(), nodeInterface.getSocketPort(), node.getDimFingerTable());
         socketNode.sendMessage(new FindSuccessorResponse(nodeTemp, findSuccessorRequest.getLockId()));
     }
 
@@ -467,13 +485,8 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
         } catch (TimerExpiredException e) {
             throw new UnexpectedBehaviourException();
         }
-        if (predecessor != null) {
-            try {
-                socketNode.sendMessage(new GetPredecessorResponse(new Node(predecessor.getIpAddress(), predecessor.getSocketPort(), node.getDimFingerTable()), getPredecessorRequest.getLockId()));
-            } catch (TimerExpiredException e) {
-                e.printStackTrace();
-            }
-        }
+        if (predecessor != null)
+            socketNode.sendMessage(new GetPredecessorResponse(new Node(predecessor.getIpAddress(), predecessor.getSocketPort(), node.getDimFingerTable()), getPredecessorRequest.getLockId()));
         else
             socketNode.sendMessage(new GetPredecessorResponse(null, getPredecessorRequest.getLockId()));
     }
@@ -488,11 +501,7 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
 
     @Override
     public void handle(GetDimFingerTableRequest getDimFingerTableRequest) throws IOException {
-        try {
-            socketNode.sendMessage(new GetDimFingerTableResponse(node.getDimFingerTable(), getDimFingerTableRequest.getLockId()));
-        } catch (TimerExpiredException e) {
-            throw new UnexpectedBehaviourException();
-        }
+        socketNode.sendMessage(new GetDimFingerTableResponse(node.getDimFingerTable(), getDimFingerTableRequest.getLockId()));
     }
 
     @Override
