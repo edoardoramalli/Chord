@@ -9,8 +9,6 @@ import java.net.Socket;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import static java.lang.System.out;
-
 public class SocketNodeListener implements Runnable, Serializable {
     private int socketPort;
     private transient Node node;

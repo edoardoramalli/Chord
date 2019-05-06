@@ -114,3 +114,5 @@ buildNumber.properties
 *.MF
 pom.xml
 out/production/main/META-INF/main.kotlin_module
+pom.xml
+*.xml

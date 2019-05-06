@@ -52,7 +52,6 @@ public class Node implements NodeInterface, Serializable {
         this.nodeId = -1L;
         this.socketManager = null;
         this.keyStore = new ConcurrentHashMap();
-
     }
 
     public Node(String ipAddress, int socketPort, int dimFingerTable) {
@@ -66,7 +65,6 @@ public class Node implements NodeInterface, Serializable {
         this(ipAddress, socketPort);
         this.ipController = ipController;
         this.portController = portController;
-
     }
 
     public void create(int m) {
@@ -95,7 +93,7 @@ public class Node implements NodeInterface, Serializable {
         createFingerTable();
         this.nodeId = hash(ipAddress, socketPort);
         out.println("ID: " + nodeId);
-        createSuccessorList();
+        createSuccessorList(); //TODO questo secondo me si può togliere tanto dopo fa la initialize
         this.socketManager = new SocketManager(this);
         NodeInterface successorNode;
         try {
@@ -119,18 +117,28 @@ public class Node implements NodeInterface, Serializable {
         Executors.newCachedThreadPool().submit(new UpdateNode(this));
     }
 
-    //The finger table is initialized with this in all positions
+    /**
+     * Initializes fingerTable with this in all positions
+     */
     private void createFingerTable() {
         for (int i = 0; i < dimFingerTable; i++)
             fingerTable.put(i, this);
     }
 
+    /**
+     * Creates successorList with this in the first position
+     */
     //The successor list is initialized with only this
     private void createSuccessorList() {
         successorList = new CopyOnWriteArrayList<>();
         successorList.add(0, this);
     }
 
+    /**
+     * Asks to the successor its successorList, and constructs its own successorList from that
+     * @throws IOException if an I/O error occurs
+     * @throws TimerExpiredException if getSuccessorList message do not has a response from the successor within a timer
+     */
     private void initializeSuccessorList() throws IOException, TimerExpiredException {
         List<NodeInterface> successorNodeList = successorList.get(0).getSuccessorList();
         for (NodeInterface node : successorNodeList) {
@@ -319,6 +327,13 @@ public class Node implements NodeInterface, Serializable {
         //else non faccio niente, perchè il vecchio nodo della finger è uguale a quello nuovo
     }
 
+    /**
+     * @param pred previous nodeId
+     * @param index nodeId of node to check
+     * @param succ successor nodeId
+     * @return return true if index is between pred(excluded) and succ(excluded), otherwise return false
+     *         (return true if pred == succ)
+     */
     private boolean checkInterval(long pred, long index, long succ) {
         if (pred == succ)
             return true;
