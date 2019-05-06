@@ -112,3 +112,5 @@ buildNumber.properties
 *.jar
 *.jar
 *.MF
+pom.xml
+out/production/main/META-INF/main.kotlin_module

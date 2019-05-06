@@ -16,7 +16,7 @@ public class UpdateNode implements Runnable {
         this.node = node;
     }
 
-    public static void setUpdate(boolean b) {
+    static void setUpdate(boolean b) {
         bool=b;
     }
 

@@ -28,7 +28,6 @@ public class LaunchNodeCreate {
 
     public static void main(String[] args){
         Node node = null;
-        //TODO andrebbero fatti dei controlli sugli inserimenti
         boolean exit = false;
         while (!exit){
             out.println("Select create or join");
@@ -114,6 +113,8 @@ public class LaunchNodeCreate {
                         value = node.findKey(keyToFind);
                     } catch (IOException e) {
                         e.printStackTrace();
+                    } catch (TimerExpiredException e) {
+                        out.println("Impossible to Find the Key");
                     }
                     if (value==null)
                         System.out.println("KEY NOT FOUND");
