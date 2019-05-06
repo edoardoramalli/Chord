@@ -309,7 +309,7 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
         return getSuccessorListResponse.getSuccessorList();
     }
 
-    //TODO non utilizzato?
+    //non utilizzato
     @Override
     public void sendToController(String text) {
         throw new UnexpectedBehaviourException();
@@ -358,9 +358,10 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
         throw new UnexpectedBehaviourException(); //non utilizzato?
     }
 
+    //non usìtilizzato
     @Override
     public Object retrieveKeyFromStore(Long key) {
-        return null; //TODO perchè null?
+        throw new UnexpectedBehaviourException();
     }
 
     @Override

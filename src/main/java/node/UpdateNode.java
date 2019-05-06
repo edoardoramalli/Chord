@@ -59,6 +59,7 @@ public class UpdateNode implements Runnable {
                     node.fixFingers();
                 } catch (IOException e) {
                     throw new UnexpectedBehaviourException();
+                } catch (TimerExpiredException ignored) {
                 }
             }
             ArrayList<Long> newFingerTableList = new ArrayList<>();

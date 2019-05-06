@@ -30,7 +30,7 @@ public class Node implements NodeInterface, Serializable {
     private transient volatile NodeInterface predecessor;
     private transient volatile Map<Integer, NodeInterface> fingerTable;
     private transient int dimFingerTable;
-    private transient int dimSuccessorList = 3; //todo quanto è lunga la lista?
+    private transient int dimSuccessorList = 3;
     private transient int nextFinger;
     private transient volatile ConcurrentHashMap<Long, Object> keyStore;
     //connection handler
@@ -112,7 +112,7 @@ public class Node implements NodeInterface, Serializable {
             initializeSuccessorList();
             successorList.get(0).notify(this); //serve per settare il predecessore nel successore del nodo
         } catch (TimerExpiredException e) {
-            throw new ConnectionErrorException(); //TODO se il nodo a cui stiamo facendo la prima notify cade cosa facciamo?
+            throw new ConnectionErrorException();
         }
 
         Executors.newCachedThreadPool().submit(new UpdateNode(this));
@@ -216,7 +216,7 @@ public class Node implements NodeInterface, Serializable {
 
 
     @Override
-    public NodeInterface findSuccessor(Long id) throws IOException {
+    public NodeInterface findSuccessor(Long id) throws IOException, TimerExpiredException {
         NodeInterface nextNode;
         for (NodeInterface nodeInterface : successorList) {
             if (checkIntervalEquivalence(nodeId, id, nodeInterface.getNodeId()))
@@ -225,12 +225,8 @@ public class Node implements NodeInterface, Serializable {
         nextNode = closestPrecedingNodeList(id);
         if (this == nextNode)
             return this;
-        try {
-            return nextNode.findSuccessor(id);
-        } catch (TimerExpiredException e) {
-            e.printStackTrace();
-            return null; //TODO da vedere cosa far ritornare
-        }
+        return nextNode.findSuccessor(id);
+
     }
 
     private NodeInterface closestPrecedingNodeList(long id) {
@@ -283,7 +279,7 @@ public class Node implements NodeInterface, Serializable {
         }
     }
 
-    public NodeInterface lookup(Long id) throws IOException {
+    public NodeInterface lookup(Long id) throws IOException, TimerExpiredException {
         for (NodeInterface nodeInterface : successorList)
             if (id.equals(nodeInterface.getNodeId()))
                 return nodeInterface;
@@ -293,7 +289,7 @@ public class Node implements NodeInterface, Serializable {
             return findSuccessor(id);
     }
 
-    synchronized void fixFingers() throws IOException {
+    synchronized void fixFingers() throws IOException, TimerExpiredException {
         long idToFind;
         nextFinger = nextFinger + 1;
         if (nextFinger > dimFingerTable)
@@ -524,7 +520,7 @@ public class Node implements NodeInterface, Serializable {
 
     //KEY-VALUE
 
-    public NodeInterface addKey(Map.Entry<Long, Object> keyValue) throws IOException {
+    public NodeInterface addKey(Map.Entry<Long, Object> keyValue) throws IOException, TimerExpiredException {
         Long hashKey = keyValue.getKey() % (long) Math.pow(2, dimFingerTable);
         if (hashKey.equals(this.nodeId) || successorList.get(0).equals(this)) {
             addKeyToStore(keyValue);

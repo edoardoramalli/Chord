@@ -2,6 +2,7 @@ package start;
 
 import exceptions.ConnectionErrorException;
 import exceptions.NodeIdAlreadyExistsException;
+import exceptions.TimerExpiredException;
 import exceptions.UnexpectedBehaviourException;
 import node.Node;
 import node.NodeInterface;
@@ -87,6 +88,8 @@ public class LaunchNodeCreate {
                         out.println("Nodo cercato: " + prova.getNodeId());
                     } catch (IOException e) {
                         e.printStackTrace();
+                    } catch (TimerExpiredException e) {
+                        out.println("Node not found");
                     }
                     break;
                 case ADDKEY_COMMAND:
@@ -98,6 +101,8 @@ public class LaunchNodeCreate {
                         result = node.addKey(keyValue);
                     } catch (IOException e) {
                         e.printStackTrace();
+                    } catch (TimerExpiredException e) {
+                        out.println("impossible to add key");
                     }
                     System.out.println("KEY SAVED: " + result);
                     break;
