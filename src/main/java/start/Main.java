@@ -6,7 +6,6 @@ import exceptions.UnexpectedBehaviourException;
 import node.Collector;
 import node.Controller;
 import node.Node;
-import node.NodeInterface;
 import org.apache.commons.cli.*;
 
 import java.io.IOException;
@@ -129,8 +128,6 @@ public class Main {
                 break;
             case 2:
                 //join
-                //TODO Magari aggiungere controlli
-
                 controllerIP = cmd.getOptionValue("contrip");
                 controllerPort = Integer.parseInt(cmd.getOptionValue("contrport"));
                 joinIP = cmd.getOptionValue("joinip");

@@ -43,11 +43,11 @@ public interface NodeInterface extends Serializable {
 
     //Key
 
-    public NodeInterface addKey(Map.Entry<Long, Object> keyValue) throws IOException;
+    public NodeInterface addKey(Map.Entry<Long, Object> keyValue) throws IOException, TimerExpiredException;
 
     void addKeyToStore(Map.Entry<Long, Object> keyValue);
 
-    Object findKey(Long key) throws IOException;
+    Object findKey(Long key) throws IOException, TimerExpiredException;
 
     Object retrieveKeyFromStore(Long key);
 

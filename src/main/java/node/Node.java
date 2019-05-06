@@ -548,7 +548,11 @@ public class Node implements NodeInterface, Serializable {
             return this;
         }
 
-        newNodeKey.addKey(keyValue);
+        try {
+            newNodeKey.addKey(keyValue);
+        } catch (TimerExpiredException e) {//TODO gestire eccezione
+            e.printStackTrace();
+        }
         return newNodeKey;
     }
 
@@ -565,7 +569,11 @@ public class Node implements NodeInterface, Serializable {
                 keyStore.entrySet()) {
             Long hashKey = keyValue.getKey() % (long) Math.pow(2, dimFingerTable);
             if (checkIntervalEquivalence(this.nodeId, hashKey, predecessor.getNodeId())) {
-                predecessor.addKey(new AbstractMap.SimpleEntry<>(keyValue.getKey(), keyValue.getValue()));
+                try {
+                    predecessor.addKey(new AbstractMap.SimpleEntry<>(keyValue.getKey(), keyValue.getValue()));
+                } catch (TimerExpiredException e) {//TODO gestire eccezione
+                    e.printStackTrace();
+                }
                 keyStore.remove(keyValue.getKey());
             }
         }
@@ -580,7 +588,14 @@ public class Node implements NodeInterface, Serializable {
         if (predecessor != null && checkIntervalEquivalence(predecessor.getNodeId(), hashKey, nodeId))
             return keyStore.get(key);
 
-        return findSuccessor(hashKey).findKey(key);
+        Object keyTemp = null;
+        try {
+            keyTemp = findSuccessor(hashKey).findKey(key);
+        } catch (TimerExpiredException e) {//TODO gestire eccezione
+            e.printStackTrace();
+        }
+        return keyTemp;
+
     }
 
 
@@ -599,16 +614,16 @@ public class Node implements NodeInterface, Serializable {
     public void transferKey() throws IOException {
         for (Map.Entry<Long, Object> keyValue:
                 keyStore.entrySet()) {
-            successorList.get(0).addKey(new AbstractMap.SimpleEntry<>(keyValue.getKey(),keyValue.getValue()));
+            try {
+                successorList.get(0).addKey(new AbstractMap.SimpleEntry<>(keyValue.getKey(),keyValue.getValue()));
+            } catch (TimerExpiredException e) {//TODO gestire eccezione
+                e.printStackTrace();
+            }
             keyStore.remove(keyValue);
         }
     }
 
-
-
     public synchronized void updateAfterLeave(Long oldNodeID, NodeInterface newNode) throws IOException, ConnectionErrorException {
-
-
         if (oldNodeID.equals(predecessor.getNodeId())){
             out.println("My predecessor left");
             if (successorList.contains(predecessor)) {
@@ -619,7 +634,6 @@ public class Node implements NodeInterface, Serializable {
             predecessor = socketManager.createConnection(newNode);
             socketManager.closeCommunicator(oldNodeID);
             out.println(this.toString());
-
         }
 
         if (oldNodeID.equals(successorList.get(0).getNodeId())){

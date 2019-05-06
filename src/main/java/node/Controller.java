@@ -7,6 +7,8 @@ import java.time.LocalTime;
 import java.util.*;
 import java.util.concurrent.Semaphore;
 
+import static java.lang.System.out;
+
 public class Controller implements Runnable {
     private ArrayList<String> socketList;
     private HashMap<Socket, String> socketMap;
@@ -14,7 +16,6 @@ public class Controller implements Runnable {
     private Semaphore trafficLight;
     private Semaphore timeSem;
     private Socket socket; //socket di connessione con il client
-    private LocalTime starTime, endTime; //todo questi si possono togliere?
     private Collector c;
 
     public Controller(Socket socket, Collector c) {
@@ -32,18 +33,14 @@ public class Controller implements Runnable {
         //System.out.println("Connected: " + socket);
         try {
             Scanner in = new Scanner(socket.getInputStream());
-            //PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
             while (in.hasNextLine()) {
-                //this.parseInput(in.nextLine());
                 String a = in.nextLine();
                 this.parseInput(a);
-                //out.println(in.nextLine().toUpperCase());
-                //out.println("EDOOO");
             }
         } catch (Exception e) {
-            System.out.println("Error:" + socket);
-            System.out.println("Nodi Connessi : " + socketList  + " " + LocalTime.now());
-            System.out.println("End Error");
+            out.println("Error:" + socket);
+            out.println("Nodi Connessi : " + socketList  + " " + LocalTime.now());
+            out.println("End Error");
         } finally {
             try {
                 socket.close();
@@ -60,8 +57,8 @@ public class Controller implements Runnable {
                 socketMap.remove(socket);
                 socketList.remove(exitNode);
                 stableNet.remove(exitNode);
-                //System.out.println("Nodi Connessi ("+ socketList.size() + ") : " + socketList  + " " + LocalTime.now());
-                System.out.println("Nodi Connessi ("+ socketList.size() + ") " + LocalTime.now());
+                out.println("Nodi Connessi ("+ socketList.size() + ") : " + socketList  + " " + LocalTime.now());
+                //out.println("Nodi Connessi ("+ socketList.size() + ") " + LocalTime.now());
                 trafficLight.release();
 
             } catch (InterruptedException e) {
@@ -85,8 +82,8 @@ public class Controller implements Runnable {
                     socketMap.put(socket,nodeId);
                     socketList.add(nodeId);
                     Collections.sort(socketList);
-                    //System.out.println("Nodi Connessi ("+ socketList.size() + ") : " + socketList  + " " + LocalTime.now());
-                    System.out.println("Nodi Connessi ("+ socketList.size() + ") " + LocalTime.now());
+                    out.println("Nodi Connessi ("+ socketList.size() + ") : " + socketList  + " " + LocalTime.now());
+                    //out.println("Nodi Connessi ("+ socketList.size() + ") " + LocalTime.now());
                     trafficLight.release();
 
                 } catch (InterruptedException e) {
@@ -113,10 +110,10 @@ public class Controller implements Runnable {
                     if (isUnique){
                         timeSem.acquire();
                         c.setEndTime(LocalTime.now());
-                        Long elapsed = Duration.between(c.getStartTime(), c.getEndTime()).toMillis();
+                        long elapsed = Duration.between(c.getStartTime(), c.getEndTime()).toMillis();
                         timeSem.release();
                         double pass = elapsed / 1000.0;
-                        System.out.println("Tempo per Stabilizzarsi : " + pass + " sec.");
+                        out.println("Tempo per Stabilizzarsi : " + pass + " sec.");
                     }
                     trafficLight.release();
                 } catch (InterruptedException e) {

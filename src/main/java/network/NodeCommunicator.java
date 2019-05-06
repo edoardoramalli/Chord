@@ -108,7 +108,6 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
     @Override
     public void notify(NodeInterface node) throws IOException, TimerExpiredException {
         Long lockId = createLock();
-
         final ExecutorService service = Executors.newSingleThreadExecutor();
         try {
             final Future<?> f = service.submit(() -> {
@@ -143,7 +142,6 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
     @Override
     public int getInitialSocketPort() throws IOException, TimerExpiredException {
         Long lockId = createLock();
-
         final ExecutorService service = Executors.newSingleThreadExecutor();
         try {
             final Future<?> f = service.submit(() -> {
@@ -179,9 +177,8 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
     }
 
     @Override
-    public int getDimFingerTable() throws IOException, TimerExpiredException {
+    public int getDimFingerTable() throws TimerExpiredException {
         Long lockId = createLock();
-
         final ExecutorService service = Executors.newSingleThreadExecutor();
         try {
             final Future<?> f = service.submit(() -> {
@@ -246,7 +243,6 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
     @Override
     public NodeInterface getPredecessor() throws TimerExpiredException {
         Long lockId = createLock();
-
         final ExecutorService service = Executors.newSingleThreadExecutor();
         try {
             final Future<?> f = service.submit(() -> {
@@ -276,7 +272,6 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
         return getPredecessorResponse.getNode();
     }
 
-
     @Override
     public Long getNodeId() {
         return nodeId;
@@ -285,7 +280,6 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
     @Override
     public List<NodeInterface> getSuccessorList() throws IOException, TimerExpiredException {
         Long lockId = createLock();
-
         final ExecutorService service = Executors.newSingleThreadExecutor();
         try {
             final Future<?> f = service.submit(() -> {
@@ -315,9 +309,10 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
         return getSuccessorListResponse.getSuccessorList();
     }
 
+    //TODO non utilizzato?
     @Override
     public void sendToController(String text) {
-
+        throw new UnexpectedBehaviourException();
     }
 
     @Override
@@ -326,26 +321,41 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
         node.getSocketManager().removeNode(nodeId);
     }
 
-    //TODO DA METTERE TIMER
     @Override
-    public NodeInterface addKey(Map.Entry<Long, Object> keyValue) throws IOException {
+    public NodeInterface addKey(Map.Entry<Long, Object> keyValue) throws TimerExpiredException {
         Long lockId = createLock();
-        synchronized (lockList.get(lockId)){
-            socketNode.sendMessage(new AddKeyRequest(keyValue, lockId));
-            try {
-                lockList.get(lockId).wait();
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
+        final ExecutorService service = Executors.newSingleThreadExecutor();
+        try {
+            final Future<?> f = service.submit(() -> {
+                synchronized (lockList.get(lockId)){
+                    try {
+                        socketNode.sendMessage(new AddKeyRequest(keyValue, lockId));
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    try {
+                        lockList.get(lockId).wait();
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    }
+                }
+            });
+
+            f.get(TIMEOUT, TimeUnit.MILLISECONDS);
+        } catch (final TimeoutException e) {
+            out.println("Timer scaduto ADD KEY");
+            throw new TimerExpiredException();
+        } catch (InterruptedException | ExecutionException e) {
+            Thread.currentThread().interrupt();
         }
         AddKeyResponse addKeyResponse = (AddKeyResponse) messageList.get(lockId);
         messageList.remove(lockId);
         return addKeyResponse.getNode();
     }
 
-    //TODO DA METTERE TIMER
     @Override
     public void addKeyToStore(Map.Entry<Long, Object> keyValue) {
+        throw new UnexpectedBehaviourException(); //non utilizzato?
     }
 
     @Override
@@ -353,21 +363,47 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
         return null; //TODO perchè null?
     }
 
-    //TODO DA METTERE TIMER
     @Override
-    public Object findKey(Long key) throws IOException {
+    public Object findKey(Long key) throws TimerExpiredException {
         Long lockId = createLock();
-        synchronized (lockList.get(lockId)){
-            socketNode.sendMessage(new FindKeyRequest(lockId, key));
-            try {
-                lockList.get(lockId).wait();
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
+        final ExecutorService service = Executors.newSingleThreadExecutor();
+        try {
+            final Future<?> f = service.submit(() -> {
+                synchronized (lockList.get(lockId)){
+                    try {
+                        socketNode.sendMessage(new FindKeyRequest(lockId, key));
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    try {
+                        lockList.get(lockId).wait();
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    }
+                }
+            });
+
+            f.get(TIMEOUT, TimeUnit.MILLISECONDS);
+        } catch (final TimeoutException e) {
+            out.println("Timer scaduto FIND KEY");
+            throw new TimerExpiredException();
+        } catch (InterruptedException | ExecutionException e) {
+            Thread.currentThread().interrupt();
         }
         FindKeyResponse findKeyResponse = (FindKeyResponse) messageList.get(lockId);
         messageList.remove(lockId);
         return findKeyResponse.getValue();
+    }
+
+    //TODO vedere se mettere timer
+    @Override
+    public void updateAfterLeave(Long oldNodeID, NodeInterface newNode) throws IOException, ConnectionErrorException {
+        Long lockId = createLock();
+
+        NodeInterface newNod= new Node(newNode.getIpAddress(), newNode.getSocketPort());
+        newNod.setNodeId(newNode.getNodeId());
+        socketNode.sendMessage(new LeaveRequest(oldNodeID, newNod, lockId));
+
     }
 
     //---------> Handling of Messages
@@ -543,29 +579,12 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
         }
     }
 
-
-    //LEAVE
-
-
-
-    @Override
-    public void updateAfterLeave(Long oldNodeID, NodeInterface newNode) throws IOException, ConnectionErrorException {
-        Long lockId = createLock();
-
-            NodeInterface newNod= new Node(newNode.getIpAddress(), newNode.getSocketPort());
-            newNod.setNodeId(newNode.getNodeId());
-            socketNode.sendMessage(new LeaveRequest(oldNodeID, newNod, lockId));
-
-    }
-
     @Override
     public void handle(LeaveRequest leaveRequest) throws IOException{
         try {
             node.updateAfterLeave(leaveRequest.getNodeId(), leaveRequest.getNewNode());
-        } catch (IOException | ConnectionErrorException e) {
-            e.printStackTrace();
+        } catch (ConnectionErrorException e) {
+            throw new UnexpectedBehaviourException();
         }
     }
-
-
 }
