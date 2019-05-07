@@ -34,9 +34,9 @@ public class UpdateNode implements Runnable {
         while (active) {
             if (node.getPredecessor() != null) {
                 //Get Old List Value to be compared at the end
-                ArrayList<Long> oldSuccList = new ArrayList<>();
+                ArrayList<Long> oldSuccessorList = new ArrayList<>();
                 for (NodeInterface n : node.getSuccessorList())
-                    oldSuccList.add(n.getNodeId());
+                    oldSuccessorList.add(n.getNodeId());
 
                 try {
                     node.listStabilize();
@@ -45,14 +45,14 @@ public class UpdateNode implements Runnable {
                     throw new UnexpectedBehaviourException();
                 }
 
-                ArrayList<Long> newSuccList = new ArrayList<>();
+                ArrayList<Long> newSuccessorList = new ArrayList<>();
                 for (NodeInterface n : node.getSuccessorList())
-                    newSuccList.add(n.getNodeId());
+                    newSuccessorList.add(n.getNodeId());
 
-                stable = oldSuccList.equals(newSuccList); //The Order matters
+                stable = oldSuccessorList.equals(newSuccessorList); //The Order matters
 
-                oldSuccList.clear();
-                newSuccList.clear();
+                oldSuccessorList.clear();
+                newSuccessorList.clear();
 
             }
 

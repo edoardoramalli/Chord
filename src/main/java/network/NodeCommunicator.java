@@ -31,11 +31,16 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
     private transient volatile HashMap<Long, Object> lockList = new HashMap<>();
     private transient volatile Long lockID = 0L;
 
-    //è una map <lockId, Message> in questo modo il metodo chiamante può accedere
-    // al suo valore di ritorno tramite il lockId
+    /**
+     * is map <lockId, Message> in this way the calling method can access
+     * to the return value using the correspondent lockId
+     */
     private transient volatile HashMap<Long, Message> messageList;
 
-    private static final int TIMEOUT = 1000; //in milliseconds
+    /**
+     * in milliseconds
+     */
+    private static final int TIMEOUT = 1000;
 
     private synchronized Long createLock(){
         lockList.put(lockID, new Object());
@@ -76,16 +81,6 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
         this.dimFingerTable = node.getDimFingerTable();
     }
 
-    @Override
-    public void setNodeId(Long nodeId) {
-        this.nodeId = nodeId;
-    }
-
-    @Override
-    public void setSocketPort(int socketPort) {
-        this.socketPort = socketPort;
-    }
-
     public void close() throws IOException {
         Long lockId = createLock();
         synchronized (lockList.get(lockId)){
@@ -99,17 +94,6 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
         socketNode.close();
         joinNodeSocket.close();
         node.getSocketManager().closeCommunicator(nodeId);
-    }
-
-    /**
-     * Not used in this class
-     *
-     * @return .
-     */
-    @Override
-    public SocketManager getSocketManager() {
-        err.println("ERRORE DENTRO GETSOCKETMANAGER in NODECOMMUNICATOR");
-        throw new UnexpectedBehaviourException();
     }
 
     @Override
@@ -139,11 +123,6 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
         } catch (InterruptedException | ExecutionException e) {
             Thread.currentThread().interrupt();
         }
-    }
-
-    @Override
-    public String getIpAddress(){
-        return ipAddress;
     }
 
     @Override
@@ -179,11 +158,6 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
     }
 
     @Override
-    public int getSocketPort(){
-        return socketPort;
-    }
-
-    @Override
     public int getInitialDimFingerTable() throws TimerExpiredException {
         Long lockId = createLock();
         final ExecutorService service = Executors.newSingleThreadExecutor();
@@ -213,11 +187,6 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
         GetDimFingerTableResponse getDimFingerTableResponse = (GetDimFingerTableResponse) messageList.get(lockId);
         messageList.remove(lockId);
         return getDimFingerTableResponse.getDimFingerTable();
-    }
-
-    @Override
-    public int getDimFingerTable() {
-        return dimFingerTable;
     }
 
     @Override
@@ -282,11 +251,6 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
         GetPredecessorResponse getPredecessorResponse = (GetPredecessorResponse) messageList.get(lockId);
         messageList.remove(lockId);
         return getPredecessorResponse.getNode();
-    }
-
-    @Override
-    public Long getNodeId() {
-        return nodeId;
     }
 
     @Override
@@ -429,6 +393,46 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
         NodeInterface newNod= new Node(newNode.getIpAddress(), newNode.getSocketPort());
         newNod.setNodeId(newNode.getNodeId());
         socketNode.sendMessage(new LeaveRequest(oldNodeID, newNod, lockId));
+    }
+
+    @Override
+    public int getDimFingerTable() {
+        return dimFingerTable;
+    }
+
+    @Override
+    public Long getNodeId() {
+        return nodeId;
+    }
+
+    @Override
+    public void setNodeId(Long nodeId) {
+        this.nodeId = nodeId;
+    }
+
+    @Override
+    public String getIpAddress(){
+        return ipAddress;
+    }
+
+    @Override
+    public int getSocketPort(){
+        return socketPort;
+    }
+
+    @Override
+    public void setSocketPort(int socketPort) {
+        this.socketPort = socketPort;
+    }
+
+    /**
+     * Not used in this class
+     *
+     * @return .
+     */
+    @Override
+    public SocketManager getSocketManager() {
+        throw new UnexpectedBehaviourException();
     }
 
     //---------> Handling of Messages

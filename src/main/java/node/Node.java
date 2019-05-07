@@ -501,12 +501,11 @@ public class Node implements NodeInterface, Serializable {
         out.println("Now I'm leaving\n\n");
         transferKey();
         UpdateNode.stopUpdate();
-        SocketNodeListener.setUpdate(false);
+        SocketNodeListener.stopListening();
 
         successorList.get(0).updateAfterLeave(nodeId, predecessor);
 
         predecessor.updateAfterLeave(nodeId, successorList.get(successorList.size() - 1));
-
     }
 
     private void transferKey() throws IOException {
