@@ -105,14 +105,9 @@ buildNumber.properties
 
 
 # End of https://www.gitignore.io/api/java,maven,intellij
-.idea/modules.xml
+.DS_Store
+out/production/main/META-INF/main.kotlin_module
 *.xml
 *.iml
-.DS_Store
-*.jar
 *.jar
 *.MF
-pom.xml
-out/production/main/META-INF/main.kotlin_module
-pom.xml
-*.xml

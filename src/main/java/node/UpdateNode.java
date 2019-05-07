@@ -8,23 +8,30 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Class that manage the update of node's attributes (like predecessor, successorList, fingerTable),
+ * calling periodically the node's methods (stabilize and fixFinger).
+ * The class is also responsible to evaluate the stability of the node
+ */
 public class UpdateNode implements Runnable {
     private Node node;
-    private static Boolean bool=true;
+    private static Boolean active = true;
 
+    /**
+     * @param node node to update
+     */
     UpdateNode(Node node){
         this.node = node;
     }
 
-    static void setUpdate(boolean b) {
-        bool=b;
-    }
-
+    /**
+     * Thread responsible to call periodically node.stabilize() and node.fixFinger(),
+     * and to evaluate the stability of the node
+     */
     @Override
     public void run() {
-        boolean equalFinger = false;
-        boolean equalList = false;
-        while (bool) {
+        boolean stable = false;
+        while (active) {
             if (node.getPredecessor() != null) {
                 //Get Old List Value to be compared at the end
                 ArrayList<Long> oldSuccList = new ArrayList<>();
@@ -42,7 +49,7 @@ public class UpdateNode implements Runnable {
                 for (NodeInterface n : node.getSuccessorList())
                     newSuccList.add(n.getNodeId());
 
-                equalList = oldSuccList.equals(newSuccList); //The Order matters
+                stable = oldSuccList.equals(newSuccList); //The Order matters
 
                 oldSuccList.clear();
                 newSuccList.clear();
@@ -65,10 +72,10 @@ public class UpdateNode implements Runnable {
             ArrayList<Long> newFingerTableList = new ArrayList<>();
             for (Map.Entry<Integer, NodeInterface> entry : node.getFingerTable().entrySet())
                 newFingerTableList.add(entry.getValue().getNodeId());
-            equalFinger = oldFingerTableList.equals(newFingerTableList);  //The Order matters
+            stable = stable && oldFingerTableList.equals(newFingerTableList);  //The Order matters
             oldFingerTableList.clear();
             newFingerTableList.clear();
-            node.updateStable(equalList, equalFinger);
+            node.updateStable(stable);
 
             try {
                 TimeUnit.MILLISECONDS.sleep(3000);
@@ -76,5 +83,12 @@ public class UpdateNode implements Runnable {
                 Thread.currentThread().interrupt();
             }
         }
+    }
+
+    /**
+     * Called to stop the update when the node has disconnected
+     */
+    static void stopUpdate() {
+        active = false;
     }
 }

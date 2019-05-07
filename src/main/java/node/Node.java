@@ -428,12 +428,10 @@ public class Node implements NodeInterface, Serializable {
 
     }
 
-    void updateStable(boolean listSucc, boolean listFinger) {
-        boolean local;
-        local = listSucc && listFinger;
-        if (stable != local) {
-            stable = local;
-            if (!stable) {
+    void updateStable(boolean stable) {
+        if (this.stable != stable) {
+            this.stable = stable;
+            if (!this.stable) {
                 this.sendToController("#NotStable");
             } else {
                 this.sendToController("#Stable");
@@ -502,7 +500,7 @@ public class Node implements NodeInterface, Serializable {
     public void leave() throws IOException, ConnectionErrorException {
         out.println("Now I'm leaving\n\n");
         transferKey();
-        UpdateNode.setUpdate(false);
+        UpdateNode.stopUpdate();
         SocketNodeListener.setUpdate(false);
 
         successorList.get(0).updateAfterLeave(nodeId, predecessor);
@@ -511,7 +509,7 @@ public class Node implements NodeInterface, Serializable {
 
     }
 
-    public void transferKey() throws IOException {
+    private void transferKey() throws IOException {
         for (Map.Entry<Long, Object> keyValue :
                 keyStore.entrySet()) {
             try {
