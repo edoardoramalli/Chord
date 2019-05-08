@@ -28,9 +28,9 @@ public interface MessageHandler {
 
     void handle(GetIpAddressResponse getIpAddressResponse) throws IOException;
 
-    void handle(GetSocketPortRequest getSocketPortRequest) throws IOException;
+    void handle(GetInitialSocketPortRequest getInitialSocketPortRequest) throws IOException;
 
-    void handle(GetSocketPortResponse getSocketPortResponse) throws IOException;
+    void handle(GetInitialSocketPortResponse getInitialSocketPortResponse) throws IOException;
 
     void handle(GetSuccessorListRequest getSuccessorListRequest) throws IOException;
 

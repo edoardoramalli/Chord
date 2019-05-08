@@ -3,10 +3,10 @@ package network.message;
 import java.io.IOException;
 import java.io.Serializable;
 
-public class GetSocketPortRequest implements Message, Serializable {
+public class GetInitialSocketPortRequest implements Message, Serializable {
     private Long lockId;
 
-    public GetSocketPortRequest(Long lockId) {
+    public GetInitialSocketPortRequest(Long lockId) {
         this.lockId = lockId;
     }
 

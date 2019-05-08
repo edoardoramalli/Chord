@@ -128,6 +128,13 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
         }
     }
 
+    /**
+     * {@inheritDoc}
+     * sends a GetInitialSocketPortRequest to the other node, waits on the objects corresponding to the message index
+     * and finally retrieve the returned value from the GetInitialSocketPortResponse corresponding to the message index
+     * @return {@inheritDoc}
+     * @throws TimerExpiredException {@inheritDoc}
+     */
     @Override
     public int getInitialSocketPort() throws TimerExpiredException {
         Long lockId = createLock();
@@ -136,7 +143,7 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
             final Future<?> f = service.submit(() -> {
                 synchronized (lockList.get(lockId)){
                     try {
-                        socketNode.sendMessage(new GetSocketPortRequest(lockId));
+                        socketNode.sendMessage(new GetInitialSocketPortRequest(lockId));
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -155,9 +162,9 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
         } catch (InterruptedException | ExecutionException e) {
             Thread.currentThread().interrupt();
         }
-        GetSocketPortResponse getSocketPortResponse = (GetSocketPortResponse) messageList.get(lockId);
+        GetInitialSocketPortResponse getInitialSocketPortResponse = (GetInitialSocketPortResponse) messageList.get(lockId);
         messageList.remove(lockId);
-        return getSocketPortResponse.getSocketPort();
+        return getInitialSocketPortResponse.getSocketPort();
     }
 
     @Override
@@ -533,15 +540,15 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
     }
 
     @Override
-    public void handle(GetSocketPortRequest getSocketPortRequest) throws IOException {
-        socketNode.sendMessage(new GetSocketPortResponse(node.getSocketPort(), getSocketPortRequest.getLockId()));
+    public void handle(GetInitialSocketPortRequest getInitialSocketPortRequest) throws IOException {
+        socketNode.sendMessage(new GetInitialSocketPortResponse(node.getSocketPort(), getInitialSocketPortRequest.getLockId()));
     }
 
     @Override
-    public void handle(GetSocketPortResponse getSocketPortResponse) throws IOException {
-        synchronized (lockList.get(getSocketPortResponse.getLockId())){
-            messageList.put(getSocketPortResponse.getLockId(), getSocketPortResponse);
-            lockList.get(getSocketPortResponse.getLockId()).notifyAll();
+    public void handle(GetInitialSocketPortResponse getInitialSocketPortResponse) throws IOException {
+        synchronized (lockList.get(getInitialSocketPortResponse.getLockId())){
+            messageList.put(getInitialSocketPortResponse.getLockId(), getInitialSocketPortResponse);
+            lockList.get(getInitialSocketPortResponse.getLockId()).notifyAll();
         }
     }
 

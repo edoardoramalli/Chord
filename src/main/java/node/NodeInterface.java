@@ -21,7 +21,13 @@ public interface NodeInterface extends Serializable {
 
     String getIpAddress();
 
-    int getInitialSocketPort() throws IOException, TimerExpiredException;
+    /**
+     * Used to ask the node its socketPort for the first time, after the port is saved locally and will be
+     * accessed through getSocketPort(
+     * @return socketPort of other node
+     * @throws TimerExpiredException if timer expires
+     */
+    int getInitialSocketPort() throws TimerExpiredException;
 
     void setSocketPort(int socketPort);
 

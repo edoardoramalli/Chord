@@ -3,11 +3,11 @@ package network.message;
 import java.io.IOException;
 import java.io.Serializable;
 
-public class GetSocketPortResponse implements Message, Serializable {
+public class GetInitialSocketPortResponse implements Message, Serializable {
     private int socketPort;
     private Long lockId;
 
-    public GetSocketPortResponse(int socketPort, Long lockId) {
+    public GetInitialSocketPortResponse(int socketPort, Long lockId) {
         this.socketPort = socketPort;
         this.lockId = lockId;
     }

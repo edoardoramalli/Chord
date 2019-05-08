@@ -562,7 +562,6 @@ public class Node implements NodeInterface, Serializable {
 
     /**
      * Not used in this class
-     *
      * @return .
      */
     @Override
@@ -572,7 +571,6 @@ public class Node implements NodeInterface, Serializable {
 
     /**
      * Not used in this class
-     *
      * @param socketPort .
      */
     @Override
