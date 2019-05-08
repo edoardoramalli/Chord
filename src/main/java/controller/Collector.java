@@ -7,8 +7,9 @@ import java.util.HashMap;
 import java.util.concurrent.Semaphore;
 
 /**
- * Java Class used to collect shared data like "TimeStamp" and to keep track of the open connections,
- * in order to know the connected node and the corresponding socket.
+ * Java Class used to collect shared data like "sockeList" among different thread
+ * and to keep track of the open connections, in order to know the connected node and the corresponding socket.
+ * A set of semaphore are used in order to keep consistency between data.
  */
 public class Collector {
     private ArrayList<String> socketList = new ArrayList<>();
