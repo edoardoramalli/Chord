@@ -34,7 +34,6 @@ public class Node implements NodeInterface, Serializable {
     private transient int dimSuccessorList = 3;
     private transient int nextFinger;
     private transient volatile ConcurrentHashMap<Long, Object> keyStore;
-    //connection handler
     private transient volatile SocketManager socketManager;
 
     private transient volatile PrintWriter outBuffer;
@@ -57,7 +56,7 @@ public class Node implements NodeInterface, Serializable {
     public Node(String ipAddress, int socketPort, int dimFingerTable) {
         this(ipAddress, socketPort);
         this.dimFingerTable = dimFingerTable;
-        this.nodeId = hash(ipAddress, socketPort);
+        this.nodeId = Hash.getHash().calculateHash(ipAddress, socketPort);
 
     }
 
@@ -67,9 +66,10 @@ public class Node implements NodeInterface, Serializable {
         this.portController = portController;
     }
 
-    public void create(int m) {
-        dimFingerTable = m;
-        nodeId = hash(ipAddress, socketPort);
+    public void create(int dimFingerTable) {
+        this.dimFingerTable = dimFingerTable;
+        Hash.initializeHash(dimFingerTable);
+        nodeId = Hash.getHash().calculateHash(ipAddress, socketPort);
         out.println("ID: " + nodeId);
         createSuccessorList();
         startSocketListener(socketPort);
@@ -84,14 +84,15 @@ public class Node implements NodeInterface, Serializable {
         startSocketListener(socketPort);
 
         NodeCommunicator nodeTemp = new NodeCommunicator(joinIpAddress, joinSocketPort,
-                this, hash(joinIpAddress, joinSocketPort)); // crea un nodecomunicator temporaneo.
+                this, -1); //creates a temporary NodeCommunicator
         try {
             dimFingerTable = nodeTemp.getInitialDimFingerTable();
         } catch (TimerExpiredException e) {
             throw new ConnectionErrorException();
         }
         createFingerTable();
-        this.nodeId = hash(ipAddress, socketPort);
+        Hash.initializeHash(dimFingerTable);
+        this.nodeId = Hash.getHash().calculateHash(ipAddress, socketPort);
         out.println("ID: " + nodeId);
         createSuccessorList(); //TODO questo secondo me si può togliere tanto dopo fa la initialize
         this.socketManager = new SocketManager(this);
@@ -106,7 +107,7 @@ public class Node implements NodeInterface, Serializable {
         nodeTemp.close();
         openController();
 
-        successorList.set(0, socketManager.createConnection(successorNode)); //creo nuova connessione
+        successorList.set(0, socketManager.createConnection(successorNode)); //creates a new connection
         try {
             initializeSuccessorList();
             successorList.get(0).notify(this); //serve per settare il predecessore nel successore del nodo
@@ -369,6 +370,12 @@ public class Node implements NodeInterface, Serializable {
         }
     }
 
+    /**
+     * Checks if the disconnected node (with nodeId = disconnectedId) is contained in some attributes,
+     * and if it true substitute it with the default value (null for predecessor,
+     * and this for successorList and fingerTable
+     * @param disconnectedId nodeId of disconnected node to check
+     */
     public void checkDisconnectedNode(Long disconnectedId) {
         CopyOnWriteArrayList<NodeInterface> successorListClone = new CopyOnWriteArrayList<>(successorList);
         for (NodeInterface nodeInterface : successorListClone)
@@ -386,23 +393,6 @@ public class Node implements NodeInterface, Serializable {
     private void startSocketListener(int socketPort) {
         SocketNodeListener socketNodeListener = new SocketNodeListener(this, socketPort);
         Executors.newCachedThreadPool().submit(socketNodeListener);
-    }
-
-    public Long hash(String ipAddress, int socketPort) {
-        Long ipNumber = ipToLong(ipAddress) + socketPort;
-        Long numberNodes = (long) Math.pow(2, dimFingerTable);
-        return ipNumber % numberNodes;
-    }
-
-    private long ipToLong(String ipAddress) {
-        String[] ipAddressInArray = ipAddress.split("\\.");
-        long result = 0;
-        for (int i = 0; i < ipAddressInArray.length; i++) {
-            int power = 3 - i;
-            int ip = Integer.parseInt(ipAddressInArray[i]);
-            result += ip * Math.pow(256, power);
-        }
-        return result;
     }
 
     //CONTROLLER

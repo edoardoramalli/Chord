@@ -4,6 +4,7 @@ import exceptions.ConnectionErrorException;
 import exceptions.TimerExpiredException;
 import exceptions.UnexpectedBehaviourException;
 import network.message.MessageHandler;
+import node.Hash;
 import node.Node;
 import node.NodeInterface;
 
@@ -84,7 +85,7 @@ public class SocketManager {
             e.printStackTrace(); //TODO da vedere cosa fare
             throw new UnexpectedBehaviourException();
         }
-        Long createdNodeId = node.hash(ipAddress, port);
+        Long createdNodeId = Hash.getHash().calculateHash(ipAddress, port);
         if (!createdNodeId.equals(node.getNodeId())) {
             createdNode.setNodeId(createdNodeId);
             createdNode.setSocketPort(port);

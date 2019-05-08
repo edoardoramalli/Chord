@@ -17,7 +17,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
 
-import static java.lang.System.err;
 import static java.lang.System.out;
 
 public class NodeCommunicator implements NodeInterface, Serializable, MessageHandler {
@@ -42,15 +41,19 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
      */
     private static final int TIMEOUT = 1000;
 
+    /**
+     * Creates the lock object
+     * @return lockId corresponding to the created lock object
+     */
     private synchronized Long createLock(){
         lockList.put(lockID, new Object());
         lockID = lockID + 1;
         return lockID - 1;
     }
 
-    public NodeCommunicator(String joinIpAddress, int joinSocketPort, NodeInterface node, long id) throws ConnectionErrorException {
+    public NodeCommunicator(String joinIpAddress, int joinSocketPort, NodeInterface node, long nodeId) throws ConnectionErrorException {
         this.node = node;
-        this.nodeId = id;
+        this.nodeId = nodeId;
         this.ipAddress = joinIpAddress;
         this.socketPort = joinSocketPort;
         this.messageList = new HashMap<>();
@@ -97,7 +100,7 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
     }
 
     @Override
-    public void notify(NodeInterface node) throws IOException, TimerExpiredException {
+    public void notify(NodeInterface node) throws TimerExpiredException {
         Long lockId = createLock();
         final ExecutorService service = Executors.newSingleThreadExecutor();
         try {
@@ -190,7 +193,7 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
     }
 
     @Override
-    public NodeInterface findSuccessor(Long id) throws IOException, TimerExpiredException {
+    public NodeInterface findSuccessor(Long id) throws TimerExpiredException {
         Long lockId = createLock();
         final ExecutorService service = Executors.newSingleThreadExecutor();
         try {
