@@ -9,11 +9,18 @@ import java.util.concurrent.Semaphore;
 
 import static java.lang.System.out;
 
-public class Controller implements Runnable {
+/**
+ * Class for the object Controller. Controller is in charge of keep track the node presents in the Chord Network,
+ * It is capable of knowing when a node is entered in the network, and also when it'll exit.
+ * Controller receive from each node of the network if it is stable. If the node change its status, it notifies the
+ * controller with its new state. In this way we can measure the time between a new insert in the net and the time
+ * when all the network will be stable.
+ */
+public class Controller implements Runnable { //TODO Davide diceva di mettere metodi sincronizzati...
     private ArrayList<String> socketList;
     private HashMap<Socket, String> socketMap;
     private HashMap<String, String> stableNet;
-    private Semaphore trafficLight;
+    private Semaphore socketListSem;
     private Semaphore timeSem;
     private Socket socket; //socket di connessione con il client
     private Collector c;
@@ -21,13 +28,19 @@ public class Controller implements Runnable {
     public Controller(Socket socket, Collector c) {
         this.socket = socket;
         this.c = c;
-        this.trafficLight = c.getTrafficLight();
+        this.socketListSem = c.getSocketListSem();
         this.socketList = c.getSocketList();
         this.socketMap = c.getSocketMap();
         this.stableNet = c.getStableNet();
         this.timeSem = c.getTimeSem();
     }
 
+    /**
+     * Ovveride method "run" of the class Runnable. It is used to open a new socket connection to each incoming
+     * connection request. In case of a raise exception, means that the socket is not more valid, it is capable of
+     * detect the exit of a node from the Chord Network. Semaphore are used to be sure that on the shared data
+     * between thread there aren't concurrent writes.
+     */
     @Override
     public void run() {
         //System.out.println("Connected: " + socket);
@@ -45,6 +58,7 @@ public class Controller implements Runnable {
             try {
                 socket.close();
             } catch (IOException e) {
+                out.println("A node is exited");
             }
             //System.out.println("Closed: " + socket);
             String exitNode = socketMap.get(socket);
@@ -53,13 +67,13 @@ public class Controller implements Runnable {
                 c.setStartTime(LocalTime.now());
                 timeSem.release();
 
-                trafficLight.acquire();
+                socketListSem.acquire();
                 socketMap.remove(socket);
                 socketList.remove(exitNode);
                 stableNet.remove(exitNode);
                 out.println("Nodi Connessi ("+ socketList.size() + ") : " + socketList  + " " + LocalTime.now());
                 //out.println("Nodi Connessi ("+ socketList.size() + ") " + LocalTime.now());
-                trafficLight.release();
+                socketListSem.release();
 
             } catch (InterruptedException e) {
                 e.printStackTrace();
@@ -68,6 +82,15 @@ public class Controller implements Runnable {
         }
     }
 
+    /**
+     * The Function parse the messages from the nodes of the network. It is used '#' as special character to identify
+     * a special message directed to the controller and the node ID that specifies
+     * from which node the message comes from.
+     * There are three type of messages. Connected msg means that a new node with a specific ID is entered.
+     * NotStable means that the node is not stable. Stable the exact opposite.
+     * @param input Text Message received from the node
+     *
+     */
     private void parseInput(String input) {
         String [] split = input.split("#");
         String nodeId = split[0];
@@ -78,13 +101,13 @@ public class Controller implements Runnable {
                     c.setStartTime(LocalTime.now());
                     timeSem.release();
 
-                    trafficLight.acquire();
+                    socketListSem.acquire();
                     socketMap.put(socket,nodeId);
                     socketList.add(nodeId);
                     Collections.sort(socketList);
                     out.println("Nodi Connessi ("+ socketList.size() + ") : " + socketList  + " " + LocalTime.now());
                     //out.println("Nodi Connessi ("+ socketList.size() + ") " + LocalTime.now());
-                    trafficLight.release();
+                    socketListSem.release();
 
                 } catch (InterruptedException e) {
                     e.printStackTrace();
@@ -92,17 +115,17 @@ public class Controller implements Runnable {
                 break;
             case "NotStable":
                 try {
-                    trafficLight.acquire();
+                    socketListSem.acquire();
                     stableNet.put(nodeId,"False");
                     //System.out.println("Stabilità : " + stableNet.toString());
-                    trafficLight.release();
+                    socketListSem.release();
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
                 break;
             case "Stable":
                 try {
-                    trafficLight.acquire();
+                    socketListSem.acquire();
                     stableNet.put(nodeId,"True");
                     //System.out.println("Stabilità : " + stableNet.toString() + " " + LocalTime.now());
                     Set<String> values = new HashSet<>(stableNet.values());
@@ -115,7 +138,7 @@ public class Controller implements Runnable {
                         double pass = elapsed / 1000.0;
                         out.println("Tempo per Stabilizzarsi : " + pass + " sec.");
                     }
-                    trafficLight.release();
+                    socketListSem.release();
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }

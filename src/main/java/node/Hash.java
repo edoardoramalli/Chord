@@ -36,9 +36,11 @@ public class Hash {
     }
 
     /**
-     * //TODO da scrivere (edo)
+     * An IPv4 Address is composed by four blocks of number from 0 to 255. Each block is transformed into a long number
+     * through the Hex notation.
+     * and then
      * @param ipAddress ipAddress of node
-     * @return //TODO da scrivere (edo)
+     * @return is returned the translation of the IPv4 notation into a long number.
      */
     private long ipToLong(String ipAddress) {
         String[] ipAddressInArray = ipAddress.split("\\.");

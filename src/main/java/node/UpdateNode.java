@@ -26,10 +26,11 @@ public class UpdateNode implements Runnable {
 
     /**
      * Thread responsible to call periodically node.stabilize() and node.fixFinger(),
-     * and to evaluate the stability of the node
+     * and to evaluate the stability of the node based on : checking if the successor list is changed
+     * and  the finger table.
      */
     @Override
-    public void run() {
+    public void run() { //TODO ottimizzazione, se un controllo per la stable fallisce non importa fare l'altro.
         boolean stable = false;
         while (active) {
             if (node.getPredecessor() != null) {

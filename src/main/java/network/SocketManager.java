@@ -79,8 +79,6 @@ public class SocketManager {
         int port;
         try {
             port = createdNode.getInitialSocketPort();
-        } catch (IOException e) {
-            throw new UnexpectedBehaviourException();
         } catch (TimerExpiredException e) {
             e.printStackTrace(); //TODO da vedere cosa fare
             throw new UnexpectedBehaviourException();

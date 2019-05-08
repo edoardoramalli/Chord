@@ -137,7 +137,8 @@ public class Node implements NodeInterface, Serializable {
 
     /**
      * Asks to the successor its successorList, and constructs its own successorList from that
-     * @throws IOException if an I/O error occurs
+     *
+     * @throws IOException           if an I/O error occurs
      * @throws TimerExpiredException if getSuccessorList message do not has a response from the successor within a timer
      */
     private void initializeSuccessorList() throws IOException, TimerExpiredException {
@@ -329,11 +330,11 @@ public class Node implements NodeInterface, Serializable {
     }
 
     /**
-     * @param pred previous nodeId
+     * @param pred  previous nodeId
      * @param index nodeId of node to check
-     * @param succ successor nodeId
+     * @param succ  successor nodeId
      * @return return true if index is between pred(excluded) and succ(excluded), otherwise return false
-     *         (return true if pred == succ)
+     * (return true if pred == succ)
      */
     private boolean checkInterval(long pred, long index, long succ) {
         if (pred == succ)
@@ -374,6 +375,7 @@ public class Node implements NodeInterface, Serializable {
      * Checks if the disconnected node (with nodeId = disconnectedId) is contained in some attributes,
      * and if it true substitute it with the default value (null for predecessor,
      * and this for successorList and fingerTable
+     *
      * @param disconnectedId nodeId of disconnected node to check
      */
     public void checkDisconnectedNode(Long disconnectedId) {
@@ -397,16 +399,22 @@ public class Node implements NodeInterface, Serializable {
 
     //CONTROLLER
 
+    /**
+     * Each Node has to open a connection to the network controller in order to keep updated the information about
+     * the network
+     */
     private void openController() {
         try {
             this.socketController = new Socket(ipController, portController);
-            //this.socketController = new Socket("127.0.0.1", 59898);
             this.sendToController("#Connected");
         } catch (Exception e) {
-            out.println("ERRORE CONTROLLER");
+            out.println("Error Connecting to the Controller");
         }
     }
 
+    /**
+     * @param text Text string passed to the sender for the Controller
+     */
     @Override
     public void sendToController(String text) {
         try {
@@ -418,6 +426,10 @@ public class Node implements NodeInterface, Serializable {
 
     }
 
+    /**
+     * @param stable At each iteration the node check if it is in a stable condition. If it changes its status,
+     *               it'll send a message.
+     */
     void updateStable(boolean stable) {
         if (this.stable != stable) {
             this.stable = stable;
@@ -562,6 +574,7 @@ public class Node implements NodeInterface, Serializable {
 
     /**
      * Not used in this class
+     *
      * @return .
      */
     @Override
@@ -571,6 +584,7 @@ public class Node implements NodeInterface, Serializable {
 
     /**
      * Not used in this class
+     *
      * @param socketPort .
      */
     @Override
