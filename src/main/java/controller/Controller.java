@@ -36,7 +36,7 @@ public class Controller implements Runnable { //TODO Davide diceva di mettere me
     }
 
     /**
-     * Ovveride method "run" of the class Runnable. It is used to open a new socket connection to each incoming
+     * Override method "run" of the class Runnable. It is used to open a new socket connection to each incoming
      * connection request. In case of a raise exception, means that the socket is not more valid, it is capable of
      * detect the exit of a node from the Chord Network. Semaphore are used to be sure that on the shared data
      * between thread there aren't concurrent writes.
@@ -89,7 +89,6 @@ public class Controller implements Runnable { //TODO Davide diceva di mettere me
      * There are three type of messages. Connected msg means that a new node with a specific ID is entered.
      * NotStable means that the node is not stable. Stable the exact opposite.
      * @param input Text Message received from the node
-     *
      */
     private void parseInput(String input) {
         String [] split = input.split("#");

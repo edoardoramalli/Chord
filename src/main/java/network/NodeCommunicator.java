@@ -87,7 +87,7 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
     public void close() throws IOException {
         Long lockId = createLock();
         synchronized (lockList.get(lockId)){
-            socketNode.sendMessage(new CloseMessage(lockId));
+            socketNode.sendMessage(new CloseRequest(lockId));
             try {
                 lockList.get(lockId).wait();
             } catch (InterruptedException e) {
@@ -264,7 +264,7 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
     }
 
     @Override
-    public List<NodeInterface> getSuccessorList() throws IOException, TimerExpiredException {
+    public List<NodeInterface> getSuccessorList() throws TimerExpiredException {
         Long lockId = createLock();
         final ExecutorService service = Executors.newSingleThreadExecutor();
         try {
@@ -295,16 +295,19 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
         return getSuccessorListResponse.getSuccessorList();
     }
 
+
     /**
      * Not used in this class
-     *
-     * @param text .
+     * @param text Text string passed to the sender for the Controller
      */
     @Override
     public void sendToController(String text) {
         throw new UnexpectedBehaviourException();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void nodeDisconnected() {
         //out.println("Entro qui, disconnesso: " + nodeId);
@@ -343,22 +346,13 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
         return addKeyResponse.getNode();
     }
 
-    /**
-     * Not used in this class
-     *
-     * @param keyValue .
-     */
+    //Not used in this class
     @Override
     public void addKeyToStore(Map.Entry<Long, Object> keyValue) {
         throw new UnexpectedBehaviourException();
     }
 
-    /**
-     * Not used in this class
-     *
-     * @param key .
-     * @return .
-     */
+    //Not used in this class
     @Override
     public Object retrieveKeyFromStore(Long key) {
         throw new UnexpectedBehaviourException();
@@ -398,7 +392,7 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
 
     //TODO vedere se mettere timer
     @Override
-    public void updateAfterLeave(Long oldNodeID, NodeInterface newNode) throws IOException, ConnectionErrorException {
+    public void updateAfterLeave(Long oldNodeID, NodeInterface newNode) throws IOException {
         Long lockId = createLock();
         NodeInterface newNod= new Node(newNode.getIpAddress(), newNode.getSocketPort());
         newNod.setNodeId(newNode.getNodeId());
@@ -437,8 +431,7 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
 
     /**
      * Not used in this class
-     *
-     * @return .
+     * @return {@inheritDoc}
      */
     @Override
     public SocketManager getSocketManager() {
@@ -447,6 +440,13 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
 
     //---------> Handling of Messages
 
+    /**
+     * {@inheritDoc}
+     * Calls findSuccessor method of node, with the parameters taken from findSuccessorRequest message.
+     * After sends a FindSuccessorResponse, containing the obtained object, to the requesting node
+     * @param findSuccessorRequest the received findSuccessorRequest message
+     * @throws IOException {@inheritDoc}
+     */
     @Override
     public void handle(FindSuccessorRequest findSuccessorRequest) throws IOException {
         NodeInterface nodeInterface = null;
@@ -459,6 +459,12 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
         socketNode.sendMessage(new FindSuccessorResponse(nodeTemp, findSuccessorRequest.getLockId()));
     }
 
+    /**{@inheritDoc}
+     * Takes the lockId parameter from the findSuccessorResponse unlocks the method in wait
+     * on the object of lockList and put the findSuccessorResponse in messageList
+     * @param findSuccessorResponse the received findSuccessorResponse message
+     * @throws IOException {@inheritDoc}
+     */
     @Override
     public void handle(FindSuccessorResponse findSuccessorResponse) throws IOException {
         synchronized (lockList.get(findSuccessorResponse.getLockId())){
@@ -485,8 +491,8 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
     }
 
     @Override
-    public void handle(CloseMessage closeMessage) throws IOException {
-        socketNode.sendMessage(new TerminatedMethodMessage(closeMessage.getLockId()));
+    public void handle(CloseRequest closeRequest) throws IOException {
+        socketNode.sendMessage(new TerminatedMethodMessage(closeRequest.getLockId()));
         socketNode.close();
         node.getSocketManager().closeCommunicator(nodeId);
     }
@@ -523,19 +529,6 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
         synchronized (lockList.get(getDimFingerTableResponse.getLockId())){
             messageList.put(getDimFingerTableResponse.getLockId(), getDimFingerTableResponse);
             lockList.get(getDimFingerTableResponse.getLockId()).notifyAll();
-        }
-    }
-
-    @Override
-    public void handle(GetIpAddressRequest getIpAddressRequest) throws IOException {
-        socketNode.sendMessage(new GetIpAddressResponse(node.getIpAddress(), getIpAddressRequest.getLockId()));
-    }
-
-    @Override
-    public void handle(GetIpAddressResponse getIpAddressResponse) throws IOException {
-        synchronized (lockList.get(getIpAddressResponse.getLockId())){
-            messageList.put(getIpAddressResponse.getLockId(), getIpAddressResponse);
-            lockList.get(getIpAddressResponse.getLockId()).notifyAll();
         }
     }
 

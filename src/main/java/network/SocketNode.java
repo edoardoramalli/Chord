@@ -56,7 +56,7 @@ public class SocketNode implements Runnable, Serializable {
     }
 
     /**
-     * while the node is connected (connected == true) the method calls the getMessage method to receives the
+     * While the node is connected (connected == true) the method calls the getMessage method to receives the
      * message from the other node
      */
     @Override

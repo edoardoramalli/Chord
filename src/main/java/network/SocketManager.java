@@ -35,7 +35,6 @@ public class SocketManager {
 
     /**
      * Used to create the outgoing socket connections
-     *
      * @param connectionNode node to which you want to open the connection
      * @return if the nodeId of connectionNode is equal to that of node, return node
      *         if there is already a open connection to the connectionNode, return that one increasing the
@@ -69,7 +68,6 @@ public class SocketManager {
     /**
      * Used to create the ingoing socket connections.
      * Method called only by the constructor of SocketNode
-     *
      * @param socketNode socketNode of node that is connecting
      * @param ipAddress ipAddress of node that is connecting
      */
@@ -101,7 +99,6 @@ public class SocketManager {
     /**
      * If nodeId has a number greater or equal to 2 of open connections, simply decreases by one the number of connections
      * if nodeId has only 1 open connection, close the connection and remove it from socketList and socketNumber
-     *
      * @param nodeId nodeId of node to which we want close the connection
      */
     public synchronized void closeCommunicator(Long nodeId) {
@@ -123,8 +120,7 @@ public class SocketManager {
     }
 
     /**
-     * Called only when the connection to the disconnectedId is dropped,
-     *
+     * Called only when the connection to the disconnectedId is dropped
      * @param disconnectedId nodeId of disconnected node
      */
     synchronized void removeNode(Long disconnectedId){

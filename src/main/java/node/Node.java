@@ -339,11 +339,10 @@ public class Node implements NodeInterface, Serializable {
     private boolean checkInterval(long pred, long index, long succ) {
         if (pred == succ)
             return true;
-        if (pred > succ) {
+        if (pred > succ)
             return (index > pred && index < Math.pow(2, dimFingerTable)) || (index >= 0 && index < succ);
-        } else {
+        else
             return index > pred && index < succ;
-        }
     }
 
     //Check che nell'intervallo comprende anche l'estremo superiore succ
@@ -351,11 +350,10 @@ public class Node implements NodeInterface, Serializable {
     private boolean checkIntervalEquivalence(long pred, long index, long succ) {
         if (pred == succ)
             return true;
-        if (pred > succ) {
+        if (pred > succ)
             return (index > pred && index < Math.pow(2, dimFingerTable)) || (index >= 0 && index <= succ);
-        } else {
+        else
             return index > pred && index <= succ;
-        }
     }
 
     //Ritorna FALSE in caso di pred e succ uguali
@@ -363,19 +361,17 @@ public class Node implements NodeInterface, Serializable {
     private boolean checkIntervalClosest(long pred, long index, long succ) {
         if (pred == succ)
             return false;
-        if (pred > succ) {
+        if (pred > succ)
             //controllate se il >=0 ha senso, l'ho messo in tutte e 3 le check
             return (index > pred && index < Math.pow(2, dimFingerTable)) || (index >= 0 && index < succ);
-        } else {
+        else
             return index > pred && index < succ;
-        }
     }
 
     /**
      * Checks if the disconnected node (with nodeId = disconnectedId) is contained in some attributes,
      * and if it true substitute it with the default value (null for predecessor,
      * and this for successorList and fingerTable
-     *
      * @param disconnectedId nodeId of disconnected node to check
      */
     public void checkDisconnectedNode(Long disconnectedId) {
@@ -443,6 +439,7 @@ public class Node implements NodeInterface, Serializable {
 
     //KEY-VALUE
 
+    @Override
     public NodeInterface addKey(Map.Entry<Long, Object> keyValue) throws IOException, TimerExpiredException {
         Long hashKey = keyValue.getKey() % (long) Math.pow(2, dimFingerTable);
         if (hashKey.equals(this.nodeId) || successorList.get(0).equals(this)) {
@@ -463,10 +460,12 @@ public class Node implements NodeInterface, Serializable {
         return newNodeKey;
     }
 
+    @Override
     public void addKeyToStore(Map.Entry<Long, Object> keyValue) {
         keyStore.put(keyValue.getKey(), keyValue.getValue());
     }
 
+    @Override
     public Object retrieveKeyFromStore(Long key) {
         return keyStore.get(key);
     }
@@ -522,8 +521,9 @@ public class Node implements NodeInterface, Serializable {
         }
     }
 
+    @Override
     public synchronized void updateAfterLeave(Long oldNodeID, NodeInterface newNode)
-            throws IOException, ConnectionErrorException {
+            throws ConnectionErrorException {
         if (oldNodeID.equals(predecessor.getNodeId())) {
             out.println("My predecessor left");
             if (successorList.contains(predecessor)) {
@@ -555,6 +555,7 @@ public class Node implements NodeInterface, Serializable {
     }
 
     /**
+     * {@inheritDoc}
      * Not used in this class
      */
     @Override
@@ -574,19 +575,14 @@ public class Node implements NodeInterface, Serializable {
 
     /**
      * Not used in this class
-     *
-     * @return .
+     * @return {@inheritDoc}
      */
     @Override
     public int getInitialSocketPort() {
         throw new UnexpectedBehaviourException();
     }
 
-    /**
-     * Not used in this class
-     *
-     * @param socketPort .
-     */
+    //Not used in this class
     @Override
     public void setSocketPort(int socketPort) {
         throw new UnexpectedBehaviourException();
@@ -603,8 +599,7 @@ public class Node implements NodeInterface, Serializable {
 
     /**
      * Not used in this class
-     *
-     * @return .
+     * @return {@inheritDoc}
      */
     @Override
     public int getInitialDimFingerTable() {
