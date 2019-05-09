@@ -36,6 +36,13 @@ public interface NodeInterface extends Serializable {
 
     int getSocketPort();
 
+    /**
+     * Used to ask the node the dimension of the finger table for the first time,
+     * after the port is saved locally and will be accessed through getDimFingerTable()
+     * (Used only during join phase)
+     * @return dimension of finger table
+     * @throws TimerExpiredException if timer expires
+     */
     int getInitialDimFingerTable() throws TimerExpiredException;
 
     int getDimFingerTable();
