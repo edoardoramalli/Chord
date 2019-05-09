@@ -345,8 +345,14 @@ public class Node implements NodeInterface, Serializable {
             return index > pred && index < succ;
     }
 
-    //Check che nell'intervallo comprende anche l'estremo superiore succ
-    //Necessaria in find successor
+    /**
+     * (Used in findSuccessor)
+     * @param pred  previous nodeId
+     * @param index nodeId of node to check
+     * @param succ  successor nodeId
+     * @return return true if index is between pred(excluded) and succ(included), otherwise return false
+     * (return true if pred == succ)
+     */
     private boolean checkIntervalEquivalence(long pred, long index, long succ) {
         if (pred == succ)
             return true;
@@ -356,13 +362,18 @@ public class Node implements NodeInterface, Serializable {
             return index > pred && index <= succ;
     }
 
-    //Ritorna FALSE in caso di pred e succ uguali
-    //Chiamato solo in closestPrecedingNode per evitare loop infinito
+    /**
+     * (Used only in closestPrecedingNode to avoid infinite loops)
+     * @param pred  previous nodeId
+     * @param index nodeId of node to check
+     * @param succ  successor nodeId
+     * @return return true if index is between pred(excluded) and succ(excluded), otherwise return false
+     * (return false if pred == succ)
+     */
     private boolean checkIntervalClosest(long pred, long index, long succ) {
         if (pred == succ)
             return false;
         if (pred > succ)
-            //controllate se il >=0 ha senso, l'ho messo in tutte e 3 le check
             return (index > pred && index < Math.pow(2, dimFingerTable)) || (index >= 0 && index < succ);
         else
             return index > pred && index < succ;
