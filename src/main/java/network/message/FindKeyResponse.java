@@ -4,12 +4,12 @@ import java.io.IOException;
 import java.io.Serializable;
 
 public class FindKeyResponse implements Message,Serializable {
-    private Long lockId;
     private Object value;
+    private Long lockId;
 
-    public FindKeyResponse(Long lockId, Object value) {
-        this.lockId = lockId;
+    public FindKeyResponse(Object value, Long lockId) {
         this.value = value;
+        this.lockId = lockId;
     }
 
     @Override

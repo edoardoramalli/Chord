@@ -513,6 +513,13 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
         }
     }
 
+    /**
+     * {@inheritDoc}
+     * Sends a TerminatedMethodMessage to the requesting node,
+     * after calls the close method of socket node, and close the communication through the caller
+     * @param closeRequest the received closeRequest message
+     * @throws IOException
+     */
     @Override
     public void handle(CloseRequest closeRequest) throws IOException {
         socketNode.sendMessage(new TerminatedMethodMessage(closeRequest.getLockId()));
@@ -520,6 +527,13 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
         node.getSocketManager().closeCommunicator(nodeId);
     }
 
+    /**
+     * {@inheritDoc}
+     * Calls getPredecessor method of node, after sends a getPredecessorResponse,
+     * containing the predecessor (or null if predecessor==null), to the requesting node
+     * @param getPredecessorRequest the received getPredecessorRequest message
+     * @throws IOException
+     */
     @Override
     public void handle(GetPredecessorRequest getPredecessorRequest) throws IOException {
         NodeInterface predecessor;
@@ -549,6 +563,13 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
         }
     }
 
+    /**
+     * {@inheritDoc}
+     * Calls getDimFingerTable method of node, after sends a GetDimFingerTableResponse,
+     * containing the obtained value, to the requesting node
+     * @param getDimFingerTableRequest the received getDimFingerTableRequest message
+     * @throws IOException
+     */
     @Override
     public void handle(GetDimFingerTableRequest getDimFingerTableRequest) throws IOException {
         socketNode.sendMessage(new GetDimFingerTableResponse(node.getDimFingerTable(), getDimFingerTableRequest.getLockId()));
@@ -569,6 +590,13 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
         }
     }
 
+    /**
+     * {@inheritDoc}
+     * Calls getSocketPort method of node, after sends a GetInitialSocketPortResponse,
+     * containing the obtained value, to the requesting node
+     * @param getInitialSocketPortRequest the received getInitialSocketPortRequest message
+     * @throws IOException
+     */
     @Override
     public void handle(GetInitialSocketPortRequest getInitialSocketPortRequest) throws IOException {
         socketNode.sendMessage(new GetInitialSocketPortResponse(node.getSocketPort(), getInitialSocketPortRequest.getLockId()));
@@ -589,12 +617,18 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
         }
     }
 
+    /**
+     * {@inheritDoc}
+     * Calls getSuccessorList method of node, after sends a GetSuccessorListResponse,
+     * containing the obtained list, to the requesting node
+     * @param getSuccessorListRequest the received getSuccessorListRequest message
+     * @throws IOException
+     */
     @Override
     public void handle(GetSuccessorListRequest getSuccessorListRequest) throws IOException {
         CopyOnWriteArrayList<NodeInterface> list = new CopyOnWriteArrayList<>();
         try {
-            for (NodeInterface nodeInterface :
-                    node.getSuccessorList()) {
+            for (NodeInterface nodeInterface : node.getSuccessorList()) {
                 list.add(new Node(nodeInterface.getIpAddress(), nodeInterface.getSocketPort(), node.getDimFingerTable()));
             }
         } catch (TimerExpiredException e) {
@@ -618,6 +652,13 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
         }
     }
 
+    /**
+     * {@inheritDoc}
+     * Calls addKeyToStore method of node, with the parameters taken from addKeyRequest message.
+     * After sends a AddKeyResponse, containing the obtained object, to the requesting node
+     * @param addKeyRequest the received addKeyRequest message
+     * @throws IOException
+     */
     @Override
     public void handle(AddKeyRequest addKeyRequest) throws IOException {
         node.addKeyToStore(addKeyRequest.getKeyValue());
@@ -640,10 +681,16 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
         }
     }
 
+    /**
+     * {@inheritDoc}
+     * Calls retrieveKeyFromStore method of node, with the parameters taken from findSuccessorRequest message.
+     * After sends a FindKeyResponse, containing the obtained object, to the requesting node
+     * @param findKeyRequest the received findKeyRequest message
+     * @throws IOException
+     */
     @Override
     public void handle(FindKeyRequest findKeyRequest) throws IOException {
-        Object value = node.retrieveKeyFromStore(findKeyRequest.getKey());
-        socketNode.sendMessage(new FindKeyResponse(findKeyRequest.getLockId(), value));
+        socketNode.sendMessage(new FindKeyResponse(node.retrieveKeyFromStore(findKeyRequest.getKey()), findKeyRequest.getLockId()));
     }
 
     /**
@@ -661,6 +708,12 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
         }
     }
 
+    /**
+     * {@inheritDoc}
+     * Calls updateAfterLeave method of node, with the parameters taken from leaveRequest message.
+     * @param leaveRequest the received leaveRequest message
+     * @throws IOException
+     */
     @Override
     public void handle(LeaveRequest leaveRequest) throws IOException{
         try {
