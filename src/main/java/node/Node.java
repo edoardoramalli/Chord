@@ -448,8 +448,11 @@ public class Node implements NodeInterface, Serializable {
         }
     }
 
-    //KEY-VALUE
 
+    /**
+     *
+     * {@inheritDoc}
+     */
     @Override
     public NodeInterface addKey(Map.Entry<Long, Object> keyValue) throws IOException, TimerExpiredException {
         Long hashKey = keyValue.getKey() % (long) Math.pow(2, dimFingerTable);
@@ -471,16 +474,29 @@ public class Node implements NodeInterface, Serializable {
         return newNodeKey;
     }
 
+    /**
+     *
+     *{@inheritDoc}
+     */
     @Override
     public void addKeyToStore(Map.Entry<Long, Object> keyValue) {
         keyStore.put(keyValue.getKey(), keyValue.getValue());
     }
 
+    /**
+     *
+     * {@inheritDoc}
+     */
     @Override
     public Object retrieveKeyFromStore(Long key) {
         return keyStore.get(key);
     }
 
+    /**
+     * Moves some keys from a node to its new predecessor
+     *
+     * @throws IOException
+     */
     private void moveKey() throws IOException {
         for (Map.Entry<Long, Object> keyValue :
                 keyStore.entrySet()) {
@@ -496,6 +512,10 @@ public class Node implements NodeInterface, Serializable {
         }
     }
 
+    /**
+     *
+     *{@inheritDoc}
+     */
     @Override
     public Object findKey(Long key) throws IOException, TimerExpiredException {
         long hashKey = key % (long) Math.pow(2, dimFingerTable);
@@ -508,9 +528,13 @@ public class Node implements NodeInterface, Serializable {
         return findSuccessor(hashKey).findKey(key);
     }
 
-
+    /**
+     * This method handles the voluntarily departure of a node
+     *
+     * @throws IOException
+     * @throws ConnectionErrorException
+     */
     public void leave() throws IOException, ConnectionErrorException {
-        out.println("Now I'm leaving\n\n");
         transferKey();
         UpdateNode.stopUpdate();
         SocketNodeListener.stopListening();
@@ -520,6 +544,10 @@ public class Node implements NodeInterface, Serializable {
         predecessor.updateAfterLeave(nodeId, successorList.get(successorList.size() - 1));
     }
 
+    /**
+     * This method transfers all the keys of a node to its successor
+     * @throws IOException
+     */
     private void transferKey() throws IOException {
         for (Map.Entry<Long, Object> keyValue :
                 keyStore.entrySet()) {
@@ -532,6 +560,10 @@ public class Node implements NodeInterface, Serializable {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     */
     @Override
     public synchronized void updateAfterLeave(Long oldNodeID, NodeInterface newNode)
             throws ConnectionErrorException {

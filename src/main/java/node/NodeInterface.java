@@ -64,13 +64,49 @@ public interface NodeInterface extends Serializable {
 
     //Key
 
+    /**
+     *
+     * @param keyValue
+     * @return
+     * @throws IOException
+     * @throws TimerExpiredException
+     */
     NodeInterface addKey(Map.Entry<Long, Object> keyValue) throws IOException, TimerExpiredException;
 
-    void addKeyToStore(Map.Entry<Long, Object> keyValue);
 
+
+    /**
+     * This method handles the search of a value given its key
+     *
+     * @param key of the value that the node wants to find
+     * @return the value if it exists, null otherwise
+     * @throws IOException
+     * @throws TimerExpiredException
+     */
     Object findKey(Long key) throws IOException, TimerExpiredException;
 
+    /**
+     * This method adds the new key-value tuple to the local set of the keys that the node has
+     *
+     * @param keyValue new key-value entry to be added
+     */
+    void addKeyToStore(Map.Entry<Long, Object> keyValue);
+
+    /**
+     * Retrieves a value given a key from the local set of a key
+     *
+     * @param key key to be retrieved from the set
+     * @return the value found, null otherwise
+     */
     Object retrieveKeyFromStore(Long key);
 
+    /**
+     * This method handles the update after that a node voluntarily left the network
+     *
+     * @param oldNodeID the node that left the network
+     * @param newNode the node that replaces the one that left
+     * @throws IOException
+     * @throws ConnectionErrorException
+     */
     void updateAfterLeave(Long oldNodeID, NodeInterface newNode) throws IOException, ConnectionErrorException;
 }

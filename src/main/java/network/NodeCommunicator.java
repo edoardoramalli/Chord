@@ -322,6 +322,9 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
         node.getSocketManager().removeNode(nodeId);
     }
 
+    /**
+     *{@inheritDoc}
+     */
     @Override
     public NodeInterface addKey(Map.Entry<Long, Object> keyValue) throws TimerExpiredException {
         Long lockId = createLock();
@@ -355,17 +358,30 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
     }
 
     //Not used in this class
+
+    /**
+     *{@inheritDoc}
+     * Not used in this class
+     */
     @Override
     public void addKeyToStore(Map.Entry<Long, Object> keyValue) {
         throw new UnexpectedBehaviourException();
     }
 
-    //Not used in this class
+    /**
+     *{@inheritDoc}
+     * Not used in this class
+     */
+
     @Override
     public Object retrieveKeyFromStore(Long key) {
         throw new UnexpectedBehaviourException();
     }
 
+    /**
+     *
+     *{@inheritDoc}
+     */
     @Override
     public Object findKey(Long key) throws TimerExpiredException {
         Long lockId = createLock();
