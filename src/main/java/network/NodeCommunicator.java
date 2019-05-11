@@ -306,7 +306,7 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
 
     /**
      * Not used in this class
-     * @param text Text string passed to the sender for the Controller
+     * @param text Text string passed to the sender for the OldController
      */
     @Override
     public void sendToController(String text) {

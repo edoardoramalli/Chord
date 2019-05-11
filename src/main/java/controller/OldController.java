@@ -10,22 +10,22 @@ import java.util.concurrent.Semaphore;
 import static java.lang.System.out;
 
 /**
- * Class for the object Controller. Controller is in charge of keep track the node presents in the Chord Network,
+ * Class for the object OldController. OldController is in charge of keep track the node presents in the Chord Network,
  * It is capable of knowing when a node is entered in the network, and also when it'll exit.
- * Controller receive from each node of the network if it is stable. If the node change its status, it notifies the
+ * OldController receive from each node of the network if it is stable. If the node change its status, it notifies the
  * controller with its new state. In this way we can measure the time between a new insert in the net and the time
  * when all the network will be stable.
  */
-public class Controller implements Runnable { //TODO Davide diceva di mettere metodi sincronizzati...
+public class OldController implements Runnable { //TODO Davide diceva di mettere metodi sincronizzati...
     private ArrayList<String> socketList;
     private HashMap<Socket, String> socketMap;
     private HashMap<String, String> stableNet;
     private Semaphore socketListSem;
     private Semaphore timeSem;
     private Socket socket; //socket di connessione con il client
-    private Collector c;
+    private OldCollector c;
 
-    public Controller(Socket socket, Collector c) {
+    public OldController(Socket socket, OldCollector c) {
         this.socket = socket;
         this.c = c;
         this.socketListSem = c.getSocketListSem();

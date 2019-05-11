@@ -1,11 +1,12 @@
 package start;
 
+import controller.Collector;
+import controller.SocketController;
 import exceptions.ConnectionErrorException;
 import exceptions.NodeIdAlreadyExistsException;
 import exceptions.TimerExpiredException;
 import exceptions.UnexpectedBehaviourException;
-import controller.Collector;
-import controller.Controller;
+import controller.OldCollector;
 import node.Node;
 import node.NodeInterface;
 import org.apache.commons.cli.*;
@@ -13,6 +14,7 @@ import org.apache.commons.cli.*;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
+import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.AbstractMap;
 import java.util.Map;
@@ -34,9 +36,9 @@ public class Main {
         // Local Port
         // Remote IP
         // Remote Port
-        // Create/Join/Controller
-        // Controller IP
-        // Controller Port
+        // Create/Join/OldController
+        // OldController IP
+        // OldController Port
         // Dim Finger Table
 
         int localPort;
@@ -53,11 +55,11 @@ public class Main {
         localPortOpt.setRequired(true);
         options.addOption(localPortOpt);
 
-        Option controllerIPOpt = new Option("cip", "contrip", true, "Controller IP");
+        Option controllerIPOpt = new Option("cip", "controllerIp", true, "OldController IP");
         controllerIPOpt.setRequired(false);
         options.addOption(controllerIPOpt);
 
-        Option controllerPortOpt = new Option("cp", "contrport", true, "Controller Port");
+        Option controllerPortOpt = new Option("cp", "controllerPort", true, "OldController Port");
         controllerPortOpt.setRequired(false);
         options.addOption(controllerPortOpt);
 
@@ -65,11 +67,11 @@ public class Main {
         typeOpt.setRequired(true);
         options.addOption(typeOpt);
 
-        Option joinIpOpt = new Option("jip", "joinip", true, "Join IP");
+        Option joinIpOpt = new Option("jip", "joinIp", true, "Join IP");
         joinIpOpt.setRequired(false);
         options.addOption(joinIpOpt);
 
-        Option joinPortOpt = new Option("jp", "joinport", true, "Join Port");
+        Option joinPortOpt = new Option("jp", "joinPort", true, "Join Port");
         joinPortOpt.setRequired(false);
         options.addOption(joinPortOpt);
 
@@ -101,20 +103,22 @@ public class Main {
 
         switch (type) {
             case 0:
-                Collector coll = new Collector();
+                OldCollector coll = new OldCollector();
 
+                Collector collector = Collector.getController();
                 try (ServerSocket listener = new ServerSocket(localPort)) {
-                    out.println("The Controller server is running on Port " + localPort + " ...");
+                    out.println("The OldController server is running on Port " + localPort + " ...");
                     while (true) {
-                        Executors.newCachedThreadPool().submit(new Controller(listener.accept(), coll));
+                        Socket nodeSocket = listener.accept();
+                        Executors.newCachedThreadPool().submit(new SocketController(collector, nodeSocket));
                     }
                 } catch (IOException e){
                     throw new UnexpectedBehaviourException();
                 }
             case 1:
                 // Create
-                controllerIP = cmd.getOptionValue("contrip");
-                controllerPort = Integer.parseInt(cmd.getOptionValue("contrport"));
+                controllerIP = cmd.getOptionValue("controllerIp");
+                controllerPort = Integer.parseInt(cmd.getOptionValue("controllerPort"));
                 try {
                     node = new Node(InetAddress.getLocalHost().getHostAddress(), localPort,
                             controllerIP, controllerPort);
@@ -138,10 +142,10 @@ public class Main {
                 break;
             case 2:
                 //join
-                controllerIP = cmd.getOptionValue("contrip");
-                controllerPort = Integer.parseInt(cmd.getOptionValue("contrport"));
-                joinIP = cmd.getOptionValue("joinip");
-                joinPort = Integer.parseInt(cmd.getOptionValue("joinport"));
+                controllerIP = cmd.getOptionValue("controllerIp");
+                controllerPort = Integer.parseInt(cmd.getOptionValue("controllerPort"));
+                joinIP = cmd.getOptionValue("joinIp");
+                joinPort = Integer.parseInt(cmd.getOptionValue("joinPort"));
 
                 try {
                     node = new Node(InetAddress.getLocalHost().getHostAddress(), localPort,

@@ -1,58 +1,27 @@
 package controller;
 
-import java.net.Socket;
 import java.time.LocalTime;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.concurrent.Semaphore;
+import java.util.Map;
 
-/**
- * Java Class used to collect shared data like "socketList" among different thread
- * and to keep track of the open connections, in order to know the connected node and the corresponding socket.
- * A set of semaphore are used in order to keep consistency between data.
- */
 public class Collector {
-    private ArrayList<String> socketList = new ArrayList<>();
-    private HashMap<Socket, String> socketMap = new HashMap<>();
-    private Semaphore socketListSem = new Semaphore(1);
-    private Semaphore timeSem = new Semaphore(1);
-    private HashMap<String, String> stableNet = new HashMap<>();
-    private LocalTime startTime;
-    private LocalTime endTime;
+    private static Collector collectorInstance;
+    private Map<Long, NodeInfo> nodeMap;
 
-    ArrayList<String> getSocketList() {
-        return socketList;
+    private Collector(){
+        this.nodeMap = new HashMap<>();
     }
 
-    Semaphore getSocketListSem() {
-        return socketListSem;
+    public static Collector getController(){
+        if (collectorInstance == null)
+            collectorInstance = new Collector();
+        return collectorInstance;
     }
 
-    HashMap<String, String> getStableNet() {
-        return stableNet;
-    }
-
-    HashMap<Socket, String> getSocketMap() {
-        return socketMap;
-    }
-
-    LocalTime getStartTime() {
-        return startTime;
-    }
-
-    LocalTime getEndTime() {
-        return endTime;
-    }
-
-    Semaphore getTimeSem() {
-        return timeSem;
-    }
-
-    void setStartTime(LocalTime startTime) {
-        this.startTime = startTime;
-    }
-
-    void setEndTime(LocalTime endTime) {
-        this.endTime = endTime;
+    void newConnection(Long nodeId){
+        LocalTime connectionTime = LocalTime.now();
+        nodeMap.put(nodeId, new NodeInfo(connectionTime));
+        if (nodeMap.size() == 1)
+            nodeMap.get(nodeId).setStabilityTime(connectionTime);
     }
 }

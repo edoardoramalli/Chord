@@ -415,12 +415,12 @@ public class Node implements NodeInterface, Serializable {
             this.socketController = new Socket(ipController, portController);
             this.sendToController("#Connected");
         } catch (Exception e) {
-            out.println("Error Connecting to the Controller");
+            out.println("Error Connecting to the OldController");
         }
     }
 
     /**
-     * @param text Text string passed to the sender for the Controller
+     * @param text Text string passed to the sender for the OldController
      */
     @Override
     public void sendToController(String text) {
