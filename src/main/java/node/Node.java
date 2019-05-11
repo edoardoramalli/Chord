@@ -448,10 +448,12 @@ public class Node implements NodeInterface, Serializable {
         }
     }
 
-
     /**
-     *
      * {@inheritDoc}
+     * @param keyValue
+     * @return
+     * @throws IOException
+     * @throws TimerExpiredException
      */
     @Override
     public NodeInterface addKey(Map.Entry<Long, Object> keyValue) throws IOException, TimerExpiredException {
@@ -475,17 +477,19 @@ public class Node implements NodeInterface, Serializable {
     }
 
     /**
-     *
-     *{@inheritDoc}
+     * {@inheritDoc}
+     * @param keyValue new key-value entry to be added
      */
     @Override
     public void addKeyToStore(Map.Entry<Long, Object> keyValue) {
         keyStore.put(keyValue.getKey(), keyValue.getValue());
     }
 
+
     /**
-     *
      * {@inheritDoc}
+     * @param key key to be retrieved from the set
+     * @return {@inheritDoc}
      */
     @Override
     public Object retrieveKeyFromStore(Long key) {
@@ -494,8 +498,7 @@ public class Node implements NodeInterface, Serializable {
 
     /**
      * Moves some keys from a node to its new predecessor
-     *
-     * @throws IOException
+     * @throws IOException if an I/O error occurs
      */
     private void moveKey() throws IOException {
         for (Map.Entry<Long, Object> keyValue :
@@ -513,8 +516,11 @@ public class Node implements NodeInterface, Serializable {
     }
 
     /**
-     *
-     *{@inheritDoc}
+     * {@inheritDoc}
+     * @param key of the value that the node wants to find
+     * @return {@inheritDoc}
+     * @throws IOException
+     * @throws TimerExpiredException
      */
     @Override
     public Object findKey(Long key) throws IOException, TimerExpiredException {
@@ -530,9 +536,8 @@ public class Node implements NodeInterface, Serializable {
 
     /**
      * This method handles the voluntarily departure of a node
-     *
-     * @throws IOException
-     * @throws ConnectionErrorException
+     * @throws IOException if an I/O error occurs
+     * @throws ConnectionErrorException if updateAfterLeave throws the exception
      */
     public void leave() throws IOException, ConnectionErrorException {
         transferKey();
@@ -546,7 +551,7 @@ public class Node implements NodeInterface, Serializable {
 
     /**
      * This method transfers all the keys of a node to its successor
-     * @throws IOException
+     * @throws IOException if an I/O error occurs
      */
     private void transferKey() throws IOException {
         for (Map.Entry<Long, Object> keyValue :
@@ -560,9 +565,12 @@ public class Node implements NodeInterface, Serializable {
         }
     }
 
+
     /**
      * {@inheritDoc}
-     *
+     * @param oldNodeID the node that left the network
+     * @param newNode   the node that replaces the one that left
+     * @throws ConnectionErrorException
      */
     @Override
     public synchronized void updateAfterLeave(Long oldNodeID, NodeInterface newNode)
@@ -588,7 +596,6 @@ public class Node implements NodeInterface, Serializable {
             socketManager.closeCommunicator(oldNodeID);
 
             out.println(this.toString());
-
         }
     }
 

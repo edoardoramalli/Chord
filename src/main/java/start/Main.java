@@ -2,16 +2,20 @@ package start;
 
 import exceptions.ConnectionErrorException;
 import exceptions.NodeIdAlreadyExistsException;
+import exceptions.TimerExpiredException;
 import exceptions.UnexpectedBehaviourException;
 import controller.Collector;
 import controller.Controller;
 import node.Node;
+import node.NodeInterface;
 import org.apache.commons.cli.*;
 
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.UnknownHostException;
+import java.util.AbstractMap;
+import java.util.Map;
 import java.util.Scanner;
 import java.util.concurrent.Executors;
 
@@ -19,6 +23,12 @@ import static java.lang.System.err;
 import static java.lang.System.out;
 
 public class Main {
+    private static final String LOOKUP_COMMAND = "lookup";
+    private static final String ADDKEY_COMMAND = "addkey";
+    private static final String PRINT_COMMAND = "p";
+    private static final String EXIT_COMMAND = "exit";
+    private static final String FIND_COMMAND = "find";
+
     public static void main(String[] args) {
 
         // Local Port
@@ -171,11 +181,53 @@ public class Main {
             //out.println("Select 'lookup', 'addKey', 'p' or 'exit'" );
             String choice = in.nextLine().toLowerCase();
             switch (choice) {
-                case "p":
+                case PRINT_COMMAND:
                     out.println(node);
                     out.println(node.getSocketManager());
                     break;
-                case "exit":
+                case LOOKUP_COMMAND:
+                    out.println("Insert ID of node to find" );
+                    Long id = Long.parseLong(in.nextLine().toLowerCase());
+                    try {
+                        NodeInterface prova = node.lookup(id);
+                        out.println("Nodo cercato: " + prova.getNodeId());
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    } catch (TimerExpiredException e) {
+                        out.println("Node not found");
+                    }
+                    break;
+                case ADDKEY_COMMAND:
+                    out.println("Insert ID of node to find" );
+                    Long key = Long.parseLong(in.nextLine().toLowerCase());
+                    Map.Entry<Long, Object> keyValue = new AbstractMap.SimpleEntry<>(key,2);
+                    NodeInterface result=null;
+                    try {
+                        result = node.addKey(keyValue);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    } catch (TimerExpiredException e) {
+                        out.println("impossible to add key");
+                    }
+                    out.println("KEY SAVED: " + result);
+                    break;
+                case FIND_COMMAND:
+                    out.println("Insert key to find");
+                    Long keyToFind = Long.parseLong(in.nextLine().toLowerCase());
+                    Object value = null;
+                    try {
+                        value = node.findKey(keyToFind);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    } catch (TimerExpiredException e) {
+                        out.println("Impossible to Find the Key");
+                    }
+                    if (value == null)
+                        out.println("KEY NOT FOUND");
+                    else
+                        out.println("VALUE: " + value);
+                    break;
+                case EXIT_COMMAND:
                     try {
                         node.leave();
                     } catch (IOException e) {
