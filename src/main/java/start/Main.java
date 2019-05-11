@@ -6,7 +6,6 @@ import exceptions.ConnectionErrorException;
 import exceptions.NodeIdAlreadyExistsException;
 import exceptions.TimerExpiredException;
 import exceptions.UnexpectedBehaviourException;
-import controller.OldCollector;
 import node.Node;
 import node.NodeInterface;
 import org.apache.commons.cli.*;
@@ -103,11 +102,9 @@ public class Main {
 
         switch (type) {
             case 0:
-                OldCollector coll = new OldCollector();
-
-                Collector collector = Collector.getController();
+                Collector collector = Collector.getCollector();
                 try (ServerSocket listener = new ServerSocket(localPort)) {
-                    out.println("The OldController server is running on Port " + localPort + " ...");
+                    out.println("The Controller server is running on Port " + localPort + " ...");
                     while (true) {
                         Socket nodeSocket = listener.accept();
                         Executors.newCachedThreadPool().submit(new SocketController(collector, nodeSocket));
@@ -134,7 +131,13 @@ public class Main {
                 out.println("Node Create : Local Port " + localPort + " - Dim " + dimFingerTable + " - ControllerIP " +controllerIP
                         + " - ControllerPort " + controllerPort);
                 out.println("-----------------------------");
-                node.create(dimFingerTable);
+                try {
+                    node.create(dimFingerTable);
+                } catch (ConnectionErrorException e) {
+                    err.println("ERROR controller connection");
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
 
                 if (cmd.hasOption("debug"))
                     debugInterface(node);

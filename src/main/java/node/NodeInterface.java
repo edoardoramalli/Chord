@@ -55,13 +55,6 @@ public interface NodeInterface extends Serializable {
 
     List<NodeInterface> getSuccessorList() throws TimerExpiredException;
 
-    //OldController
-
-    /**
-     * @param text Text string passed to the sender for the OldController
-     */
-    void sendToController (String text);
-
     //Key
 
     /**

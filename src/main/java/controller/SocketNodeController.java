@@ -1,0 +1,71 @@
+package controller;
+
+import controller.message.*;
+
+import java.io.IOException;
+import java.util.HashMap;
+
+public class SocketNodeController implements NodeMessageHandler {
+    private Long nodeId;
+    private SocketNodeCommunicator controller;
+    private volatile HashMap<Long, Object> lockList = new HashMap<>();
+    private volatile Long lockID = 0L;
+
+    public SocketNodeController(Long nodeId, SocketNodeCommunicator controller) {
+        this.nodeId = nodeId;
+        this.controller = controller;
+    }
+
+    /**
+     * Creates the lock object
+     * @return lockId corresponding to the created lock object
+     */
+    private synchronized Long createLock(){
+        lockList.put(lockID, new Object());
+        lockID = lockID + 1;
+        return lockID - 1;
+    }
+
+    public void connected() throws IOException {
+        Long lockId = createLock();
+        synchronized (lockList.get(lockId)) {
+            controller.sendMessage(new ConnectedMessage(nodeId, lockId));
+            try {
+                lockList.get(lockId).wait();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+    }
+
+    public void stable() throws IOException {
+        Long lockId = createLock();
+        synchronized (lockList.get(lockId)) {
+            controller.sendMessage(new StableMessage(nodeId, lockId));
+            try {
+                lockList.get(lockId).wait();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+    }
+
+    public void notStable() throws IOException {
+        Long lockId = createLock();
+        synchronized (lockList.get(lockId)) {
+            controller.sendMessage(new NotStableMessage(nodeId, lockId));
+            try {
+                lockList.get(lockId).wait();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+    }
+
+    @Override
+    public void handle(ReceivedMessage receivedMessage) throws IOException {
+        synchronized (lockList.get(receivedMessage.getLockId())){
+            lockList.get(receivedMessage.getLockId()).notifyAll();
+        }
+    }
+}

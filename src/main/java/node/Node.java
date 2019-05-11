@@ -1,5 +1,7 @@
 package node;
 
+import controller.SocketNodeCommunicator;
+import controller.SocketNodeController;
 import exceptions.ConnectionErrorException;
 import exceptions.NodeIdAlreadyExistsException;
 import exceptions.TimerExpiredException;
@@ -9,9 +11,7 @@ import network.SocketManager;
 import network.SocketNodeListener;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.io.Serializable;
-import java.net.Socket;
 import java.util.*;
 
 import java.util.concurrent.ConcurrentHashMap;
@@ -36,11 +36,10 @@ public class Node implements NodeInterface, Serializable {
     private transient volatile ConcurrentHashMap<Long, Object> keyStore;
     private transient volatile SocketManager socketManager;
 
-    private transient volatile PrintWriter outBuffer;
-    private transient volatile Socket socketController;
     private transient volatile boolean stable = true;
     private transient volatile String ipController;
     private transient volatile int portController;
+    private transient volatile SocketNodeController controller;
 
     public Node(String ipAddress, int socketPort) {
         this.ipAddress = ipAddress;
@@ -57,7 +56,6 @@ public class Node implements NodeInterface, Serializable {
         this(ipAddress, socketPort);
         this.dimFingerTable = dimFingerTable;
         this.nodeId = Hash.getHash().calculateHash(ipAddress, socketPort);
-
     }
 
     public Node(String ipAddress, int socketPort, String ipController, int portController) {
@@ -66,7 +64,7 @@ public class Node implements NodeInterface, Serializable {
         this.portController = portController;
     }
 
-    public void create(int dimFingerTable) {
+    public void create(int dimFingerTable) throws ConnectionErrorException, IOException {
         this.dimFingerTable = dimFingerTable;
         Hash.initializeHash(dimFingerTable);
         nodeId = Hash.getHash().calculateHash(ipAddress, socketPort);
@@ -76,7 +74,8 @@ public class Node implements NodeInterface, Serializable {
         createFingerTable();
         socketManager = new SocketManager(this);
         Executors.newCachedThreadPool().submit(new UpdateNode(this));
-        openController();
+        controller = new SocketNodeCommunicator(ipController, portController).openController(nodeId);
+        controller.connected();
     }
 
     public void join(String joinIpAddress, int joinSocketPort)
@@ -105,7 +104,8 @@ public class Node implements NodeInterface, Serializable {
         if (successorNode.getNodeId().equals(nodeId)) //se find successor ritorna un nodo con lo stesso tuo id significa che esiste già un nodo con il tuo id
             throw new NodeIdAlreadyExistsException();
         nodeTemp.close();
-        openController();
+        controller = new SocketNodeCommunicator(ipController, portController).openController(nodeId);
+        controller.connected();
 
         successorList.set(0, socketManager.createConnection(successorNode)); //creates a new connection
         try {
@@ -404,46 +404,17 @@ public class Node implements NodeInterface, Serializable {
         Executors.newCachedThreadPool().submit(socketNodeListener);
     }
 
-    //CONTROLLER
-
-    /**
-     * Each Node has to open a connection to the network controller in order to keep updated the information about
-     * the network
-     */
-    private void openController() {
-        try {
-            this.socketController = new Socket(ipController, portController);
-            this.sendToController("#Connected");
-        } catch (Exception e) {
-            out.println("Error Connecting to the OldController");
-        }
-    }
-
-    /**
-     * @param text Text string passed to the sender for the OldController
-     */
-    @Override
-    public void sendToController(String text) {
-        try {
-            this.outBuffer = new PrintWriter(this.socketController.getOutputStream(), true);
-            outBuffer.println(this.nodeId + text);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-    }
-
     /**
      * @param stable At each iteration the node check if it is in a stable condition. If it changes its status,
      *               it'll send a message.
      */
-    void updateStable(boolean stable) {
+    void updateStable(boolean stable) throws IOException {
         if (this.stable != stable) {
             this.stable = stable;
             if (!this.stable) {
-                this.sendToController("#NotStable");
+                controller.notStable();
             } else {
-                this.sendToController("#Stable");
+                controller.stable();
             }
         }
     }

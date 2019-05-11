@@ -2,11 +2,11 @@ package controller.message;
 
 import java.io.IOException;
 
-public class ConnectedMessage implements ControllerMessage {
+public class StableMessage implements ControllerMessage{
     private Long nodeId;
     private Long lockId;
 
-    public ConnectedMessage(Long nodeId, Long lockId) {
+    public StableMessage(Long nodeId, Long lockId) {
         this.nodeId = nodeId;
         this.lockId = lockId;
     }

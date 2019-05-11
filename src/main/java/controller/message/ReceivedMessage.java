@@ -2,19 +2,19 @@ package controller.message;
 
 import java.io.IOException;
 
-public class ReceivedMessage implements ControllerMessage {
-    private Long messageId;
+public class ReceivedMessage implements NodeMessage {
+    private Long lockId;
 
-    public ReceivedMessage(Long messageId) {
-        this.messageId = messageId;
+    public ReceivedMessage(Long lockId) {
+        this.lockId = lockId;
     }
 
     @Override
-    public void handle(ControllerMessageHandler controllerMessageHandler) throws IOException {
-        controllerMessageHandler.handle(this);
+    public void handle(NodeMessageHandler nodeMessageHandler) throws IOException {
+        nodeMessageHandler.handle(this);
     }
 
-    public Long getMessageId() {
-        return messageId;
+    public Long getLockId() {
+        return lockId;
     }
 }

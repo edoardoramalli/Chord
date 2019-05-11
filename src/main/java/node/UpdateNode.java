@@ -76,7 +76,11 @@ public class UpdateNode implements Runnable {
             stable = stable && oldFingerTableList.equals(newFingerTableList);  //The Order matters
             oldFingerTableList.clear();
             newFingerTableList.clear();
-            node.updateStable(stable);
+            try {
+                node.updateStable(stable);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
 
             try {
                 TimeUnit.MILLISECONDS.sleep(3000);

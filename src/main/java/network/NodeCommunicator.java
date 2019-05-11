@@ -303,16 +303,6 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
         return getSuccessorListResponse.getSuccessorList();
     }
 
-
-    /**
-     * Not used in this class
-     * @param text Text string passed to the sender for the OldController
-     */
-    @Override
-    public void sendToController(String text) {
-        throw new UnexpectedBehaviourException();
-    }
-
     /**
      * {@inheritDoc}
      */
