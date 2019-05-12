@@ -2,11 +2,11 @@ package controller.message;
 
 import java.io.IOException;
 
-public class NotStableMessage implements StatisticsMessage {
+public class EndOfLookupMessage implements StatisticsMessage {
     private Long nodeId;
     private Long lockId;
 
-    public NotStableMessage(Long nodeId, Long lockId) {
+    public EndOfLookupMessage(Long nodeId, Long lockId) {
         this.nodeId = nodeId;
         this.lockId = lockId;
     }

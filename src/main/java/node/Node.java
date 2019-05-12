@@ -1,7 +1,7 @@
 package node;
 
-import controller.SocketNodeCommunicator;
-import controller.SocketNodeController;
+import controller.SocketNodeStatistics;
+import controller.NodeStatisticsController;
 import exceptions.ConnectionErrorException;
 import exceptions.NodeIdAlreadyExistsException;
 import exceptions.TimerExpiredException;
@@ -39,7 +39,7 @@ public class Node implements NodeInterface, Serializable {
     private transient volatile boolean stable = true;
     private transient volatile String ipController;
     private transient volatile int portController;
-    private transient volatile SocketNodeController controller;
+    private transient volatile NodeStatisticsController controller;
 
     public Node(String ipAddress, int socketPort) {
         this.ipAddress = ipAddress;
@@ -74,7 +74,7 @@ public class Node implements NodeInterface, Serializable {
         createFingerTable();
         socketManager = new SocketManager(this);
         Executors.newCachedThreadPool().submit(new UpdateNode(this));
-        controller = new SocketNodeCommunicator(ipController, portController).openController(nodeId);
+        controller = new SocketNodeStatistics(ipController, portController).openController(nodeId);
         controller.connected();
     }
 
@@ -104,7 +104,7 @@ public class Node implements NodeInterface, Serializable {
         if (successorNode.getNodeId().equals(nodeId)) //se find successor ritorna un nodo con lo stesso tuo id significa che esiste già un nodo con il tuo id
             throw new NodeIdAlreadyExistsException();
         nodeTemp.close();
-        controller = new SocketNodeCommunicator(ipController, portController).openController(nodeId);
+        controller = new SocketNodeStatistics(ipController, portController).openController(nodeId);
         controller.connected();
 
         successorList.set(0, socketManager.createConnection(successorNode)); //creates a new connection
@@ -129,7 +129,6 @@ public class Node implements NodeInterface, Serializable {
     /**
      * Creates successorList with this in the first position
      */
-    //The successor list is initialized with only this
     private void createSuccessorList() {
         successorList = new CopyOnWriteArrayList<>();
         successorList.add(0, this);
@@ -137,11 +136,9 @@ public class Node implements NodeInterface, Serializable {
 
     /**
      * Asks to the successor its successorList, and constructs its own successorList from that
-     *
-     * @throws IOException           if an I/O error occurs
      * @throws TimerExpiredException if getSuccessorList message do not has a response from the successor within a timer
      */
-    private void initializeSuccessorList() throws IOException, TimerExpiredException {
+    private void initializeSuccessorList() throws TimerExpiredException {
         List<NodeInterface> successorNodeList = successorList.get(0).getSuccessorList();
         for (NodeInterface node : successorNodeList) {
             if (node.getNodeId().equals(successorList.get(0).getNodeId()) || node.getNodeId().equals(this.nodeId))
@@ -535,7 +532,6 @@ public class Node implements NodeInterface, Serializable {
             keyStore.remove(keyValue);
         }
     }
-
 
     /**
      * {@inheritDoc}

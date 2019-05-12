@@ -2,7 +2,7 @@ package controller.message;
 
 import java.io.IOException;
 
-public class ConnectedMessage implements ControllerMessage {
+public class ConnectedMessage implements StatisticsMessage {
     private Long nodeId;
     private Long lockId;
 
@@ -12,8 +12,8 @@ public class ConnectedMessage implements ControllerMessage {
     }
 
     @Override
-    public void handle(ControllerMessageHandler controllerMessageHandler) throws IOException {
-        controllerMessageHandler.handle(this);
+    public void handle(StatisticsMessageHandler statisticsMessageHandler) throws IOException {
+        statisticsMessageHandler.handle(this);
     }
 
     public Long getNodeId() {

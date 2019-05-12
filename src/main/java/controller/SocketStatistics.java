@@ -1,6 +1,6 @@
 package controller;
 
-import controller.message.ControllerMessage;
+import controller.message.StatisticsMessage;
 import controller.message.NodeMessage;
 import exceptions.UnexpectedBehaviourException;
 
@@ -11,14 +11,14 @@ import java.io.Serializable;
 import java.net.Socket;
 import java.util.concurrent.Executors;
 
-public class SocketController implements Runnable, Serializable {
-    private transient CollectorController collector;
+public class SocketStatistics implements Runnable, Serializable {
+    private transient StatisticsController collector;
     private transient ObjectInputStream socketInput;
     private transient ObjectOutputStream socketOutput;
     private transient volatile boolean connected = true;
 
-    public SocketController(Collector collector, Socket nodeSocket){
-        this.collector = new CollectorController(collector, this);
+    public SocketStatistics(Statistics statistics, Socket nodeSocket){
+        this.collector = new StatisticsController(statistics, this);
         try {
             this.socketInput = new ObjectInputStream(nodeSocket.getInputStream());
             this.socketOutput = new ObjectOutputStream(nodeSocket.getOutputStream());
@@ -27,10 +27,14 @@ public class SocketController implements Runnable, Serializable {
         }
     }
 
+    /**
+     * While the node is connected (connected == true) the method calls the getMessage method to receives the
+     * message from the node
+     */
     @Override
     public void run() {
         while (connected){
-            ControllerMessage message = getMessage();
+            StatisticsMessage message = getMessage();
             if(!connected)
                 break;
             Executors.newCachedThreadPool().execute(() -> {
@@ -45,13 +49,14 @@ public class SocketController implements Runnable, Serializable {
 
     /**
      * Receives the message from the node,
-     * and when the other node has disconnected calls the nodeDisconnected method of NodeCommunicator
+     * and when the other node has disconnected calls the nodeDisconnected method of StatisticsController
      * @return the received message
      */
-    private ControllerMessage getMessage() {
+    private StatisticsMessage getMessage() {
         try {
-            return (ControllerMessage) socketInput.readObject();
+            return (StatisticsMessage) socketInput.readObject();
         } catch (IOException e) {
+            //TODO qui gestire disconnessione
             connected = false;
             this.close();
         } catch (ClassNotFoundException e) {
@@ -61,7 +66,7 @@ public class SocketController implements Runnable, Serializable {
     }
 
     /**
-     * Sends the message to the node
+     * Sends the NodeMessage to the node
      * @param message message to send
      * @throws IOException if an I/O error occurs
      */

@@ -5,13 +5,13 @@ import controller.message.*;
 import java.io.IOException;
 import java.util.HashMap;
 
-public class SocketNodeController implements NodeMessageHandler {
+public class NodeStatisticsController implements NodeMessageHandler {
     private Long nodeId;
-    private SocketNodeCommunicator controller;
+    private SocketNodeStatistics controller;
     private volatile HashMap<Long, Object> lockList = new HashMap<>();
     private volatile Long lockID = 0L;
 
-    public SocketNodeController(Long nodeId, SocketNodeCommunicator controller) {
+    public NodeStatisticsController(Long nodeId, SocketNodeStatistics controller) {
         this.nodeId = nodeId;
         this.controller = controller;
     }

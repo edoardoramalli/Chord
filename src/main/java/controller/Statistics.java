@@ -6,18 +6,18 @@ import java.util.Map;
 
 import static java.lang.System.out;
 
-public class Collector {
-    private static Collector collectorInstance;
+public class Statistics {
+    private static Statistics statisticsInstance;
     private Map<Long, NodeInfo> nodeMap;
 
-    private Collector(){
+    private Statistics(){
         this.nodeMap = new HashMap<>();
     }
 
-    public static Collector getCollector(){
-        if (collectorInstance == null)
-            collectorInstance = new Collector();
-        return collectorInstance;
+    public static Statistics getStatistics(){
+        if (statisticsInstance == null)
+            statisticsInstance = new Statistics();
+        return statisticsInstance;
     }
 
     synchronized void newConnection(Long nodeId){
