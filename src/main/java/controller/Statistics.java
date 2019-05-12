@@ -21,10 +21,15 @@ public class Statistics {
     }
 
     synchronized void newConnection(Long nodeId){
-        out.println("Connessione arrivata: " + nodeId);
+        out.println("Connessione arrivata: " + nodeId + ". Dim: " + nodeMap.size());
         LocalTime connectionTime = LocalTime.now();
         nodeMap.put(nodeId, new NodeInfo(connectionTime));
         if (nodeMap.size() == 1)
             nodeMap.get(nodeId).setStabilityTime(connectionTime);
+    }
+
+    synchronized void disconnectedNode(Long nodeId){
+        nodeMap.remove(nodeId);
+        out.println("Disconnessione: " + nodeId + ". Dim: " + nodeMap.size());
     }
 }

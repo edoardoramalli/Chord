@@ -12,13 +12,13 @@ import java.net.Socket;
 import java.util.concurrent.Executors;
 
 public class SocketStatistics implements Runnable, Serializable {
-    private transient StatisticsController collector;
+    private transient StatisticsController controller;
     private transient ObjectInputStream socketInput;
     private transient ObjectOutputStream socketOutput;
     private transient volatile boolean connected = true;
 
     public SocketStatistics(Statistics statistics, Socket nodeSocket){
-        this.collector = new StatisticsController(statistics, this);
+        this.controller = new StatisticsController(statistics, this);
         try {
             this.socketInput = new ObjectInputStream(nodeSocket.getInputStream());
             this.socketOutput = new ObjectOutputStream(nodeSocket.getOutputStream());
@@ -39,7 +39,7 @@ public class SocketStatistics implements Runnable, Serializable {
                 break;
             Executors.newCachedThreadPool().execute(() -> {
                 try {
-                    message.handle(collector);
+                    message.handle(controller);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -56,9 +56,9 @@ public class SocketStatistics implements Runnable, Serializable {
         try {
             return (StatisticsMessage) socketInput.readObject();
         } catch (IOException e) {
-            //TODO qui gestire disconnessione
             connected = false;
             this.close();
+            controller.disconnectedNode();
         } catch (ClassNotFoundException e) {
             throw new UnexpectedBehaviourException();
         }
