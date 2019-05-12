@@ -11,7 +11,7 @@ public class NodeStatisticsController implements NodeMessageHandler {
     private volatile HashMap<Long, Object> lockList = new HashMap<>();
     private volatile Long lockID = 0L;
 
-    public NodeStatisticsController(Long nodeId, SocketNodeStatistics controller) {
+    NodeStatisticsController(Long nodeId, SocketNodeStatistics controller) {
         this.nodeId = nodeId;
         this.controller = controller;
     }
@@ -41,7 +41,7 @@ public class NodeStatisticsController implements NodeMessageHandler {
     public void stable() throws IOException {
         Long lockId = createLock();
         synchronized (lockList.get(lockId)) {
-            controller.sendMessage(new StableMessage(nodeId, lockId));
+            controller.sendMessage(new StableMessage(lockId));
             try {
                 lockList.get(lockId).wait();
             } catch (InterruptedException e) {
@@ -53,7 +53,31 @@ public class NodeStatisticsController implements NodeMessageHandler {
     public void notStable() throws IOException {
         Long lockId = createLock();
         synchronized (lockList.get(lockId)) {
-            controller.sendMessage(new NotStableMessage(nodeId, lockId));
+            controller.sendMessage(new NotStableMessage(lockId));
+            try {
+                lockList.get(lockId).wait();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+    }
+
+    public void startLookup() throws IOException {
+        Long lockId = createLock();
+        synchronized (lockList.get(lockId)) {
+            controller.sendMessage(new StartLookupMessage(lockId));
+            try {
+                lockList.get(lockId).wait();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+    }
+
+    public void endOfLookup() throws IOException {
+        Long lockId = createLock();
+        synchronized (lockList.get(lockId)) {
+            controller.sendMessage(new EndOfLookupMessage(lockId));
             try {
                 lockList.get(lockId).wait();
             } catch (InterruptedException e) {

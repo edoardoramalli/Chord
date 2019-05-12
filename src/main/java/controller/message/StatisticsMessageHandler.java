@@ -2,6 +2,9 @@ package controller.message;
 
 import java.io.IOException;
 
+/**
+ * Interface implemented by StatisticsController, responsible of handling the messages from Node
+ */
 public interface StatisticsMessageHandler {
     /**
      * @param connectedMessage the received connectedMessage
