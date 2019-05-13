@@ -39,7 +39,7 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
     /**
      * in milliseconds
      */
-    private static final int TIMEOUT = 1000;
+    private static final int TIMEOUT = 1500;
 
     /**
      * Creates the lock object
@@ -301,16 +301,6 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
         GetSuccessorListResponse getSuccessorListResponse = (GetSuccessorListResponse) messageList.get(lockId);
         messageList.remove(lockId);
         return getSuccessorListResponse.getSuccessorList();
-    }
-
-
-    /**
-     * Not used in this class
-     * @param text Text string passed to the sender for the Controller
-     */
-    @Override
-    public void sendToController(String text) {
-        throw new UnexpectedBehaviourException();
     }
 
     /**

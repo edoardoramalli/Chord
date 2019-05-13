@@ -1,11 +1,11 @@
 package start;
 
+import controller.Statistics;
+import controller.SocketStatistics;
 import exceptions.ConnectionErrorException;
 import exceptions.NodeIdAlreadyExistsException;
 import exceptions.TimerExpiredException;
 import exceptions.UnexpectedBehaviourException;
-import controller.Collector;
-import controller.Controller;
 import node.Node;
 import node.NodeInterface;
 import org.apache.commons.cli.*;
@@ -13,6 +13,7 @@ import org.apache.commons.cli.*;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
+import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.AbstractMap;
 import java.util.Map;
@@ -34,9 +35,9 @@ public class Main {
         // Local Port
         // Remote IP
         // Remote Port
-        // Create/Join/Controller
-        // Controller IP
-        // Controller Port
+        // Create/Join/OldController
+        // OldController IP
+        // OldController Port
         // Dim Finger Table
 
         int localPort;
@@ -53,11 +54,11 @@ public class Main {
         localPortOpt.setRequired(true);
         options.addOption(localPortOpt);
 
-        Option controllerIPOpt = new Option("cip", "contrip", true, "Controller IP");
+        Option controllerIPOpt = new Option("cip", "controllerIp", true, "OldController IP");
         controllerIPOpt.setRequired(false);
         options.addOption(controllerIPOpt);
 
-        Option controllerPortOpt = new Option("cp", "contrport", true, "Controller Port");
+        Option controllerPortOpt = new Option("cp", "controllerPort", true, "OldController Port");
         controllerPortOpt.setRequired(false);
         options.addOption(controllerPortOpt);
 
@@ -65,11 +66,11 @@ public class Main {
         typeOpt.setRequired(true);
         options.addOption(typeOpt);
 
-        Option joinIpOpt = new Option("jip", "joinip", true, "Join IP");
+        Option joinIpOpt = new Option("jip", "joinIp", true, "Join IP");
         joinIpOpt.setRequired(false);
         options.addOption(joinIpOpt);
 
-        Option joinPortOpt = new Option("jp", "joinport", true, "Join Port");
+        Option joinPortOpt = new Option("jp", "joinPort", true, "Join Port");
         joinPortOpt.setRequired(false);
         options.addOption(joinPortOpt);
 
@@ -101,20 +102,20 @@ public class Main {
 
         switch (type) {
             case 0:
-                Collector coll = new Collector();
-
+                Statistics statistics = Statistics.getStatistics();
                 try (ServerSocket listener = new ServerSocket(localPort)) {
                     out.println("The Controller server is running on Port " + localPort + " ...");
                     while (true) {
-                        Executors.newCachedThreadPool().submit(new Controller(listener.accept(), coll));
+                        Socket nodeSocket = listener.accept();
+                        Executors.newCachedThreadPool().submit(new SocketStatistics(statistics, nodeSocket));
                     }
                 } catch (IOException e){
                     throw new UnexpectedBehaviourException();
                 }
             case 1:
                 // Create
-                controllerIP = cmd.getOptionValue("contrip");
-                controllerPort = Integer.parseInt(cmd.getOptionValue("contrport"));
+                controllerIP = cmd.getOptionValue("controllerIp");
+                controllerPort = Integer.parseInt(cmd.getOptionValue("controllerPort"));
                 try {
                     node = new Node(InetAddress.getLocalHost().getHostAddress(), localPort,
                             controllerIP, controllerPort);
@@ -130,7 +131,13 @@ public class Main {
                 out.println("Node Create : Local Port " + localPort + " - Dim " + dimFingerTable + " - ControllerIP " +controllerIP
                         + " - ControllerPort " + controllerPort);
                 out.println("-----------------------------");
-                node.create(dimFingerTable);
+                try {
+                    node.create(dimFingerTable);
+                } catch (ConnectionErrorException e) {
+                    err.println("ERROR controller connection");
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
 
                 if (cmd.hasOption("debug"))
                     debugInterface(node);
@@ -138,10 +145,10 @@ public class Main {
                 break;
             case 2:
                 //join
-                controllerIP = cmd.getOptionValue("contrip");
-                controllerPort = Integer.parseInt(cmd.getOptionValue("contrport"));
-                joinIP = cmd.getOptionValue("joinip");
-                joinPort = Integer.parseInt(cmd.getOptionValue("joinport"));
+                controllerIP = cmd.getOptionValue("controllerIp");
+                controllerPort = Integer.parseInt(cmd.getOptionValue("controllerPort"));
+                joinIP = cmd.getOptionValue("joinIp");
+                joinPort = Integer.parseInt(cmd.getOptionValue("joinPort"));
 
                 try {
                     node = new Node(InetAddress.getLocalHost().getHostAddress(), localPort,
@@ -189,7 +196,7 @@ public class Main {
                     out.println("Insert ID of node to find" );
                     Long id = Long.parseLong(in.nextLine().toLowerCase());
                     try {
-                        NodeInterface prova = node.lookup(id);
+                        NodeInterface prova = node.startLookup(id);
                         out.println("Nodo cercato: " + prova.getNodeId());
                     } catch (IOException e) {
                         e.printStackTrace();
@@ -198,25 +205,25 @@ public class Main {
                     }
                     break;
                 case ADDKEY_COMMAND:
-                    out.println("Insert ID of node to find" );
+                    out.println("Insert Value of the Key" );
                     Long key = Long.parseLong(in.nextLine().toLowerCase());
                     Map.Entry<Long, Object> keyValue = new AbstractMap.SimpleEntry<>(key,2);
                     NodeInterface result=null;
                     try {
-                        result = node.addKey(keyValue);
+                        result = node.startAddKey(keyValue);
                     } catch (IOException e) {
                         e.printStackTrace();
                     } catch (TimerExpiredException e) {
-                        out.println("impossible to add key");
+                        out.println("Impossible to add key");
                     }
-                    out.println("KEY SAVED: " + result);
+                    out.println("KEY SAVED IN NODE: " + result.getNodeId());
                     break;
                 case FIND_COMMAND:
                     out.println("Insert key to find");
                     Long keyToFind = Long.parseLong(in.nextLine().toLowerCase());
                     Object value = null;
                     try {
-                        value = node.findKey(keyToFind);
+                        value = node.startFindKey(keyToFind);
                     } catch (IOException e) {
                         e.printStackTrace();
                     } catch (TimerExpiredException e) {

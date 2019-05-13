@@ -1,5 +1,7 @@
 package node;
 
+import controller.SocketNodeStatistics;
+import controller.NodeStatisticsController;
 import exceptions.ConnectionErrorException;
 import exceptions.NodeIdAlreadyExistsException;
 import exceptions.TimerExpiredException;
@@ -9,15 +11,14 @@ import network.SocketManager;
 import network.SocketNodeListener;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.io.Serializable;
-import java.net.Socket;
 import java.util.*;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executors;
 
+import static java.lang.System.exit;
 import static java.lang.System.out;
 
 public class Node implements NodeInterface, Serializable {
@@ -36,11 +37,10 @@ public class Node implements NodeInterface, Serializable {
     private transient volatile ConcurrentHashMap<Long, Object> keyStore;
     private transient volatile SocketManager socketManager;
 
-    private transient volatile PrintWriter outBuffer;
-    private transient volatile Socket socketController;
     private transient volatile boolean stable = true;
     private transient volatile String ipController;
     private transient volatile int portController;
+    private transient volatile NodeStatisticsController controller;
 
     public Node(String ipAddress, int socketPort) {
         this.ipAddress = ipAddress;
@@ -53,11 +53,17 @@ public class Node implements NodeInterface, Serializable {
         this.keyStore = new ConcurrentHashMap();
     }
 
+    /**
+     * Constructor used only in NodeCommunicator, when we send a Node through socket,
+     * it takes also dimFingerTable as input in order to calculate the correspondent nodeId
+     * @param ipAddress ipAddress of Node
+     * @param socketPort socketPort of Node
+     * @param dimFingerTable dimension of finger table of the network
+     */
     public Node(String ipAddress, int socketPort, int dimFingerTable) {
         this(ipAddress, socketPort);
         this.dimFingerTable = dimFingerTable;
         this.nodeId = Hash.getHash().calculateHash(ipAddress, socketPort);
-
     }
 
     public Node(String ipAddress, int socketPort, String ipController, int portController) {
@@ -66,7 +72,7 @@ public class Node implements NodeInterface, Serializable {
         this.portController = portController;
     }
 
-    public void create(int dimFingerTable) {
+    public void create(int dimFingerTable) throws ConnectionErrorException, IOException {
         this.dimFingerTable = dimFingerTable;
         Hash.initializeHash(dimFingerTable);
         nodeId = Hash.getHash().calculateHash(ipAddress, socketPort);
@@ -75,8 +81,10 @@ public class Node implements NodeInterface, Serializable {
         startSocketListener(socketPort);
         createFingerTable();
         socketManager = new SocketManager(this);
+        controller = new SocketNodeStatistics(ipController, portController).openController(nodeId);
+        controller.connected();
         Executors.newCachedThreadPool().submit(new UpdateNode(this));
-        openController();
+
     }
 
     public void join(String joinIpAddress, int joinSocketPort)
@@ -105,7 +113,8 @@ public class Node implements NodeInterface, Serializable {
         if (successorNode.getNodeId().equals(nodeId)) //se find successor ritorna un nodo con lo stesso tuo id significa che esiste già un nodo con il tuo id
             throw new NodeIdAlreadyExistsException();
         nodeTemp.close();
-        openController();
+        controller = new SocketNodeStatistics(ipController, portController).openController(nodeId);
+        controller.connected();
 
         successorList.set(0, socketManager.createConnection(successorNode)); //creates a new connection
         try {
@@ -129,7 +138,6 @@ public class Node implements NodeInterface, Serializable {
     /**
      * Creates successorList with this in the first position
      */
-    //The successor list is initialized with only this
     private void createSuccessorList() {
         successorList = new CopyOnWriteArrayList<>();
         successorList.add(0, this);
@@ -137,11 +145,9 @@ public class Node implements NodeInterface, Serializable {
 
     /**
      * Asks to the successor its successorList, and constructs its own successorList from that
-     *
-     * @throws IOException           if an I/O error occurs
      * @throws TimerExpiredException if getSuccessorList message do not has a response from the successor within a timer
      */
-    private void initializeSuccessorList() throws IOException, TimerExpiredException {
+    private void initializeSuccessorList() throws TimerExpiredException {
         List<NodeInterface> successorNodeList = successorList.get(0).getSuccessorList();
         for (NodeInterface node : successorNodeList) {
             if (node.getNodeId().equals(successorList.get(0).getNodeId()) || node.getNodeId().equals(this.nodeId))
@@ -298,7 +304,21 @@ public class Node implements NodeInterface, Serializable {
         }
     }
 
-    public NodeInterface lookup(Long id) throws IOException, TimerExpiredException {
+    /**
+     * Method called by Main in order to send to controller the messages of start/end
+     * @param id id of node to find
+     * @return the found node
+     * @throws IOException if an I/O error occurs
+     * @throws TimerExpiredException if lookup's timer expires
+     */
+    public NodeInterface startLookup(Long id) throws IOException, TimerExpiredException {
+        controller.startLookup();
+        NodeInterface searchedNode = lookup(id);
+        controller.endOfLookup();
+        return searchedNode;
+    }
+
+    private NodeInterface lookup(Long id) throws IOException, TimerExpiredException {
         for (NodeInterface nodeInterface : successorList)
             if (id.equals(nodeInterface.getNodeId()))
                 return nodeInterface;
@@ -399,56 +419,40 @@ public class Node implements NodeInterface, Serializable {
                 fingerTable.replace(i, this);
     }
 
+    /**
+     * Called at the end of create and join, the method starts the thread responsible of accepting incoming connections
+     * @param socketPort port at which the other nodes have to connect
+     */
     private void startSocketListener(int socketPort) {
         SocketNodeListener socketNodeListener = new SocketNodeListener(this, socketPort);
         Executors.newCachedThreadPool().submit(socketNodeListener);
-    }
-
-    //CONTROLLER
-
-    /**
-     * Each Node has to open a connection to the network controller in order to keep updated the information about
-     * the network
-     */
-    private void openController() {
-        try {
-            this.socketController = new Socket(ipController, portController);
-            this.sendToController("#Connected");
-        } catch (Exception e) {
-            out.println("Error Connecting to the Controller");
-        }
-    }
-
-    /**
-     * @param text Text string passed to the sender for the Controller
-     */
-    @Override
-    public void sendToController(String text) {
-        try {
-            this.outBuffer = new PrintWriter(this.socketController.getOutputStream(), true);
-            outBuffer.println(this.nodeId + text);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
     }
 
     /**
      * @param stable At each iteration the node check if it is in a stable condition. If it changes its status,
      *               it'll send a message.
      */
-    void updateStable(boolean stable) {
+    void updateStable(boolean stable) throws IOException {
         if (this.stable != stable) {
             this.stable = stable;
             if (!this.stable) {
-                this.sendToController("#NotStable");
+                controller.notStable();
             } else {
-                this.sendToController("#Stable");
+                controller.stable();
             }
         }
     }
 
+
+    public NodeInterface startAddKey(Map.Entry<Long, Object> keyValue) throws IOException, TimerExpiredException {
+        controller.startInsertKey();
+        NodeInterface resultNode = addKey(keyValue);
+        controller.endInsertKey();
+        return resultNode;
+    }
+
     /**
+     * //todo da rigenerare dopo aver fatto in nodeInterface
      * {@inheritDoc}
      * @param keyValue
      * @return
@@ -515,6 +519,13 @@ public class Node implements NodeInterface, Serializable {
         }
     }
 
+    public Object startFindKey(Long key) throws IOException, TimerExpiredException {
+        controller.startFindKey();
+        Object NodeWithKey = findKey(key);
+        controller.endFindKey();
+        return NodeWithKey;
+    }
+
     /**
      * {@inheritDoc}
      * @param key of the value that the node wants to find
@@ -547,6 +558,7 @@ public class Node implements NodeInterface, Serializable {
         successorList.get(0).updateAfterLeave(nodeId, predecessor);
 
         predecessor.updateAfterLeave(nodeId, successorList.get(successorList.size() - 1));
+        exit(0);
     }
 
     /**
@@ -564,7 +576,6 @@ public class Node implements NodeInterface, Serializable {
             keyStore.remove(keyValue);
         }
     }
-
 
     /**
      * {@inheritDoc}

@@ -2,6 +2,9 @@ package network.message;
 
 import java.io.IOException;
 
+/**
+ * Interface implemented by NodeCommunicator that is responsible of handling the messages from other nodes
+ */
 public interface MessageHandler {
 
     /**
