@@ -196,7 +196,7 @@ public class Main {
                     out.println("Insert ID of node to find" );
                     Long id = Long.parseLong(in.nextLine().toLowerCase());
                     try {
-                        NodeInterface prova = node.lookup(id);
+                        NodeInterface prova = node.startLookup(id);
                         out.println("Nodo cercato: " + prova.getNodeId());
                     } catch (IOException e) {
                         e.printStackTrace();

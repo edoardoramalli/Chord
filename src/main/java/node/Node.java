@@ -52,6 +52,13 @@ public class Node implements NodeInterface, Serializable {
         this.keyStore = new ConcurrentHashMap();
     }
 
+    /**
+     * Constructor used only in NodeCommunicator, when we send a Node through socket,
+     * it takes also dimFingerTable as input in order to calculate the correspondent nodeId
+     * @param ipAddress ipAddress of Node
+     * @param socketPort socketPort of Node
+     * @param dimFingerTable dimension of finger table of the network
+     */
     public Node(String ipAddress, int socketPort, int dimFingerTable) {
         this(ipAddress, socketPort);
         this.dimFingerTable = dimFingerTable;
@@ -295,7 +302,21 @@ public class Node implements NodeInterface, Serializable {
         }
     }
 
-    public NodeInterface lookup(Long id) throws IOException, TimerExpiredException {
+    /**
+     * Method called by Main in order to send to controller the messages of start/end
+     * @param id id of node to find
+     * @return the found node
+     * @throws IOException if an I/O error occurs
+     * @throws TimerExpiredException if lookup's timer expires
+     */
+    public NodeInterface startLookup(Long id) throws IOException, TimerExpiredException {
+        controller.startLookup();
+        NodeInterface searchedNode = lookup(id);
+        controller.endOfLookup();
+        return searchedNode;
+    }
+
+    private NodeInterface lookup(Long id) throws IOException, TimerExpiredException {
         for (NodeInterface nodeInterface : successorList)
             if (id.equals(nodeInterface.getNodeId()))
                 return nodeInterface;
@@ -396,6 +417,10 @@ public class Node implements NodeInterface, Serializable {
                 fingerTable.replace(i, this);
     }
 
+    /**
+     * Called at the end of create and join, the method starts the thread responsible of accepting incoming connections
+     * @param socketPort port at which the other nodes have to connect
+     */
     private void startSocketListener(int socketPort) {
         SocketNodeListener socketNodeListener = new SocketNodeListener(this, socketPort);
         Executors.newCachedThreadPool().submit(socketNodeListener);
@@ -417,6 +442,7 @@ public class Node implements NodeInterface, Serializable {
     }
 
     /**
+     * //todo da rigenerare dopo aver fatto in nodeInterface
      * {@inheritDoc}
      * @param keyValue
      * @return
