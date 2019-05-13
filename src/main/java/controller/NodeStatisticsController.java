@@ -6,7 +6,7 @@ import java.io.IOException;
 import java.util.HashMap;
 
 /**
- *This class is exposed from the node-side. Each node has a open socket to the controller. Every time that a operation
+ * This class is exposed from the node-side. Each node has a open socket to the controller. Every time that a operation
  * that is checked by the controller is performed, the corresponding method is lunched. Every method create the right
  * message and send to the Controller through the socket. Often a single operation is slipped in two parts with two
  * different methods. In that way we are able to detect the start of an operation and its conclusion.
@@ -141,6 +141,7 @@ public class NodeStatisticsController implements NodeMessageHandler {
             }
         }
     }
+
     @Override
     public void handle(ReceivedMessage receivedMessage) throws IOException {
         synchronized (lockList.get(receivedMessage.getLockId())){

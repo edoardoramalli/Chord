@@ -36,14 +36,27 @@ public interface StatisticsMessageHandler {
      */
     void handle(EndOfLookupMessage endOfLookupMessage) throws IOException;
 
-
+    /**
+     * @param startInsertKeyMessage the received startInsertKeyMessage
+     * @throws IOException if an I/O error occurs
+     */
     void handle(StartInsertKeyMessage startInsertKeyMessage) throws IOException;
 
-
+    /**
+     * @param endInsertKeyMessage the received endInsertKeyMessage
+     * @throws IOException if an I/O error occurs
+     */
     void handle(EndInsertKeyMessage endInsertKeyMessage) throws IOException;
 
+    /**
+     * @param startFindKeyMessage the received startFindKeyMessage
+     * @throws IOException if an I/O error occurs
+     */
     void handle(StartFindKeyMessage startFindKeyMessage) throws IOException;
 
-
+    /**
+     * @param endFindKeyMessage the received endFindKeyMessage
+     * @throws IOException if an I/O error occurs
+     */
     void handle(EndFindKeyMessage endFindKeyMessage) throws IOException;
 }

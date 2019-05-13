@@ -7,16 +7,14 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-
-
 import static java.lang.System.out;
 
 /**
  * Singleton class in charge of the creation of the network controller. It uses a map with NodeId as key and NodeInfo
  * as value. In this way we can collect all the information needed to measure the time elapsed between the start of an
- * operation, like 'insertkey', 'lookup', 'findkey', and their actual end time. In addition the class is responsable to count
- * the number of nodes present in the Chord network and is capable of measuring the convergence time between two
- * successive join or leave of a node to the network itself.
+ * operation, like 'insertKey', 'lookup', 'findKey', and their actual end time. In addition the class is responsible
+ * to count the number of nodes present in the Chord network and is capable of measuring the convergence time between
+ * two successive join or leave of a node to the network itself.
  * All the methods are called by the class 'StatisticsController' that has the corresponding methods that are triggered
  * when a specific type of message is arrived.
  */
@@ -54,17 +52,17 @@ public class Statistics {
         this.startTimeStability = LocalTime.now();
         if (nodeMap.size() == 1)
             updateStable(nodeId, true);
-        out.println("Connessione arrivata: " + nodeId + ". Dim: " + nodeMap.size());
+        out.println("New Connection: " + nodeId + ". Number of connected node: " + nodeMap.size());
     }
 
     /**
-     * The start time of the convergence is resetted. The node with the specific Id is removed from the map.
+     * The start time of the convergence is reset. The node with the specific Id is removed from the map.
      * @param nodeId of the node that is exiting for the network
      */
     synchronized void disconnectedNode(Long nodeId){
         nodeMap.remove(nodeId);
         this.startTimeStability = LocalTime.now();
-        out.println("Disconnessione: " + nodeId + ". Dim: " + nodeMap.size());
+        out.println("Disconnected node: " + nodeId + ". Number of connected node: " + nodeMap.size());
     }
 
     /**

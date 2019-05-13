@@ -11,12 +11,19 @@ import java.io.Serializable;
 import java.net.Socket;
 import java.util.concurrent.Executors;
 
+/**
+ * Socket Statistics-side that deals the sending and receiving of Message to/from the node
+ */
 public class SocketStatistics implements Runnable, Serializable {
     private transient StatisticsController controller;
     private transient ObjectInputStream socketInput;
     private transient ObjectOutputStream socketOutput;
     private transient volatile boolean connected = true;
 
+    /**
+     * @param statistics Statistics singleton
+     * @param nodeSocket socket of incoming connection, from which we create the input and output stream
+     */
     public SocketStatistics(Statistics statistics, Socket nodeSocket){
         this.controller = new StatisticsController(statistics, this);
         try {

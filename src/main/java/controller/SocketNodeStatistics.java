@@ -12,6 +12,9 @@ import java.io.Serializable;
 import java.net.Socket;
 import java.util.concurrent.Executors;
 
+/**
+ * Socket Node-side that deals the sending and receiving of Message to/from Statistics
+ */
 public class SocketNodeStatistics implements Runnable, Serializable {
     private String ipAddress;
     private int socketPort;
@@ -21,11 +24,23 @@ public class SocketNodeStatistics implements Runnable, Serializable {
     private transient NodeStatisticsController controller;
     private volatile boolean connected;
 
+    /**
+     * @param ipAddress ipAddress of Statistics
+     * @param socketPort socketPort on which Statistics is reachable
+     */
     public SocketNodeStatistics(String ipAddress, int socketPort) {
         this.ipAddress = ipAddress;
         this.socketPort = socketPort;
     }
 
+    /**
+     * Creates the output/input stream to the Statistics, and also creates the controller
+     * responsible to handle the received message
+     * @param nodeId nodeId of node that creates the connection
+     * @return the created controller
+     * @throws ConnectionErrorException if statistics is not reachable at (ipAddress, socketPort)
+     * @throws IOException if an I/O error occurs
+     */
     public NodeStatisticsController openController(Long nodeId) throws ConnectionErrorException, IOException {
         this.connected = true;
         try {
@@ -40,6 +55,10 @@ public class SocketNodeStatistics implements Runnable, Serializable {
         return controller;
     }
 
+    /**
+     * While the connection is open (connected == true) the method calls the getMessage method to receives the
+     * message from Statistics
+     */
     @Override
     public void run() {
         while (connected){
@@ -57,14 +76,14 @@ public class SocketNodeStatistics implements Runnable, Serializable {
     }
 
     /**
-     * Receives the message from Statistics,
-     * and when the other node has disconnected calls the nodeDisconnected method of NodeCommunicator
+     * Receives the message from Statistics
      * @return the received message
      */
     private NodeMessage getMessage() {
         try {
             return (NodeMessage) in.readObject();
         } catch (IOException e) {
+            //TODO andrebbe gestita la disconnessione del controller
             connected = false;
             this.close();
         } catch (ClassNotFoundException e) {

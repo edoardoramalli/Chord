@@ -5,7 +5,7 @@ import controller.message.*;
 import java.io.IOException;
 
 /**
- *StatisticsController is Controller-side and performs the handle of the incoming messages and lunch
+ * StatisticsController is Controller-side and performs the handle of the incoming messages and lunch
  * the corresponding method of the controller.
  */
 public class StatisticsController implements StatisticsMessageHandler {
@@ -40,37 +40,37 @@ public class StatisticsController implements StatisticsMessageHandler {
     @Override
     public void handle(StartLookupMessage startLookupMessage) throws IOException {
         statistics.startLookup(nodeId);
-        socketStatistics.sendMessage(new ReceivedMessage((startLookupMessage.getLockId())));
+        socketStatistics.sendMessage(new ReceivedMessage(startLookupMessage.getLockId()));
     }
 
     @Override
     public void handle(EndOfLookupMessage endOfLookupMessage) throws IOException {
         statistics.endLookup(nodeId);
-        socketStatistics.sendMessage(new ReceivedMessage((endOfLookupMessage.getLockId())));
+        socketStatistics.sendMessage(new ReceivedMessage(endOfLookupMessage.getLockId()));
     }
 
     @Override
     public void handle(StartInsertKeyMessage startInsertKeyMessage) throws IOException {
         statistics.startInsertKey(nodeId);
-        socketStatistics.sendMessage(new ReceivedMessage((startInsertKeyMessage.getLockId())));
+        socketStatistics.sendMessage(new ReceivedMessage(startInsertKeyMessage.getLockId()));
     }
 
     @Override
     public void handle(EndInsertKeyMessage endInsertKeyMessage) throws IOException {
         statistics.endInsertKey(nodeId);
-        socketStatistics.sendMessage(new ReceivedMessage((endInsertKeyMessage.getLockId())));
+        socketStatistics.sendMessage(new ReceivedMessage(endInsertKeyMessage.getLockId()));
     }
 
     @Override
     public void handle(StartFindKeyMessage startFindKeyMessage) throws IOException {
         statistics.startFindKey(nodeId);
-        socketStatistics.sendMessage(new ReceivedMessage((startFindKeyMessage.getLockId())));
+        socketStatistics.sendMessage(new ReceivedMessage(startFindKeyMessage.getLockId()));
     }
 
     @Override
     public void handle(EndFindKeyMessage endFindKeyMessage) throws IOException {
         statistics.endFindKey(nodeId);
-        socketStatistics.sendMessage(new ReceivedMessage((endFindKeyMessage.getLockId())));
+        socketStatistics.sendMessage(new ReceivedMessage(endFindKeyMessage.getLockId()));
     }
 
     void disconnectedNode(){

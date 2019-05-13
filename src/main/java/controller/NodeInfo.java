@@ -1,24 +1,21 @@
 package controller;
 
-
 import java.time.LocalTime;
 
 /**
- * The aim of this class is to keep track of the statisticts of each connected Node to the Controller.
+ * The aim of this class is to keep track of the statistics of each connected Node to the Controller.
  * This object is used in the map of the controller as value associated to the NodeId as key of the map.
  * Statistics:
- * -Stability of the Node
- * -Starting time of the Lookup
- * -Starting time of the InsertKey
- * -Starting time of the FindKey
+ * - Stability of the Node
+ * - Starting time of the Lookup
+ * - Starting time of the InsertKey
+ * - Starting time of the FindKey
  */
 class NodeInfo {
-
     private boolean stable;
     private LocalTime startTimeLookup;
     private LocalTime startTimeInsertKey;
     private LocalTime startTimeFindKey;
-
 
     NodeInfo() { this.stable = false; }
 
