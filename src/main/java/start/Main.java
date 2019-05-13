@@ -205,25 +205,25 @@ public class Main {
                     }
                     break;
                 case ADDKEY_COMMAND:
-                    out.println("Insert ID of node to find" );
+                    out.println("Insert Value of the Key" );
                     Long key = Long.parseLong(in.nextLine().toLowerCase());
                     Map.Entry<Long, Object> keyValue = new AbstractMap.SimpleEntry<>(key,2);
                     NodeInterface result=null;
                     try {
-                        result = node.addKey(keyValue);
+                        result = node.startAddKey(keyValue);
                     } catch (IOException e) {
                         e.printStackTrace();
                     } catch (TimerExpiredException e) {
-                        out.println("impossible to add key");
+                        out.println("Impossible to add key");
                     }
-                    out.println("KEY SAVED: " + result);
+                    out.println("KEY SAVED IN NODE: " + result.getNodeId());
                     break;
                 case FIND_COMMAND:
                     out.println("Insert key to find");
                     Long keyToFind = Long.parseLong(in.nextLine().toLowerCase());
                     Object value = null;
                     try {
-                        value = node.findKey(keyToFind);
+                        value = node.startFindKey(keyToFind);
                     } catch (IOException e) {
                         e.printStackTrace();
                     } catch (TimerExpiredException e) {

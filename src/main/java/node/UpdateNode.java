@@ -54,7 +54,6 @@ public class UpdateNode implements Runnable {
 
                 oldSuccessorList.clear();
                 newSuccessorList.clear();
-
             }
 
             // get old Finger Table
@@ -78,12 +77,13 @@ public class UpdateNode implements Runnable {
             newFingerTableList.clear();
             try {
                 node.updateStable(stable);
+
             } catch (IOException e) {
                 e.printStackTrace();
             }
 
             try {
-                TimeUnit.MILLISECONDS.sleep(3000);
+                TimeUnit.MILLISECONDS.sleep(1000);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }

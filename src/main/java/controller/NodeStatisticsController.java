@@ -86,6 +86,53 @@ public class NodeStatisticsController implements NodeMessageHandler {
         }
     }
 
+    public void startInsertKey() throws IOException {
+        Long lockId = createLock();
+        synchronized (lockList.get(lockId)) {
+            controller.sendMessage(new StartInsertKeyMessage(lockId));
+            try {
+                lockList.get(lockId).wait();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+    }
+
+    public void endInsertKey() throws IOException {
+        Long lockId = createLock();
+        synchronized (lockList.get(lockId)) {
+            controller.sendMessage(new EndInsertKeyMessage(lockId));
+            try {
+                lockList.get(lockId).wait();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+    }
+
+    public void startFindKey() throws IOException {
+        Long lockId = createLock();
+        synchronized (lockList.get(lockId)) {
+            controller.sendMessage(new StartFindKeyMessage(lockId));
+            try {
+                lockList.get(lockId).wait();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+    }
+
+    public void endFindKey() throws IOException {
+        Long lockId = createLock();
+        synchronized (lockList.get(lockId)) {
+            controller.sendMessage(new EndFindKeyMessage(lockId));
+            try {
+                lockList.get(lockId).wait();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+    }
     @Override
     public void handle(ReceivedMessage receivedMessage) throws IOException {
         synchronized (lockList.get(receivedMessage.getLockId())){

@@ -18,6 +18,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executors;
 
+import static java.lang.System.exit;
 import static java.lang.System.out;
 
 public class Node implements NodeInterface, Serializable {
@@ -80,9 +81,10 @@ public class Node implements NodeInterface, Serializable {
         startSocketListener(socketPort);
         createFingerTable();
         socketManager = new SocketManager(this);
-        Executors.newCachedThreadPool().submit(new UpdateNode(this));
         controller = new SocketNodeStatistics(ipController, portController).openController(nodeId);
         controller.connected();
+        Executors.newCachedThreadPool().submit(new UpdateNode(this));
+
     }
 
     public void join(String joinIpAddress, int joinSocketPort)
@@ -440,6 +442,12 @@ public class Node implements NodeInterface, Serializable {
             }
         }
     }
+    public NodeInterface startAddKey(Map.Entry<Long, Object> keyValue) throws IOException, TimerExpiredException {
+        controller.startInsertKey();
+        NodeInterface resultNode = addKey(keyValue);
+        controller.endInsertKey();
+        return resultNode;
+    }
 
     /**
      * //todo da rigenerare dopo aver fatto in nodeInterface
@@ -509,6 +517,13 @@ public class Node implements NodeInterface, Serializable {
         }
     }
 
+    public Object startFindKey(Long key) throws IOException, TimerExpiredException {
+        controller.startFindKey();
+        Object NodeWithKey = findKey(key);
+        controller.endFindKey();
+        return NodeWithKey;
+    }
+
     /**
      * {@inheritDoc}
      * @param key of the value that the node wants to find
@@ -541,6 +556,7 @@ public class Node implements NodeInterface, Serializable {
         successorList.get(0).updateAfterLeave(nodeId, predecessor);
 
         predecessor.updateAfterLeave(nodeId, successorList.get(successorList.size() - 1));
+        exit(0);
     }
 
     /**
