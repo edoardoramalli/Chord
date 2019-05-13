@@ -3,7 +3,16 @@ package controller;
 
 import java.time.LocalTime;
 
-public class NodeInfo {
+/**
+ * The aim of this class is to keep track of the statisticts of each connected Node to the Controller.
+ * This object is used in the map of the controller as value associated to the NodeId as key of the map.
+ * Statistics:
+ * -Stability of the Node
+ * -Starting time of the Lookup
+ * -Starting time of the InsertKey
+ * -Starting time of the FindKey
+ */
+class NodeInfo {
 
     private boolean stable;
     private LocalTime startTimeLookup;
@@ -11,36 +20,27 @@ public class NodeInfo {
     private LocalTime startTimeFindKey;
 
 
-    public NodeInfo() {
+    NodeInfo() { this.stable = false; }
 
-        this.stable = false;
-    }
-
-    public void setStability(boolean stability) {
+    void setStability(boolean stability) {
         this.stable= stability;
     }
 
-    public boolean getStability() {return this.stable;}
+    boolean getStability() {return this.stable;}
 
-    public LocalTime getStartTimeLookup() {return this.startTimeLookup;}
+    LocalTime getStartTimeLookup() {return this.startTimeLookup;}
 
-    public void setStartTimeLookup(LocalTime startTimeLookup){
+    void setStartTimeLookup(LocalTime startTimeLookup){
         this.startTimeLookup = startTimeLookup;
     }
 
-    public LocalTime getStartTimeInsertKey() {
-        return startTimeInsertKey;
-    }
+    LocalTime getStartTimeInsertKey() { return startTimeInsertKey; }
 
-    public void setStartTimeInsertKey(LocalTime startTimeInsertKey) {
+    void setStartTimeInsertKey(LocalTime startTimeInsertKey) {
         this.startTimeInsertKey = startTimeInsertKey;
     }
 
-    public LocalTime getStartTimeFindKey() {
-        return startTimeFindKey;
-    }
+    LocalTime getStartTimeFindKey() { return startTimeFindKey; }
 
-    public void setStartTimeFindKey(LocalTime startTimeFindKey) {
-        this.startTimeFindKey = startTimeFindKey;
-    }
+    void setStartTimeFindKey(LocalTime startTimeFindKey) { this.startTimeFindKey = startTimeFindKey; }
 }

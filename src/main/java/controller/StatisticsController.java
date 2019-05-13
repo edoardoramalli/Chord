@@ -4,6 +4,10 @@ import controller.message.*;
 
 import java.io.IOException;
 
+/**
+ *StatisticsController is Controller-side and performs the handle of the incoming messages and lunch
+ * the corresponding method of the controller.
+ */
 public class StatisticsController implements StatisticsMessageHandler {
     private Statistics statistics;
     private SocketStatistics socketStatistics;

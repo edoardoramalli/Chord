@@ -39,7 +39,7 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
     /**
      * in milliseconds
      */
-    private static final int TIMEOUT = 1000;
+    private static final int TIMEOUT = 1500;
 
     /**
      * Creates the lock object

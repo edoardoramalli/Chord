@@ -83,7 +83,7 @@ public class UpdateNode implements Runnable {
             }
 
             try {
-                TimeUnit.MILLISECONDS.sleep(1000);
+                TimeUnit.MILLISECONDS.sleep(2000);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
