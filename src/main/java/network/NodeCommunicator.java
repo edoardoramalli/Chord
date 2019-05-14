@@ -101,6 +101,12 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
         node.getSocketManager().closeCommunicator(nodeId);
     }
 
+    /**
+     * {@inheritDoc}
+     * Sends a NotifyRequest to the other node.
+     * @param node the node itself
+     * @throws TimerExpiredException
+     */
     @Override
     public void notify(NodeInterface node) throws TimerExpiredException {
         Long lockId = createLock();
@@ -208,6 +214,14 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
         return getDimFingerTableResponse.getDimFingerTable();
     }
 
+    /**
+     * {@inheritDoc}
+     * Sends a FindSuccessorRequest to the other node, waits on the objects corresponding to the message index
+     * and finally retrieve the returned value from the FindSuccessorResponse corresponding to the message index
+     * @param id NodeId to be found
+     * @return
+     * @throws TimerExpiredException
+     */
     @Override
     public NodeInterface findSuccessor(Long id) throws TimerExpiredException {
         Long lockId = createLock();

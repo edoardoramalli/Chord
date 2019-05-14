@@ -239,6 +239,13 @@ public class Node implements NodeInterface, Serializable {
     }
     //catch successor exception--->update listSuccessor
 
+    /**
+     * {@inheritDoc}
+     * @param id NodeId to be found
+     * @return
+     * @throws IOException
+     * @throws TimerExpiredException
+     */
     @Override
     public NodeInterface findSuccessor(Long id) throws IOException, TimerExpiredException {
         NodeInterface nextNode;
@@ -277,23 +284,28 @@ public class Node implements NodeInterface, Serializable {
         return maxClosestNode;
     }
 
+
+    /**
+     * {@inheritDoc}
+     * @param node the node itself
+     * @throws IOException
+     */
     @Override
-    public synchronized void notify(NodeInterface n) throws IOException {
+    public synchronized void notify(NodeInterface node) throws IOException {
         if (predecessor == null) {
             try {
-                predecessor = socketManager.createConnection(n); //creo connessione
+                predecessor = socketManager.createConnection(node); //creo connessione
                 moveKey();
             } catch (ConnectionErrorException e) {
                 throw new UnexpectedBehaviourException();
             }
         } else {
-            long index = n.getNodeId();
+            long index = node.getNodeId();
             long predIndex = predecessor.getNodeId();
-            if (checkInterval(predIndex, index, getNodeId()) && !(predecessor.getNodeId().equals(n.getNodeId()))) { //entro solo se n è diverso dal predecessore
+            if (checkInterval(predIndex, index, getNodeId()) && !(predecessor.getNodeId().equals(node.getNodeId()))) { //entro solo se n è diverso dal predecessore
                 try {
-
                     socketManager.closeCommunicator(predecessor.getNodeId());//chiudo connessione verso vecchio predecessore
-                    predecessor = socketManager.createConnection(n); //apro connessione verso nuovo predecessore
+                    predecessor = socketManager.createConnection(node); //apro connessione verso nuovo predecessore
                     moveKey();
                 } catch (ConnectionErrorException e) {
                     throw new UnexpectedBehaviourException();
