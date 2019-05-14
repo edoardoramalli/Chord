@@ -61,8 +61,8 @@ public interface NodeInterface extends Serializable {
      * //TODO da fare
      * @param keyValue
      * @return
-     * @throws IOException
-     * @throws TimerExpiredException
+     * @throws IOException if an I/O error occurs
+     * @throws TimerExpiredException if timer expires
      */
     NodeInterface addKey(Map.Entry<Long, Object> keyValue) throws IOException, TimerExpiredException;
 

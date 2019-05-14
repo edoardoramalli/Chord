@@ -193,7 +193,7 @@ public class Main {
                     out.println(node.getSocketManager());
                     break;
                 case LOOKUP_COMMAND:
-                    out.println("Insert ID of node to find" );
+                    out.println("Insert ID of node to find");
                     Long id = Long.parseLong(in.nextLine().toLowerCase());
                     try {
                         NodeInterface prova = node.startLookup(id);
@@ -205,10 +205,12 @@ public class Main {
                     }
                     break;
                 case ADDKEY_COMMAND:
-                    out.println("Insert Value of the Key" );
+                    out.println("Insert nodeId of the owner of the Key");
                     Long key = Long.parseLong(in.nextLine().toLowerCase());
-                    Map.Entry<Long, Object> keyValue = new AbstractMap.SimpleEntry<>(key,2);
-                    NodeInterface result=null;
+                    out.println("Insert content of the key:");
+                    String text = in.nextLine();
+                    Map.Entry<Long, Object> keyValue = new AbstractMap.SimpleEntry<>(key, text);
+                    NodeInterface result = null;
                     try {
                         result = node.startAddKey(keyValue);
                     } catch (IOException e) {
@@ -238,8 +240,6 @@ public class Main {
                     try {
                         node.leave();
                     } catch (IOException e) {
-                        e.printStackTrace();
-                    } catch (ConnectionErrorException e) {
                         e.printStackTrace();
                     }
                     exit = true;

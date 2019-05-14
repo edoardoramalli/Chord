@@ -84,13 +84,11 @@ public class Node implements NodeInterface, Serializable {
         controller = new SocketNodeStatistics(ipController, portController).openController(nodeId);
         controller.connected();
         Executors.newCachedThreadPool().submit(new UpdateNode(this));
-
     }
 
     public void join(String joinIpAddress, int joinSocketPort)
             throws ConnectionErrorException, NodeIdAlreadyExistsException, IOException {
         startSocketListener(socketPort);
-
         NodeCommunicator nodeTemp = new NodeCommunicator(joinIpAddress, joinSocketPort,
                 this, -1); //creates a temporary NodeCommunicator
         try {
@@ -305,7 +303,7 @@ public class Node implements NodeInterface, Serializable {
     }
 
     /**
-     * Method called by Main in order to send to controller the messages of start/end
+     * Method called by Main in order to send to controller the messages of start/end lookup
      * @param id id of node to find
      * @return the found node
      * @throws IOException if an I/O error occurs
@@ -443,7 +441,13 @@ public class Node implements NodeInterface, Serializable {
         }
     }
 
-
+    /**
+     * Method called by Main in order to send to controller the messages of start/end addKey
+     * @param keyValue
+     * @return
+     * @throws IOException if an I/O error occurs
+     * @throws TimerExpiredException if addKey throws it
+     */
     public NodeInterface startAddKey(Map.Entry<Long, Object> keyValue) throws IOException, TimerExpiredException {
         controller.startInsertKey();
         NodeInterface resultNode = addKey(keyValue);
@@ -489,7 +493,6 @@ public class Node implements NodeInterface, Serializable {
         keyStore.put(keyValue.getKey(), keyValue.getValue());
     }
 
-
     /**
      * {@inheritDoc}
      * @param key key to be retrieved from the set
@@ -519,11 +522,18 @@ public class Node implements NodeInterface, Serializable {
         }
     }
 
+    /**
+     * Method called by Main in order to send to controller the messages of start/end findKey
+     * @param key
+     * @return
+     * @throws IOException
+     * @throws TimerExpiredException
+     */
     public Object startFindKey(Long key) throws IOException, TimerExpiredException {
         controller.startFindKey();
-        Object NodeWithKey = findKey(key);
+        Object nodeWithKey = findKey(key);
         controller.endFindKey();
-        return NodeWithKey;
+        return nodeWithKey;
     }
 
     /**
@@ -548,16 +558,11 @@ public class Node implements NodeInterface, Serializable {
     /**
      * This method handles the voluntarily departure of a node
      * @throws IOException if an I/O error occurs
-     * @throws ConnectionErrorException if updateAfterLeave throws the exception
      */
-    public void leave() throws IOException, ConnectionErrorException {
+    public void leave() throws IOException {
         transferKey();
         UpdateNode.stopUpdate();
         SocketNodeListener.stopListening();
-
-        successorList.get(0).updateAfterLeave(nodeId, predecessor);
-
-        predecessor.updateAfterLeave(nodeId, successorList.get(successorList.size() - 1));
         exit(0);
     }
 

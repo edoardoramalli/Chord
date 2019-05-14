@@ -51,7 +51,8 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
         return lockID - 1;
     }
 
-    public NodeCommunicator(String joinIpAddress, int joinSocketPort, NodeInterface node, long nodeId) throws ConnectionErrorException {
+    public NodeCommunicator(String joinIpAddress, int joinSocketPort, NodeInterface node, long nodeId)
+            throws ConnectionErrorException {
         this.node = node;
         this.nodeId = nodeId;
         this.ipAddress = joinIpAddress;
@@ -347,8 +348,6 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
         return addKeyResponse.getNode();
     }
 
-    //Not used in this class
-
     /**
      *{@inheritDoc}
      * Not used in this class
@@ -362,7 +361,6 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
      *{@inheritDoc}
      * Not used in this class
      */
-
     @Override
     public Object retrieveKeyFromStore(Long key) {
         throw new UnexpectedBehaviourException();
