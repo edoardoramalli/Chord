@@ -80,9 +80,10 @@ public interface NodeInterface extends Serializable {
     //Key
 
     /**
-     * //TODO da fare
-     * @param keyValue
-     * @return
+     * Add to the couple < owner_id, object> to the network
+     *
+     * @param keyValue the map element to be stored in the network
+     * @return the node in which the key is stored
      * @throws IOException if an I/O error occurs
      * @throws TimerExpiredException if timer expires
      */
@@ -109,13 +110,4 @@ public interface NodeInterface extends Serializable {
      * @return the value found, null otherwise
      */
     Object retrieveKeyFromStore(Long key);
-
-    /**
-     * This method handles the update after that a node voluntarily left the network
-     * @param oldNodeID the node that left the network
-     * @param newNode the node that replaces the one that left
-     * @throws IOException if an I/O error occurs
-     * @throws ConnectionErrorException if node is not reachable
-     */
-    void updateAfterLeave(Long oldNodeID, NodeInterface newNode) throws IOException, ConnectionErrorException;
 }

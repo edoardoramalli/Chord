@@ -56,8 +56,9 @@ public class Node implements NodeInterface, Serializable {
     /**
      * Constructor used only in NodeCommunicator, when we send a Node through socket,
      * it takes also dimFingerTable as input in order to calculate the correspondent nodeId
-     * @param ipAddress ipAddress of Node
-     * @param socketPort socketPort of Node
+     *
+     * @param ipAddress      ipAddress of Node
+     * @param socketPort     socketPort of Node
      * @param dimFingerTable dimension of finger table of the network
      */
     public Node(String ipAddress, int socketPort, int dimFingerTable) {
@@ -72,6 +73,17 @@ public class Node implements NodeInterface, Serializable {
         this.portController = portController;
     }
 
+    /**
+     * This method is invoked only one time in the chord system. The node that does the creation of the network
+     * specify its dimensions. Based on it, and its IPv4 address and port, the node compute its hash to get
+     * the right nodeId. Start to listen on a specific port to accept incoming connection request to the network and
+     * initialize the socketManger that manages all the sockets connection and the list of successor.
+     * It also establish a socket to the controller, and shares with it its information.
+     *
+     * @param dimFingerTable is the power of two that will represent the dimension of the chord network
+     * @throws ConnectionErrorException if the controller is not available
+     * @throws IOException              if an I/O error occurs
+     */
     public void create(int dimFingerTable) throws ConnectionErrorException, IOException {
         this.dimFingerTable = dimFingerTable;
         Hash.initializeHash(dimFingerTable);
@@ -86,6 +98,19 @@ public class Node implements NodeInterface, Serializable {
         Executors.newCachedThreadPool().submit(new UpdateNode(this));
     }
 
+    /**
+     * If a node wants to enter into Chord Network, it has to join to a already present node. The node contacts the
+     * node, receives all the information about the network. Then the node can calculate itself the right NodeId
+     * and then does the same passages of the create procedure. In addition there is a control on the computed NodeId:
+     * if it already present, another nodeId is computed. The node already presents in the network gives also to the
+     * joining node its possible successor node.
+     *
+     * @param joinIpAddress  Ip address of a node already present in the Chord network
+     * @param joinSocketPort Port of a node already present in the Chord network
+     * @throws ConnectionErrorException     if the controller or the join node is not available.
+     * @throws NodeIdAlreadyExistsException if the computed NodeId is already present in the network.
+     * @throws IOException                  if an I/O error occurs
+     */
     public void join(String joinIpAddress, int joinSocketPort)
             throws ConnectionErrorException, NodeIdAlreadyExistsException, IOException {
         startSocketListener(socketPort);
@@ -100,7 +125,7 @@ public class Node implements NodeInterface, Serializable {
         Hash.initializeHash(dimFingerTable);
         this.nodeId = Hash.getHash().calculateHash(ipAddress, socketPort);
         out.println("ID: " + nodeId);
-        createSuccessorList(); //TODO questo secondo me si può togliere tanto dopo fa la initialize
+        createSuccessorList();
         this.socketManager = new SocketManager(this);
         NodeInterface successorNode;
         try {
@@ -143,6 +168,7 @@ public class Node implements NodeInterface, Serializable {
 
     /**
      * Asks to the successor its successorList, and constructs its own successorList from that
+     *
      * @throws TimerExpiredException if getSuccessorList message do not has a response from the successor within a timer
      */
     private void initializeSuccessorList() throws TimerExpiredException {
@@ -160,20 +186,27 @@ public class Node implements NodeInterface, Serializable {
         }
     }
 
+    /**
+     * The method, analyzing various cases, keep updated the successorList.
+     *
+     * @throws IOException           if an I/O error occurs
+     * @throws TimerExpiredException if a timer expires
+     */
     synchronized void listStabilize() throws IOException, TimerExpiredException {
-        //questo serve per settare il primo successore
-        // out.println("---------->");
+        // The method first of all asks to the successor its own predecessor. If is it null, a notify starts on the
+        // successor and the methods finish.
         NodeInterface x;
         x = successorList.get(0).getPredecessor();
         if (x == null) {
             successorList.get(0).notify(this);
             return;
         }
+        // If the predecessor given form the successor is between the current node and its successor
+        // it'll set it as its first successor and notify it.
         long nodeIndex = x.getNodeId();
         long oldSucID = successorList.get(0).getNodeId();
         if (checkInterval(getNodeId(), nodeIndex, oldSucID)) {
             try {
-
                 socketManager.closeCommunicator(oldSucID);
                 successorList.set(0, socketManager.createConnection(x));
             } catch (ConnectionErrorException e) {
@@ -182,11 +215,14 @@ public class Node implements NodeInterface, Serializable {
         }
         successorList.get(0).notify(this);
 
+        // Now the node has to update its successor list. In order to do that it contacts its successor and
+        // asks its successor list.
+
         boolean already = false;
 
         List<NodeInterface> xList; //xList contiene la lista dei successori del successore
         xList = successorList.get(0).getSuccessorList();
-        if (successorList.size() < dimSuccessorList) {
+        if (successorList.size() < dimSuccessorList) { //Add new node to successor list
             for (NodeInterface xNode : xList) {
                 if (!xNode.getNodeId().equals(nodeId) && successorList.size() < dimSuccessorList) {
                     try {
@@ -196,7 +232,6 @@ public class Node implements NodeInterface, Serializable {
                                 break;
                             }
                         }
-
                         if (!already)
                             successorList.add(socketManager.createConnection(xNode));
                         already = false;
@@ -205,10 +240,9 @@ public class Node implements NodeInterface, Serializable {
                     }
                 }
             }
-        } else {
+        } else { //only replace existing connection node in the successor list.
             int i;
             already = false;
-
             for (i = 1; i < dimSuccessorList && i < xList.size(); i++) {
                 if (!successorList.get(i).getNodeId().equals(xList.get(i - 1).getNodeId())
                         && !xList.get(i - 1).getNodeId().equals(nodeId)) {
@@ -237,10 +271,10 @@ public class Node implements NodeInterface, Serializable {
         }
         successorList = deleteList;
     }
-    //catch successor exception--->update listSuccessor
 
     /**
      * {@inheritDoc}
+     *
      * @param id NodeId to be found
      * @return
      * @throws IOException
@@ -259,11 +293,19 @@ public class Node implements NodeInterface, Serializable {
         return nextNode.findSuccessor(id);
     }
 
+
+    /**
+     * Find the closest preceding node starting to search in the successor list and then in the finger table.
+     * @param id find the closest preceding node of that id
+     * @return The found node
+     */
     private NodeInterface closestPrecedingNodeList(long id) {
         long nodeIndex;
         long maxClosestId = this.nodeId;
         NodeInterface maxClosestNode = this;
 
+        //Check the node in the successor list starting from the last one. Save in maxClosestId
+        // the temporary correct node.
         for (int i = successorList.size() - 1; i >= 0; i--) {
             nodeIndex = successorList.get(i).getNodeId();
             if (checkIntervalClosest(nodeIndex, id, this.nodeId)) {
@@ -273,6 +315,7 @@ public class Node implements NodeInterface, Serializable {
             }
         }
 
+        //After do the same thing as before with the finger table.
         for (int i = dimFingerTable - 1; i >= 0; i--) {
             nodeIndex = fingerTable.get(i).getNodeId();
             if (checkIntervalClosest(nodeIndex, id, this.nodeId))
@@ -287,6 +330,7 @@ public class Node implements NodeInterface, Serializable {
 
     /**
      * {@inheritDoc}
+     *
      * @param node the node itself
      * @throws IOException
      */
@@ -316,9 +360,10 @@ public class Node implements NodeInterface, Serializable {
 
     /**
      * Method called by Main in order to send to controller the messages of start/end lookup
+     *
      * @param id id of node to find
      * @return the found node
-     * @throws IOException if an I/O error occurs
+     * @throws IOException           if an I/O error occurs
      * @throws TimerExpiredException if lookup's timer expires
      */
     public NodeInterface startLookup(Long id) throws IOException, TimerExpiredException {
@@ -328,6 +373,14 @@ public class Node implements NodeInterface, Serializable {
         return searchedNode;
     }
 
+    /**
+     * Receives an id to be found. Checks if the the node with that id is present inside in the successor list
+     * or if it is the predecessor. Otherwise the search is forwarded to the findSuccessor method.
+     * @param id id of node to be found
+     * @return The found node
+     * @throws IOException if an I/O error occurs
+     * @throws TimerExpiredException if a timer expires
+     */
     private NodeInterface lookup(Long id) throws IOException, TimerExpiredException {
         for (NodeInterface nodeInterface : successorList)
             if (id.equals(nodeInterface.getNodeId()))
@@ -338,6 +391,12 @@ public class Node implements NodeInterface, Serializable {
             return findSuccessor(id);
     }
 
+    /**
+     * The method has an internal state. It represents the line in the finger table. So to refresh the entire finger
+     * table is necessary to call this method many times as finger table dimension.
+     * @throws IOException if an I/O error occurs
+     * @throws TimerExpiredException if a timer expires
+     */
     synchronized void fixFingers() throws IOException, TimerExpiredException {
         long idToFind;
         nextFinger = nextFinger + 1;
@@ -360,6 +419,8 @@ public class Node implements NodeInterface, Serializable {
     }
 
     /**
+     * Check if the index is between pred and succ
+     *
      * @param pred  previous nodeId
      * @param index nodeId of node to check
      * @param succ  successor nodeId
@@ -377,6 +438,7 @@ public class Node implements NodeInterface, Serializable {
 
     /**
      * (Used in findSuccessor)
+     *
      * @param pred  previous nodeId
      * @param index nodeId of node to check
      * @param succ  successor nodeId
@@ -394,6 +456,7 @@ public class Node implements NodeInterface, Serializable {
 
     /**
      * (Used only in closestPrecedingNode to avoid infinite loops)
+     *
      * @param pred  previous nodeId
      * @param index nodeId of node to check
      * @param succ  successor nodeId
@@ -413,6 +476,7 @@ public class Node implements NodeInterface, Serializable {
      * Checks if the disconnected node (with nodeId = disconnectedId) is contained in some attributes,
      * and if it true substitute it with the default value (null for predecessor,
      * and this for successorList and fingerTable
+     *
      * @param disconnectedId nodeId of disconnected node to check
      */
     public void checkDisconnectedNode(Long disconnectedId) {
@@ -431,6 +495,7 @@ public class Node implements NodeInterface, Serializable {
 
     /**
      * Called at the end of create and join, the method starts the thread responsible of accepting incoming connections
+     *
      * @param socketPort port at which the other nodes have to connect
      */
     private void startSocketListener(int socketPort) {
@@ -439,6 +504,8 @@ public class Node implements NodeInterface, Serializable {
     }
 
     /**
+     * If the status of stability  is changed, a message is sent to the controller.
+     *
      * @param stable At each iteration the node check if it is in a stable condition. If it changes its status,
      *               it'll send a message.
      */
@@ -455,9 +522,10 @@ public class Node implements NodeInterface, Serializable {
 
     /**
      * Method called by Main in order to send to controller the messages of start/end addKey
-     * @param keyValue
+     *
+     * @param keyValue the map element to be stored in the network
      * @return
-     * @throws IOException if an I/O error occurs
+     * @throws IOException           if an I/O error occurs
      * @throws TimerExpiredException if addKey throws it
      */
     public NodeInterface startAddKey(Map.Entry<Long, Object> keyValue) throws IOException, TimerExpiredException {
@@ -467,10 +535,10 @@ public class Node implements NodeInterface, Serializable {
         return resultNode;
     }
 
+
     /**
-     * //todo da rigenerare dopo aver fatto in nodeInterface
      * {@inheritDoc}
-     * @param keyValue
+     * @param keyValue the map element to be stored in the network
      * @return
      * @throws IOException
      * @throws TimerExpiredException
@@ -498,6 +566,7 @@ public class Node implements NodeInterface, Serializable {
 
     /**
      * {@inheritDoc}
+     *
      * @param keyValue new key-value entry to be added
      */
     @Override
@@ -507,6 +576,7 @@ public class Node implements NodeInterface, Serializable {
 
     /**
      * {@inheritDoc}
+     *
      * @param key key to be retrieved from the set
      * @return {@inheritDoc}
      */
@@ -517,6 +587,7 @@ public class Node implements NodeInterface, Serializable {
 
     /**
      * Moves some keys from a node to its new predecessor
+     *
      * @throws IOException if an I/O error occurs
      */
     private void moveKey() throws IOException {
@@ -526,7 +597,7 @@ public class Node implements NodeInterface, Serializable {
             if (checkIntervalEquivalence(this.nodeId, hashKey, predecessor.getNodeId())) {
                 try {
                     predecessor.addKey(new AbstractMap.SimpleEntry<>(keyValue.getKey(), keyValue.getValue()));
-                } catch (TimerExpiredException e) {//TODO gestire eccezione
+                } catch (TimerExpiredException e) {
                     e.printStackTrace();
                 }
                 keyStore.remove(keyValue.getKey());
@@ -536,10 +607,11 @@ public class Node implements NodeInterface, Serializable {
 
     /**
      * Method called by Main in order to send to controller the messages of start/end findKey
-     * @param key
-     * @return
-     * @throws IOException
-     * @throws TimerExpiredException
+     *
+     * @param key owner of the key to be found
+     * @return the found object if exist otherwise return null
+     * @throws IOException if an I/O error occurs
+     * @throws TimerExpiredException if timer expires
      */
     public Object startFindKey(Long key) throws IOException, TimerExpiredException {
         controller.startFindKey();
@@ -550,6 +622,7 @@ public class Node implements NodeInterface, Serializable {
 
     /**
      * {@inheritDoc}
+     *
      * @param key of the value that the node wants to find
      * @return {@inheritDoc}
      * @throws IOException
@@ -569,6 +642,7 @@ public class Node implements NodeInterface, Serializable {
 
     /**
      * This method handles the voluntarily departure of a node
+     *
      * @throws IOException if an I/O error occurs
      */
     public void leave() throws IOException {
@@ -580,6 +654,7 @@ public class Node implements NodeInterface, Serializable {
 
     /**
      * This method transfers all the keys of a node to its successor
+     *
      * @throws IOException if an I/O error occurs
      */
     private void transferKey() throws IOException {
@@ -587,43 +662,10 @@ public class Node implements NodeInterface, Serializable {
                 keyStore.entrySet()) {
             try {
                 successorList.get(0).addKey(new AbstractMap.SimpleEntry<>(keyValue.getKey(), keyValue.getValue()));
-            } catch (TimerExpiredException e) {//TODO gestire eccezione
+            } catch (TimerExpiredException e) {
                 e.printStackTrace();
             }
             keyStore.remove(keyValue);
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     * @param oldNodeID the node that left the network
-     * @param newNode   the node that replaces the one that left
-     * @throws ConnectionErrorException
-     */
-    @Override
-    public synchronized void updateAfterLeave(Long oldNodeID, NodeInterface newNode)
-            throws ConnectionErrorException {
-        if (oldNodeID.equals(predecessor.getNodeId())) {
-            out.println("My predecessor left");
-            if (successorList.contains(predecessor)) {
-                successorList.remove(predecessor);
-                socketManager.closeCommunicator(oldNodeID);
-            }
-
-            predecessor = socketManager.createConnection(newNode);
-            socketManager.closeCommunicator(oldNodeID);
-            out.println(this.toString());
-        }
-
-        if (oldNodeID.equals(successorList.get(0).getNodeId())) {
-            out.println("My successor left");
-            successorList.remove(0);
-            NodeInterface newCommunicator = socketManager.createConnection(newNode);
-            if (!successorList.contains(newCommunicator) && !newCommunicator.getNodeId().equals(nodeId))
-                successorList.add(newCommunicator);
-            socketManager.closeCommunicator(oldNodeID);
-
-            out.println(this.toString());
         }
     }
 
@@ -653,6 +695,7 @@ public class Node implements NodeInterface, Serializable {
 
     /**
      * Not used in this class
+     *
      * @return {@inheritDoc}
      */
     @Override
@@ -677,6 +720,7 @@ public class Node implements NodeInterface, Serializable {
 
     /**
      * Not used in this class
+     *
      * @return {@inheritDoc}
      */
     @Override

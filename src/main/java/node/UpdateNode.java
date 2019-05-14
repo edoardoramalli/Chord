@@ -30,7 +30,7 @@ public class UpdateNode implements Runnable {
      * and  the finger table.
      */
     @Override
-    public void run() { //TODO ottimizzazione, se un controllo per la stable fallisce non importa fare l'altro.
+    public void run() {
         boolean stable = false;
         while (active) {
             if (node.getPredecessor() != null) {
@@ -83,7 +83,7 @@ public class UpdateNode implements Runnable {
             }
 
             try {
-                TimeUnit.MILLISECONDS.sleep(2000);
+                TimeUnit.MILLISECONDS.sleep(3000);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }

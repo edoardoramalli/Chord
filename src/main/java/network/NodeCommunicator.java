@@ -39,7 +39,7 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
     /**
      * in milliseconds
      */
-    private static final int TIMEOUT = 1500;
+    private static final int TIMEOUT = 2500;
 
     /**
      * Creates the lock object
@@ -416,15 +416,6 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
         return findKeyResponse.getValue();
     }
 
-    //TODO vedere se mettere timer
-    @Override
-    public void updateAfterLeave(Long oldNodeID, NodeInterface newNode) throws IOException {
-        Long lockId = createLock();
-        NodeInterface newNod= new Node(newNode.getIpAddress(), newNode.getSocketPort());
-        newNod.setNodeId(newNode.getNodeId());
-        socketNode.sendMessage(new LeaveRequest(oldNodeID, newNod, lockId));
-    }
-
     @Override
     public int getDimFingerTable() {
         return dimFingerTable;
@@ -478,7 +469,7 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
         NodeInterface nodeInterface = null;
         try {
             nodeInterface = node.findSuccessor(findSuccessorRequest.getId());
-        } catch (TimerExpiredException e) { //TODO gestire eccezione
+        } catch (TimerExpiredException e) {
             e.printStackTrace();
         }
         NodeInterface nodeTemp = new Node(nodeInterface.getIpAddress(), nodeInterface.getSocketPort(), node.getDimFingerTable());
@@ -723,21 +714,6 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
         synchronized (lockList.get(findKeyResponse.getLockId())){
             messageList.put(findKeyResponse.getLockId(), findKeyResponse);
             lockList.get(findKeyResponse.getLockId()).notifyAll();
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     * Calls updateAfterLeave method of node, with the parameters taken from leaveRequest message.
-     * @param leaveRequest the received leaveRequest message
-     * @throws IOException
-     */
-    @Override
-    public void handle(LeaveRequest leaveRequest) throws IOException{
-        try {
-            node.updateAfterLeave(leaveRequest.getNodeId(), leaveRequest.getNewNode());
-        } catch (ConnectionErrorException e) {
-            throw new UnexpectedBehaviourException();
         }
     }
 }

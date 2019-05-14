@@ -114,10 +114,4 @@ public interface MessageHandler {
      * @throws IOException in an I/O error occurs
      */
     void handle(FindKeyRequest findKeyRequest) throws IOException;
-
-    /**
-     * @param leaveRequest the received leaveRequest message
-     * @throws IOException in an I/O error occurs
-     */
-    void handle(LeaveRequest leaveRequest) throws IOException;
 }

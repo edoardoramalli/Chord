@@ -12,6 +12,8 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import static java.lang.System.exit;
+
 /**
  * Handle the socket connections of the node
  * node is the owner of the SocketManager
@@ -78,7 +80,8 @@ public class SocketManager {
         try {
             port = createdNode.getInitialSocketPort();
         } catch (TimerExpiredException e) {
-            e.printStackTrace(); //TODO da vedere cosa fare
+            System.err.println("Error of connection");
+            exit(1);
             throw new UnexpectedBehaviourException();
         }
         Long createdNodeId = Hash.getHash().calculateHash(ipAddress, port);
@@ -109,7 +112,6 @@ public class SocketManager {
                 if (n == 1) { //removes the connection
                     socketNumber.remove(nodeId);
                     socketList.remove(nodeId);
-                    //TODO qua dite che ci vuole la chiamata di close sul socket eliminato?
                     //out.println("RIMOSSO: " + nodeId);
                 } else { //decreases the number of connection
                     socketNumber.replace(nodeId, n - 1);

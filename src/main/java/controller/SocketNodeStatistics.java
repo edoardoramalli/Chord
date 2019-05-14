@@ -83,7 +83,7 @@ public class SocketNodeStatistics implements Runnable, Serializable {
         try {
             return (NodeMessage) in.readObject();
         } catch (IOException e) {
-            //TODO andrebbe gestita la disconnessione del controller
+            System.err.println("Controller Disconnected");
             connected = false;
             this.close();
         } catch (ClassNotFoundException e) {
