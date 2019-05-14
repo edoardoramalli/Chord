@@ -478,7 +478,7 @@ public class Node implements NodeInterface, Serializable {
      *
      * @param disconnectedId nodeId of disconnected node to check
      */
-    public void checkDisconnectedNode(Long disconnectedId) {
+    public synchronized void checkDisconnectedNode(Long disconnectedId) {
         CopyOnWriteArrayList<NodeInterface> successorListClone = new CopyOnWriteArrayList<>(successorList);
         for (NodeInterface nodeInterface : successorListClone)
             if (nodeInterface.getNodeId().equals(disconnectedId)) //se il nodo disconnesso è il successore lo metto = this
@@ -523,7 +523,7 @@ public class Node implements NodeInterface, Serializable {
      * Method called by Main in order to send to controller the messages of start/end addKey
      *
      * @param keyValue the map element to be stored in the network
-     * @return
+     * @return                       the node in which the key is stored
      * @throws IOException           if an I/O error occurs
      * @throws TimerExpiredException if addKey throws it
      */
