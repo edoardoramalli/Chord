@@ -18,8 +18,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executors;
 
-import static java.lang.System.exit;
-import static java.lang.System.out;
+import static java.lang.System.*;
 
 public class Node implements NodeInterface, Serializable {
     private static final long serialVersionUID = 1L;
@@ -597,10 +596,9 @@ public class Node implements NodeInterface, Serializable {
             if (checkIntervalEquivalence(this.nodeId, hashKey, predecessor.getNodeId())) {
                 try {
                     predecessor.addKey(new AbstractMap.SimpleEntry<>(keyValue.getKey(), keyValue.getValue()));
-                } catch (TimerExpiredException e) {
-                    e.printStackTrace();
+                    keyStore.remove(keyValue.getKey());
+                } catch (TimerExpiredException ignore) {
                 }
-                keyStore.remove(keyValue.getKey());
             }
         }
     }
@@ -663,7 +661,7 @@ public class Node implements NodeInterface, Serializable {
             try {
                 successorList.get(0).addKey(new AbstractMap.SimpleEntry<>(keyValue.getKey(), keyValue.getValue()));
             } catch (TimerExpiredException e) {
-                e.printStackTrace();
+                err.println("Lost key. Successor is disconnected");
             }
             keyStore.remove(keyValue);
         }
