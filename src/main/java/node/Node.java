@@ -280,7 +280,7 @@ public class Node implements NodeInterface, Serializable {
      * @throws TimerExpiredException
      */
     @Override
-    public NodeInterface findSuccessor(Long id) throws IOException, TimerExpiredException {
+    public synchronized NodeInterface findSuccessor(Long id) throws IOException, TimerExpiredException {
         NodeInterface nextNode;
         for (NodeInterface nodeInterface : successorList) {
             if (checkIntervalEquivalence(nodeId, id, nodeInterface.getNodeId()))
@@ -298,7 +298,7 @@ public class Node implements NodeInterface, Serializable {
      * @param id find the closest preceding node of that id
      * @return The found node
      */
-    private NodeInterface closestPrecedingNodeList(long id) {
+    private synchronized NodeInterface closestPrecedingNodeList(long id) {
         long nodeIndex;
         long maxClosestId = this.nodeId;
         NodeInterface maxClosestNode = this;
@@ -380,7 +380,7 @@ public class Node implements NodeInterface, Serializable {
      * @throws IOException if an I/O error occurs
      * @throws TimerExpiredException if a timer expires
      */
-    private NodeInterface lookup(Long id) throws IOException, TimerExpiredException {
+    private synchronized NodeInterface lookup(Long id) throws IOException, TimerExpiredException {
         for (NodeInterface nodeInterface : successorList)
             if (id.equals(nodeInterface.getNodeId()))
                 return nodeInterface;
@@ -508,7 +508,7 @@ public class Node implements NodeInterface, Serializable {
      * @param stable At each iteration the node check if it is in a stable condition. If it changes its status,
      *               it'll send a message.
      */
-    void updateStable(boolean stable) throws IOException {
+    synchronized void updateStable(boolean stable) throws IOException {
         if (this.stable != stable) {
             this.stable = stable;
             if (!this.stable) {
@@ -534,7 +534,6 @@ public class Node implements NodeInterface, Serializable {
         return resultNode;
     }
 
-
     /**
      * {@inheritDoc}
      * @param keyValue the map element to be stored in the network
@@ -543,7 +542,7 @@ public class Node implements NodeInterface, Serializable {
      * @throws TimerExpiredException
      */
     @Override
-    public NodeInterface addKey(Map.Entry<Long, Object> keyValue) throws IOException, TimerExpiredException {
+    public synchronized NodeInterface addKey(Map.Entry<Long, Object> keyValue) throws IOException, TimerExpiredException {
         Long hashKey = keyValue.getKey() % (long) Math.pow(2, dimFingerTable);
         if (hashKey.equals(this.nodeId) || successorList.get(0).equals(this)) {
             addKeyToStore(keyValue);
@@ -569,7 +568,7 @@ public class Node implements NodeInterface, Serializable {
      * @param keyValue new key-value entry to be added
      */
     @Override
-    public void addKeyToStore(Map.Entry<Long, Object> keyValue) {
+    public synchronized void addKeyToStore(Map.Entry<Long, Object> keyValue) {
         keyStore.put(keyValue.getKey(), keyValue.getValue());
     }
 
@@ -580,7 +579,7 @@ public class Node implements NodeInterface, Serializable {
      * @return {@inheritDoc}
      */
     @Override
-    public Object retrieveKeyFromStore(Long key) {
+    public synchronized Object retrieveKeyFromStore(Long key) {
         return keyStore.get(key);
     }
 
@@ -589,7 +588,7 @@ public class Node implements NodeInterface, Serializable {
      *
      * @throws IOException if an I/O error occurs
      */
-    private void moveKey() throws IOException {
+    private synchronized void moveKey() throws IOException {
         for (Map.Entry<Long, Object> keyValue :
                 keyStore.entrySet()) {
             long hashKey = keyValue.getKey() % (long) Math.pow(2, dimFingerTable);
@@ -627,7 +626,7 @@ public class Node implements NodeInterface, Serializable {
      * @throws TimerExpiredException
      */
     @Override
-    public Object findKey(Long key) throws IOException, TimerExpiredException {
+    public synchronized Object findKey(Long key) throws IOException, TimerExpiredException {
         long hashKey = key % (long) Math.pow(2, dimFingerTable);
         if (successorList.get(0).equals(this))
             return keyStore.get(key);
@@ -643,7 +642,7 @@ public class Node implements NodeInterface, Serializable {
      *
      * @throws IOException if an I/O error occurs
      */
-    public void leave() throws IOException {
+    public synchronized void leave() throws IOException {
         transferKey();
         UpdateNode.stopUpdate();
         SocketNodeListener.stopListening();
@@ -655,7 +654,7 @@ public class Node implements NodeInterface, Serializable {
      *
      * @throws IOException if an I/O error occurs
      */
-    private void transferKey() throws IOException {
+    private synchronized void transferKey() throws IOException {
         for (Map.Entry<Long, Object> keyValue :
                 keyStore.entrySet()) {
             try {
