@@ -191,7 +191,7 @@ public class Node implements NodeInterface, Serializable {
      * @throws IOException           if an I/O error occurs
      * @throws TimerExpiredException if a timer expires
      */
-    synchronized void listStabilize() throws IOException, TimerExpiredException {
+    void listStabilize() throws IOException, TimerExpiredException {
         // The method first of all asks to the successor its own predecessor. If is it null, a notify starts on the
         // successor and the methods finish.
         NodeInterface x;
@@ -237,7 +237,7 @@ public class Node implements NodeInterface, Serializable {
                     } catch (ConnectionErrorException e) {
                         throw new UnexpectedBehaviourException();
                     }
-                }else{
+                } else {
                     break;
                 }
             }
@@ -297,6 +297,7 @@ public class Node implements NodeInterface, Serializable {
 
     /**
      * Find the closest preceding node starting to search in the successor list and then in the finger table.
+     *
      * @param id find the closest preceding node of that id
      * @return The found node
      */
@@ -377,9 +378,10 @@ public class Node implements NodeInterface, Serializable {
     /**
      * Receives an id to be found. Checks if the the node with that id is present inside in the successor list
      * or if it is the predecessor. Otherwise the search is forwarded to the findSuccessor method.
+     *
      * @param id id of node to be found
      * @return The found node
-     * @throws IOException if an I/O error occurs
+     * @throws IOException           if an I/O error occurs
      * @throws TimerExpiredException if a timer expires
      */
     private synchronized NodeInterface lookup(Long id) throws IOException, TimerExpiredException {
@@ -395,10 +397,11 @@ public class Node implements NodeInterface, Serializable {
     /**
      * The method has an internal state. It represents the line in the finger table. So to refresh the entire finger
      * table is necessary to call this method many times as finger table dimension.
-     * @throws IOException if an I/O error occurs
+     *
+     * @throws IOException           if an I/O error occurs
      * @throws TimerExpiredException if a timer expires
      */
-    synchronized void fixFingers() throws IOException, TimerExpiredException {
+    void fixFingers() throws IOException, TimerExpiredException {
         long idToFind;
         nextFinger = nextFinger + 1;
         if (nextFinger > dimFingerTable)
@@ -525,7 +528,7 @@ public class Node implements NodeInterface, Serializable {
      * Method called by Main in order to send to controller the messages of start/end addKey
      *
      * @param keyValue the map element to be stored in the network
-     * @return                       the node in which the key is stored
+     * @return the node in which the key is stored
      * @throws IOException           if an I/O error occurs
      * @throws TimerExpiredException if addKey throws it
      */
@@ -538,6 +541,7 @@ public class Node implements NodeInterface, Serializable {
 
     /**
      * {@inheritDoc}
+     *
      * @param keyValue the map element to be stored in the network
      * @return
      * @throws IOException
@@ -609,7 +613,7 @@ public class Node implements NodeInterface, Serializable {
      *
      * @param key owner of the key to be found
      * @return the found object if exist otherwise return null
-     * @throws IOException if an I/O error occurs
+     * @throws IOException           if an I/O error occurs
      * @throws TimerExpiredException if timer expires
      */
     public Object startFindKey(Long key) throws IOException, TimerExpiredException {
