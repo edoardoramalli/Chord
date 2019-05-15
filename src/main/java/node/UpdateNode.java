@@ -4,9 +4,11 @@ import exceptions.TimerExpiredException;
 import exceptions.UnexpectedBehaviourException;
 
 import java.io.IOException;
+import java.time.Duration;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
+import static java.lang.System.err;
 
 /**
  * Class that manage the update of node's attributes (like predecessor, successorList, fingerTable),
@@ -41,6 +43,8 @@ public class UpdateNode implements Runnable {
 
                 try {
                     node.listStabilize();
+
+
                 } catch (TimerExpiredException ignored) {
                 } catch (IOException e) {
                     throw new UnexpectedBehaviourException();
@@ -64,7 +68,7 @@ public class UpdateNode implements Runnable {
             for (int i = 0; i < node.getDimFingerTable(); i++) {
                 try {
                     node.fixFingers();
-                    Thread.sleep(500);
+                    Thread.sleep(100);
                 } catch (IOException e) {
                     throw new UnexpectedBehaviourException();
                 } catch (TimerExpiredException ignored) {
@@ -84,9 +88,8 @@ public class UpdateNode implements Runnable {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-
             try {
-                Thread.sleep(3000);
+                Thread.sleep(2000);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }

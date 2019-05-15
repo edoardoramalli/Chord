@@ -211,8 +211,8 @@ public class Node implements NodeInterface, Serializable {
             } catch (ConnectionErrorException e) {
                 throw new UnexpectedBehaviourException();
             }
+            successorList.get(0).notify(this);
         }
-        successorList.get(0).notify(this);
 
         // Now the node has to update its successor list. In order to do that it contacts its successor and
         // asks its successor list.
@@ -237,6 +237,8 @@ public class Node implements NodeInterface, Serializable {
                     } catch (ConnectionErrorException e) {
                         throw new UnexpectedBehaviourException();
                     }
+                }else{
+                    break;
                 }
             }
         } else { //only replace existing connection node in the successor list.
