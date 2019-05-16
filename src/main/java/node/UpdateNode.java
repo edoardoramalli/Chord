@@ -4,11 +4,8 @@ import exceptions.TimerExpiredException;
 import exceptions.UnexpectedBehaviourException;
 
 import java.io.IOException;
-import java.time.Duration;
-import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Map;
-import static java.lang.System.err;
 
 /**
  * Class that manage the update of node's attributes (like predecessor, successorList, fingerTable),
@@ -40,12 +37,14 @@ public class UpdateNode implements Runnable {
                 ArrayList<Long> oldSuccessorList = new ArrayList<>();
                 for (NodeInterface n : node.getSuccessorList())
                     oldSuccessorList.add(n.getNodeId());
-
                 try {
                     node.listStabilize();
-
-
-                } catch (TimerExpiredException ignored) {
+                } catch (TimerExpiredException e) {
+                    try {
+                        Thread.sleep(50);
+                    } catch (InterruptedException ex) {
+                        Thread.currentThread().interrupt();
+                    }
                 } catch (IOException e) {
                     throw new UnexpectedBehaviourException();
                 }
@@ -71,9 +70,14 @@ public class UpdateNode implements Runnable {
                     Thread.sleep(100);
                 } catch (IOException e) {
                     throw new UnexpectedBehaviourException();
-                } catch (TimerExpiredException ignored) {
+                } catch (TimerExpiredException e) {
+                    try {
+                        Thread.sleep(50);
+                    } catch (InterruptedException ex) {
+                        Thread.currentThread().interrupt();
+                    }
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    Thread.currentThread().interrupt();
                 }
             }
             ArrayList<Long> newFingerTableList = new ArrayList<>();
@@ -84,7 +88,6 @@ public class UpdateNode implements Runnable {
             newFingerTableList.clear();
             try {
                 node.updateStable(stable);
-
             } catch (IOException e) {
                 e.printStackTrace();
             }

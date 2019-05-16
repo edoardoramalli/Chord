@@ -1,6 +1,5 @@
 package node;
 
-import exceptions.ConnectionErrorException;
 import exceptions.TimerExpiredException;
 import network.SocketManager;
 
