@@ -291,7 +291,10 @@ public class Node implements NodeInterface, Serializable {
         nextNode = closestPrecedingNodeList(id);
         if (this == nextNode)
             return this;
-        return nextNode.findSuccessor(id); //TODO GESTIRE
+        NodeInterface returnNode = nextNode.findSuccessor(id);
+        if (returnNode == null)
+            throw new TimerExpiredException();
+        return returnNode;
     }
 
     /**
@@ -388,8 +391,12 @@ public class Node implements NodeInterface, Serializable {
                 return nodeInterface;
         if (id.equals(predecessor.getNodeId()))
             return predecessor;
-        else
-            return findSuccessor(id); //TODO GESTIRE
+        else{
+            NodeInterface returnNode = findSuccessor(id);
+            if (returnNode == null)
+                throw new TimerExpiredException();
+            return returnNode;
+        }
     }
 
     /**
@@ -408,7 +415,7 @@ public class Node implements NodeInterface, Serializable {
         idToFind = (nodeId + ((long) Math.pow(2, nextFinger - 1))) % (long) Math.pow(2, dimFingerTable);
         NodeInterface node = findSuccessor(idToFind);
         if (node == null)
-            return;
+            throw new TimerExpiredException();
         if (!node.getNodeId().equals(fingerTable.get(nextFinger - 1).getNodeId())) { //se il nuovo nodo è diverso da quello già presente
             NodeInterface newConnection;
             try {
@@ -516,11 +523,10 @@ public class Node implements NodeInterface, Serializable {
     synchronized void updateStable(boolean stable) throws IOException {
         if (this.stable != stable) {
             this.stable = stable;
-            if (!this.stable) {
+            if (!this.stable)
                 controller.notStable();
-            } else {
+            else
                 controller.stable();
-            }
         }
     }
 
@@ -564,7 +570,6 @@ public class Node implements NodeInterface, Serializable {
             addKeyToStore(keyValue);
             return this;
         }
-        err.println("NODO CONTATTATO: " + newNodeKey.getNodeId());
         NodeInterface newNodeCommunicator;
         try {
             newNodeCommunicator = socketManager.createConnection(newNodeKey);
@@ -648,7 +653,18 @@ public class Node implements NodeInterface, Serializable {
         if (predecessor != null && checkIntervalEquivalence(predecessor.getNodeId(), hashKey, nodeId))
             return keyStore.get(key);
 
-        return findSuccessor(hashKey).findKey(key); //TODO GESTIRE
+        NodeInterface searchedNode = findSuccessor(hashKey);
+        if (searchedNode == null)
+            throw new TimerExpiredException();
+        NodeInterface searchedNodeCommunicator;
+        try {
+            searchedNodeCommunicator = socketManager.createConnection(searchedNode);
+        } catch (ConnectionErrorException e) {
+            throw new UnexpectedBehaviourException();
+        }
+        Object searchedKey = searchedNodeCommunicator.findKey(key);
+        socketManager.closeCommunicator(searchedNode.getNodeId());
+        return searchedKey;
     }
 
     /**

@@ -41,7 +41,7 @@ public class UpdateNode implements Runnable {
                     node.listStabilize();
                 } catch (TimerExpiredException e) {
                     try {
-                        Thread.sleep(50);
+                        Thread.sleep(60);
                     } catch (InterruptedException ex) {
                         Thread.currentThread().interrupt();
                     }
@@ -67,12 +67,12 @@ public class UpdateNode implements Runnable {
             for (int i = 0; i < node.getDimFingerTable(); i++) {
                 try {
                     node.fixFingers();
-                    Thread.sleep(100);
+                    Thread.sleep(200);
                 } catch (IOException e) {
                     throw new UnexpectedBehaviourException();
                 } catch (TimerExpiredException e) {
                     try {
-                        Thread.sleep(50);
+                        Thread.sleep(60);
                     } catch (InterruptedException ex) {
                         Thread.currentThread().interrupt();
                     }
@@ -92,7 +92,7 @@ public class UpdateNode implements Runnable {
                 e.printStackTrace();
             }
             try {
-                Thread.sleep(2000);
+                Thread.sleep(1000);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
