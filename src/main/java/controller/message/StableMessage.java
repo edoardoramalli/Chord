@@ -2,7 +2,7 @@ package controller.message;
 
 import java.io.IOException;
 
-public class StableMessage implements StatisticsMessage {
+public class StableMessage implements ControllerMessage {
     private Long lockId;
 
     public StableMessage(Long lockId) {
@@ -10,8 +10,8 @@ public class StableMessage implements StatisticsMessage {
     }
 
     @Override
-    public void handle(StatisticsMessageHandler statisticsMessageHandler) throws IOException {
-        statisticsMessageHandler.handle(this);
+    public void handle(ControllerMessageHandler controllerMessageHandler) throws IOException {
+        controllerMessageHandler.handle(this);
     }
 
     public Long getLockId() {

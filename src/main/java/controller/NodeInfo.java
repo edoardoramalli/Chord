@@ -5,7 +5,7 @@ import java.time.LocalTime;
 /**
  * The aim of this class is to keep track of the statistics of each connected Node to the Controller.
  * This object is used in the map of the controller as value associated the map where the key is the NodeId.
- * Statistics:
+ * Controller:
  * - Stability of the Network after the new connection or disconnection
  * - Starting time of the Lookup
  * - Starting time of the InsertKey

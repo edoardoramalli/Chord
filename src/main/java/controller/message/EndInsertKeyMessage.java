@@ -2,7 +2,7 @@ package controller.message;
 
 import java.io.IOException;
 
-public class EndInsertKeyMessage implements StatisticsMessage {
+public class EndInsertKeyMessage implements ControllerMessage {
     private Long lockId;
 
     public EndInsertKeyMessage(Long lockId) {
@@ -10,8 +10,8 @@ public class EndInsertKeyMessage implements StatisticsMessage {
     }
 
     @Override
-    public void handle(StatisticsMessageHandler statisticsMessageHandler) throws IOException {
-        statisticsMessageHandler.handle(this);
+    public void handle(ControllerMessageHandler controllerMessageHandler) throws IOException {
+        controllerMessageHandler.handle(this);
     }
 
     public Long getLockId() {
