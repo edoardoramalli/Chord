@@ -12,7 +12,7 @@ Here is an implementation of Chord in JAVA enriched by:
 In order to launch a node instance of Chord is necessary to pass to executable file some parameters, specified by following flags.
 The general signature is:
 ```sh
-$ java -jar main.jar -t type [-d dim] [-cip ipc][-cp portc][-jip ipj][-jp portj] [-deb]
+$ java -jar main.jar -t type [-d dim] [-cip ipc] [-cp portc] [-jip ipj] [-jp portj] [-deb]
 
 ```
 -`type`: specify the tipology of the node. If this flag is set to '0' (zero), an instance of controller is created. Instead, if it set to 1, an instance of a Chord node is created. In this case the node is also responsable of the creation of the Chord network, for this reason the dimension flag is not optional. Finally, if type is equal to 2, means that the node is a normal one that join the Chord network on the ip and the port specify by the parameter, that in this case are not optionale, 'ipj' and 'portj'. In the last two cases in also necessary to specify the network parameters to contact the controller node.
