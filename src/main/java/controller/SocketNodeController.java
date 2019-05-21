@@ -4,6 +4,7 @@ import controller.message.ControllerMessage;
 import controller.message.NodeMessage;
 import exceptions.ConnectionErrorException;
 import exceptions.UnexpectedBehaviourException;
+import node.Node;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -11,6 +12,8 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.net.Socket;
 import java.util.concurrent.Executors;
+
+import static java.lang.System.err;
 
 /**
  * Socket Node-side that deals the sending and receiving of Message to/from Controller
@@ -25,7 +28,7 @@ public class SocketNodeController implements Runnable, Serializable {
     private volatile boolean connected;
 
     /**
-     * @param ipAddress ipAddress of Controller
+     * @param ipAddress  ipAddress of Controller
      * @param socketPort socketPort on which Controller is reachable
      */
     public SocketNodeController(String ipAddress, int socketPort) {
@@ -36,12 +39,13 @@ public class SocketNodeController implements Runnable, Serializable {
     /**
      * Creates the output/input stream to the Controller, and also creates the controller
      * responsible to handle the received message
-     * @param nodeId nodeId of node that creates the connection
+     *
+     * @param node node that creates the connection
      * @return the created controller
      * @throws ConnectionErrorException if statistics is not reachable at (ipAddress, socketPort)
-     * @throws IOException if an I/O error occurs
+     * @throws IOException              if an I/O error occurs
      */
-    public NodeControllerCommunicator openController(Long nodeId) throws ConnectionErrorException, IOException {
+    public NodeControllerCommunicator openController(Node node) throws ConnectionErrorException, IOException {
         this.connected = true;
         try {
             socketController = new Socket(ipAddress, socketPort);
@@ -50,7 +54,7 @@ public class SocketNodeController implements Runnable, Serializable {
         }
         this.out = new ObjectOutputStream(socketController.getOutputStream());
         this.in = new ObjectInputStream(socketController.getInputStream());
-        this.controller = new NodeControllerCommunicator(nodeId, this);
+        this.controller = new NodeControllerCommunicator(node, this);
         Executors.newCachedThreadPool().submit(this);
         return controller;
     }
@@ -61,9 +65,9 @@ public class SocketNodeController implements Runnable, Serializable {
      */
     @Override
     public void run() {
-        while (connected){
+        while (connected) {
             NodeMessage message = getMessage();
-            if(!connected)
+            if (!connected)
                 break;
             Executors.newCachedThreadPool().execute(() -> {
                 try {
@@ -76,14 +80,17 @@ public class SocketNodeController implements Runnable, Serializable {
     }
 
     /**
-     * Receives the message from Controller
+     * Receives the message from Controller, and when the controller has been disconnected call the
+     * disconnectedController method of NodeControllerCommunicator
+     *
      * @return the received message
      */
     private NodeMessage getMessage() {
         try {
             return (NodeMessage) in.readObject();
         } catch (IOException e) {
-            System.err.println("Controller Disconnected");
+            controller.disconnectedController();
+            err.println("Controller Disconnected");
             connected = false;
             this.close();
         } catch (ClassNotFoundException e) {
@@ -94,6 +101,7 @@ public class SocketNodeController implements Runnable, Serializable {
 
     /**
      * Sends the ControllerMessage to Controller
+     *
      * @param message message to send
      * @throws IOException if an I/O error occurs
      */

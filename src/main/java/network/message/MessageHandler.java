@@ -17,19 +17,19 @@ public interface MessageHandler {
      * @param findSuccessorRequest the received findSuccessorRequest message
      * @throws IOException in an I/O error occurs
      */
-    void handle (FindSuccessorRequest findSuccessorRequest) throws IOException;
+    void handle(FindSuccessorRequest findSuccessorRequest) throws IOException;
 
     /**
      * @param findSuccessorResponse the received findSuccessorResponse message
      * @throws IOException in an I/O error occurs
      */
-    void handle (FindSuccessorResponse findSuccessorResponse) throws IOException;
+    void handle(FindSuccessorResponse findSuccessorResponse) throws IOException;
 
     /**
      * @param notifyRequest the received notifyRequest message
      * @throws IOException in an I/O error occurs
      */
-    void handle (NotifyRequest notifyRequest) throws IOException;
+    void handle(NotifyRequest notifyRequest) throws IOException;
 
     /**
      * @param terminatedMethodMessage the received TerminatedMethodMessage message

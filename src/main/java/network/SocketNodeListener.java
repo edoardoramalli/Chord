@@ -18,10 +18,10 @@ public class SocketNodeListener implements Runnable, Serializable {
     private static Boolean active = true;
 
     /**
-     * @param node node in listening (that will be passed as argument for the creation of SocketNode)
+     * @param node       node in listening (that will be passed as argument for the creation of SocketNode)
      * @param socketPort socketPort to which the node starts accepting incoming connections
      */
-    public SocketNodeListener(Node node, int socketPort){
+    public SocketNodeListener(Node node, int socketPort) {
         this.node = node;
         this.socketPort = socketPort;
     }
