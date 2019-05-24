@@ -109,7 +109,7 @@ public class Main {
                         Socket nodeSocket = listener.accept();
                         Executors.newCachedThreadPool().submit(new SocketController(controller, nodeSocket));
                     }
-                } catch (IOException e){
+                } catch (IOException e) {
                     throw new UnexpectedBehaviourException();
                 }
             case 1:
@@ -128,7 +128,7 @@ public class Main {
                     return;
                 }
                 out.println("-----------------------------");
-                out.println("Node Create : Local Port " + localPort + " - Dim " + dimFingerTable + " - ControllerIP " +controllerIP
+                out.println("Node Create : Local Port " + localPort + " - Dim " + dimFingerTable + " - ControllerIP " + controllerIP
                         + " - ControllerPort " + controllerPort);
                 out.println("-----------------------------");
                 try {
@@ -158,8 +158,8 @@ public class Main {
                 }
 
                 out.println("-----------------------------");
-                out.println("Node Join : Local Port " + localPort + " - ControllerIP " +controllerIP
-                        + " - ControllerPort " + controllerPort + " - JoinIP " +joinIP + " - JoinPort " + joinPort);
+                out.println("Node Join : Local Port " + localPort + " - ControllerIP " + controllerIP
+                        + " - ControllerPort " + controllerPort + " - JoinIP " + joinIP + " - JoinPort " + joinPort);
                 out.println("-----------------------------");
 
                 try {
@@ -181,10 +181,10 @@ public class Main {
         }
     }
 
-    private static void debugInterface(Node node){
+    private static void debugInterface(Node node) {
         Scanner in = new Scanner(System.in);
         boolean exit = false;
-        while (!exit){
+        while (!exit) {
             //out.println("Select 'lookup', 'addKey', 'p' or 'exit'" );
             String choice = in.nextLine().toLowerCase();
             switch (choice) {

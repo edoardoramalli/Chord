@@ -10,6 +10,7 @@ public interface ControllerMessage extends Serializable {
 
     /**
      * Handles the message
+     *
      * @param controllerMessageHandler responsible of the handling
      * @throws IOException if an I/O error occurs
      */

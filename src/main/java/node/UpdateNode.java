@@ -19,7 +19,7 @@ public class UpdateNode implements Runnable {
     /**
      * @param node node to update
      */
-    UpdateNode(Node node){
+    UpdateNode(Node node) {
         this.node = node;
     }
 
