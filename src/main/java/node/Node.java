@@ -1,7 +1,7 @@
 package node;
 
-import controller.SocketNodeController;
-import controller.NodeControllerCommunicator;
+import controller.SocketNodeStatistics;
+import controller.NodeStatisticsController;
 import exceptions.ConnectionErrorException;
 import exceptions.NodeIdAlreadyExistsException;
 import exceptions.TimerExpiredException;
@@ -39,14 +39,8 @@ public class Node implements NodeInterface, Serializable {
     private transient volatile boolean stable = true;
     private transient volatile String ipController;
     private transient volatile int portController;
-    private transient volatile NodeControllerCommunicator controller;
+    private transient volatile NodeStatisticsController controller;
 
-    /**
-     * General constructor that initializes all the Node's attributes
-     *
-     * @param ipAddress ipAddress of node
-     * @param socketPort socketPort on which the node will get incoming connections
-     */
     public Node(String ipAddress, int socketPort) {
         this.ipAddress = ipAddress;
         this.predecessor = null;
@@ -72,14 +66,6 @@ public class Node implements NodeInterface, Serializable {
         this.nodeId = Hash.getHash().calculateHash(ipAddress, socketPort);
     }
 
-    /**
-     * Constructor called by main, before the create or join is performed
-     *
-     * @param ipAddress ipAddress of node
-     * @param socketPort socketPort on which the node will get incoming connections
-     * @param ipController ipAddress of controller
-     * @param portController socketPort of controller
-     */
     public Node(String ipAddress, int socketPort, String ipController, int portController) {
         this(ipAddress, socketPort);
         this.ipController = ipController;
@@ -106,7 +92,7 @@ public class Node implements NodeInterface, Serializable {
         startSocketListener(socketPort);
         createFingerTable();
         socketManager = new SocketManager(this);
-        controller = new SocketNodeController(ipController, portController).openController(nodeId);
+        controller = new SocketNodeStatistics(ipController, portController).openController(nodeId);
         controller.connected();
         Executors.newCachedThreadPool().submit(new UpdateNode(this));
     }
@@ -149,7 +135,7 @@ public class Node implements NodeInterface, Serializable {
         if (successorNode.getNodeId().equals(nodeId)) //se find successor ritorna un nodo con lo stesso tuo id significa che esiste già un nodo con il tuo id
             throw new NodeIdAlreadyExistsException();
         nodeTemp.close();
-        controller = new SocketNodeController(ipController, portController).openController(nodeId);
+        controller = new SocketNodeStatistics(ipController, portController).openController(nodeId);
         controller.connected();
 
         successorList.set(0, socketManager.createConnection(successorNode)); //creates a new connection

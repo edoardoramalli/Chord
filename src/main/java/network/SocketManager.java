@@ -12,7 +12,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import static java.lang.System.err;
 import static java.lang.System.exit;
 
 /**
@@ -81,7 +80,7 @@ public class SocketManager {
         try {
             port = createdNode.getInitialSocketPort();
         } catch (TimerExpiredException e) {
-            err.println("Error of connection");
+            System.err.println("Error of connection");
             exit(1);
             throw new UnexpectedBehaviourException();
         }

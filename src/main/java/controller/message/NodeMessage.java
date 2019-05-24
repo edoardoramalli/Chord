@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.io.Serializable;
 
 /**
- * Interface implemented by messages that go from Controller to Node
+ * Interface implemented by messages that go from Statistics to Node
  */
 public interface NodeMessage extends Serializable {
     /**

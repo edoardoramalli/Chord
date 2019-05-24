@@ -3,9 +3,9 @@ package controller.message;
 import java.io.IOException;
 
 /**
- * Interface implemented by ControllerCommunicator, responsible of handling the messages from Node
+ * Interface implemented by StatisticsController, responsible of handling the messages from Node
  */
-public interface ControllerMessageHandler {
+public interface StatisticsMessageHandler {
     /**
      * @param connectedMessage the received connectedMessage
      * @throws IOException if an I/O error occurs

@@ -2,7 +2,7 @@ package controller.message;
 
 import java.io.IOException;
 
-public class StartFindKeyMessage implements ControllerMessage {
+public class StartFindKeyMessage implements StatisticsMessage {
     private Long lockId;
 
     public StartFindKeyMessage(Long lockId) {
@@ -10,8 +10,8 @@ public class StartFindKeyMessage implements ControllerMessage {
     }
 
     @Override
-    public void handle(ControllerMessageHandler controllerMessageHandler) throws IOException {
-        controllerMessageHandler.handle(this);
+    public void handle(StatisticsMessageHandler statisticsMessageHandler) throws IOException {
+        statisticsMessageHandler.handle(this);
     }
 
     public Long getLockId() {

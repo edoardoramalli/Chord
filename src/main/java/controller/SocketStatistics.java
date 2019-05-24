@@ -1,6 +1,6 @@
 package controller;
 
-import controller.message.ControllerMessage;
+import controller.message.StatisticsMessage;
 import controller.message.NodeMessage;
 import exceptions.UnexpectedBehaviourException;
 
@@ -12,20 +12,20 @@ import java.net.Socket;
 import java.util.concurrent.Executors;
 
 /**
- * Socket Controller-side that deals the sending and receiving of Message to/from the node
+ * Socket Statistics-side that deals the sending and receiving of Message to/from the node
  */
-public class SocketController implements Runnable, Serializable {
-    private transient ControllerCommunicator controller;
+public class SocketStatistics implements Runnable, Serializable {
+    private transient StatisticsController controller;
     private transient ObjectInputStream socketInput;
     private transient ObjectOutputStream socketOutput;
     private transient volatile boolean connected = true;
 
     /**
-     * @param controller Controller singleton
+     * @param statistics Statistics singleton
      * @param nodeSocket socket of incoming connection, from which we create the input and output stream
      */
-    public SocketController(Controller controller, Socket nodeSocket){
-        this.controller = new ControllerCommunicator(controller, this);
+    public SocketStatistics(Statistics statistics, Socket nodeSocket){
+        this.controller = new StatisticsController(statistics, this);
         try {
             this.socketInput = new ObjectInputStream(nodeSocket.getInputStream());
             this.socketOutput = new ObjectOutputStream(nodeSocket.getOutputStream());
@@ -41,7 +41,7 @@ public class SocketController implements Runnable, Serializable {
     @Override
     public void run() {
         while (connected){
-            ControllerMessage message = getMessage();
+            StatisticsMessage message = getMessage();
             if(!connected)
                 break;
             Executors.newCachedThreadPool().execute(() -> {
@@ -56,12 +56,12 @@ public class SocketController implements Runnable, Serializable {
 
     /**
      * Receives the message from the node,
-     * and when the other node has disconnected calls the nodeDisconnected method of ControllerCommunicator
+     * and when the other node has disconnected calls the nodeDisconnected method of StatisticsController
      * @return the received message
      */
-    private ControllerMessage getMessage() {
+    private StatisticsMessage getMessage() {
         try {
-            return (ControllerMessage) socketInput.readObject();
+            return (StatisticsMessage) socketInput.readObject();
         } catch (IOException e) {
             connected = false;
             this.close();

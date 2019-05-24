@@ -15,21 +15,21 @@ import static java.lang.System.out;
  * operation, like 'insertKey', 'lookup', 'findKey', and their actual end time. In addition the class is responsible
  * to count the number of nodes present in the Chord network and is capable of measuring the convergence time between
  * two successive join or leave of a node to the network itself.
- * All the methods are called by the class 'ControllerCommunicator' that has the corresponding methods that are triggered
+ * All the methods are called by the class 'StatisticsController' that has the corresponding methods that are triggered
  * when a specific type of message is arrived.
  */
-public class Controller {
+public class Statistics {
     private static final String ANSI_RESET = "\u001B[0m";
     private static final String ANSI_GREEN = "\u001B[32m";
     private static final String ANSI_YELLOW = "\u001B[33m";
     private static final String ANSI_PURPLE = "\u001B[35m";
     private static final String ANSI_CYAN = "\u001B[36m";
 
-    private static Controller controllerInstance;
+    private static Statistics statisticsInstance;
     private LocalTime startTimeStability;
     private volatile Map<Long, NodeInfo> nodeMap;
 
-    private Controller(){
+    private Statistics(){
         this.nodeMap = new LinkedHashMap<>();
     }
 
@@ -37,14 +37,14 @@ public class Controller {
      * The singleton design pattern is applied
      * @return The singleton object
      */
-    public static Controller getController(){
-        if (controllerInstance == null)
-            controllerInstance = new Controller();
-        return controllerInstance;
+    public static Statistics getStatistics(){
+        if (statisticsInstance == null)
+            statisticsInstance = new Statistics();
+        return statisticsInstance;
     }
 
     /**
-     * Put in the map the new node of the network. The start time of the convergence is reset.
+     * Put in the map the new node of the network. The start time of the convergence is resetted.
      * @param nodeId of the entering new node
      */
     synchronized void newConnection(Long nodeId){
