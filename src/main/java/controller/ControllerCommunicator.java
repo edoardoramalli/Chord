@@ -73,7 +73,7 @@ public class ControllerCommunicator implements ControllerMessageHandler {
         socketController.sendMessage(new ReceivedMessage(endFindKeyMessage.getLockId()));
     }
 
-    void disconnectedNode() {
+    void disconnectedNode(){
         controller.disconnectedNode(nodeId);
     }
 }

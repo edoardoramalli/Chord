@@ -1,7 +1,6 @@
 package controller;
 
 import controller.message.*;
-import node.Node;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -14,33 +13,31 @@ import java.util.HashMap;
  * The class also does the handle of the confirmation messages incoming from the Controller, in this way we can
  * notify the waiting methods on the resources.
  */
-public class NodeControllerCommunicator implements NodeMessageHandler, ControllerInterface {
-    private Node node;
+public class NodeControllerCommunicator implements NodeMessageHandler {
+    private Long nodeId;
     private SocketNodeController controller;
     private volatile HashMap<Long, Object> lockList = new HashMap<>();
     private volatile Long lockID = 0L;
 
-    NodeControllerCommunicator(Node node, SocketNodeController controller) {
-        this.node = node;
+    NodeControllerCommunicator(Long nodeId, SocketNodeController controller) {
+        this.nodeId = nodeId;
         this.controller = controller;
     }
 
     /**
      * Creates the lock object
-     *
      * @return lockId corresponding to the created lock object
      */
-    private synchronized Long createLock() {
+    private synchronized Long createLock(){
         lockList.put(lockID, new Object());
         lockID = lockID + 1;
         return lockID - 1;
     }
 
-    @Override
     public void connected() throws IOException {
         Long lockId = createLock();
         synchronized (lockList.get(lockId)) {
-            controller.sendMessage(new ConnectedMessage(node.getNodeId(), lockId));
+            controller.sendMessage(new ConnectedMessage(nodeId, lockId));
             try {
                 lockList.get(lockId).wait();
             } catch (InterruptedException e) {
@@ -49,7 +46,6 @@ public class NodeControllerCommunicator implements NodeMessageHandler, Controlle
         }
     }
 
-    @Override
     public void stable() throws IOException {
         Long lockId = createLock();
         synchronized (lockList.get(lockId)) {
@@ -62,7 +58,6 @@ public class NodeControllerCommunicator implements NodeMessageHandler, Controlle
         }
     }
 
-    @Override
     public void notStable() throws IOException {
         Long lockId = createLock();
         synchronized (lockList.get(lockId)) {
@@ -75,7 +70,6 @@ public class NodeControllerCommunicator implements NodeMessageHandler, Controlle
         }
     }
 
-    @Override
     public void startLookup() throws IOException {
         Long lockId = createLock();
         synchronized (lockList.get(lockId)) {
@@ -88,7 +82,6 @@ public class NodeControllerCommunicator implements NodeMessageHandler, Controlle
         }
     }
 
-    @Override
     public void endOfLookup() throws IOException {
         Long lockId = createLock();
         synchronized (lockList.get(lockId)) {
@@ -101,7 +94,6 @@ public class NodeControllerCommunicator implements NodeMessageHandler, Controlle
         }
     }
 
-    @Override
     public void startInsertKey() throws IOException {
         Long lockId = createLock();
         synchronized (lockList.get(lockId)) {
@@ -114,7 +106,6 @@ public class NodeControllerCommunicator implements NodeMessageHandler, Controlle
         }
     }
 
-    @Override
     public void endInsertKey() throws IOException {
         Long lockId = createLock();
         synchronized (lockList.get(lockId)) {
@@ -127,7 +118,6 @@ public class NodeControllerCommunicator implements NodeMessageHandler, Controlle
         }
     }
 
-    @Override
     public void startFindKey() throws IOException {
         Long lockId = createLock();
         synchronized (lockList.get(lockId)) {
@@ -140,7 +130,6 @@ public class NodeControllerCommunicator implements NodeMessageHandler, Controlle
         }
     }
 
-    @Override
     public void endFindKey() throws IOException {
         Long lockId = createLock();
         synchronized (lockList.get(lockId)) {
@@ -153,13 +142,9 @@ public class NodeControllerCommunicator implements NodeMessageHandler, Controlle
         }
     }
 
-    void disconnectedController() {
-        node.disconnectedController();
-    }
-
     @Override
     public void handle(ReceivedMessage receivedMessage) throws IOException {
-        synchronized (lockList.get(receivedMessage.getLockId())) {
+        synchronized (lockList.get(receivedMessage.getLockId())){
             lockList.get(receivedMessage.getLockId()).notifyAll();
         }
     }

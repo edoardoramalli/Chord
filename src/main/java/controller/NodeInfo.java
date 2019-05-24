@@ -17,39 +17,27 @@ class NodeInfo {
     private LocalTime startTimeInsertKey;
     private LocalTime startTimeFindKey;
 
-    NodeInfo() {
-        this.stable = false;
-    }
+    NodeInfo() { this.stable = false; }
 
     void setStability(boolean stability) {
-        this.stable = stability;
+        this.stable= stability;
     }
 
-    boolean getStability() {
-        return this.stable;
-    }
+    boolean getStability() {return this.stable;}
 
-    LocalTime getStartTimeLookup() {
-        return this.startTimeLookup;
-    }
+    LocalTime getStartTimeLookup() {return this.startTimeLookup;}
 
-    void setStartTimeLookup(LocalTime startTimeLookup) {
+    void setStartTimeLookup(LocalTime startTimeLookup){
         this.startTimeLookup = startTimeLookup;
     }
 
-    LocalTime getStartTimeInsertKey() {
-        return startTimeInsertKey;
-    }
+    LocalTime getStartTimeInsertKey() { return startTimeInsertKey; }
 
     void setStartTimeInsertKey(LocalTime startTimeInsertKey) {
         this.startTimeInsertKey = startTimeInsertKey;
     }
 
-    LocalTime getStartTimeFindKey() {
-        return startTimeFindKey;
-    }
+    LocalTime getStartTimeFindKey() { return startTimeFindKey; }
 
-    void setStartTimeFindKey(LocalTime startTimeFindKey) {
-        this.startTimeFindKey = startTimeFindKey;
-    }
+    void setStartTimeFindKey(LocalTime startTimeFindKey) { this.startTimeFindKey = startTimeFindKey; }
 }

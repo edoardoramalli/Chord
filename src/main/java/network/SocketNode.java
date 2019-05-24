@@ -22,12 +22,11 @@ public class SocketNode implements Runnable, Serializable {
     /**
      * Constructor called from NodeCommunicator's constructor when we want to create a connection towards
      * another node (so for outgoing connections)
-     *
-     * @param socketInput    socketInputStream created by NodeCommunicator
-     * @param socketOutput   socketOutputStream created by NodeCommunicator
+     * @param socketInput socketInputStream created by NodeCommunicator
+     * @param socketOutput socketOutputStream created by NodeCommunicator
      * @param messageHandler NodeCommunicator instance that handles the received messages
      */
-    SocketNode(ObjectInputStream socketInput, ObjectOutputStream socketOutput, MessageHandler messageHandler) {
+    SocketNode(ObjectInputStream socketInput, ObjectOutputStream socketOutput, MessageHandler messageHandler){
         this.messageHandler = messageHandler;
         this.socketInput = socketInput;
         this.socketOutput = socketOutput;
@@ -37,11 +36,10 @@ public class SocketNode implements Runnable, Serializable {
 
     /**
      * Constructor called from SocketNodeListener (so for incoming connections)
-     *
-     * @param node     node at which the connection arrives
+     * @param node node at which the connection arrives
      * @param socketIn socket of incoming connection, from which we create the input and output stream
      */
-    SocketNode(NodeInterface node, Socket socketIn) {
+    SocketNode(NodeInterface node, Socket socketIn){
         this.connectionIn = true;
         try {
             this.socketInput = new ObjectInputStream(socketIn.getInputStream());
@@ -50,8 +48,7 @@ public class SocketNode implements Runnable, Serializable {
             this.close();
         }
         this.connected = true;
-        Executors.newCachedThreadPool().execute(() ->
-                node.getSocketManager().createConnection(this, socketIn.getInetAddress().getHostAddress()));
+        Executors.newCachedThreadPool().execute(() -> node.getSocketManager().createConnection(this, socketIn.getInetAddress().getHostAddress()));
     }
 
     public void setMessageHandler(MessageHandler messageHandler) {
@@ -64,9 +61,9 @@ public class SocketNode implements Runnable, Serializable {
      */
     @Override
     public void run() {
-        while (connected) {
+        while (connected){
             Message message = getMessage();
-            if (!connected)
+            if(!connected)
                 break;
             Executors.newCachedThreadPool().execute(() -> {
                 try {
@@ -81,7 +78,6 @@ public class SocketNode implements Runnable, Serializable {
     /**
      * Receives the message from the other node,
      * and when the other node has disconnected calls the nodeDisconnected method of NodeCommunicator
-     *
      * @return the received message
      */
     private Message getMessage() {
@@ -100,7 +96,6 @@ public class SocketNode implements Runnable, Serializable {
 
     /**
      * Sends the message to the other node
-     *
      * @param message message to send
      * @throws IOException if an I/O error occurs
      */

@@ -9,7 +9,6 @@ import java.io.Serializable;
 public interface NodeMessage extends Serializable {
     /**
      * Handles the message
-     *
      * @param nodeMessageHandler responsible of the handling
      * @throws IOException if an I/O error occurs
      */

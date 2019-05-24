@@ -10,7 +10,6 @@ public interface Message extends Serializable {
 
     /**
      * Handles the message
-     *
      * @param messageHandler responsible of the handling
      * @throws IOException in an I/O error occurs
      */

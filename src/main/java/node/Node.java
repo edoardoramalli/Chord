@@ -1,8 +1,7 @@
 package node;
 
-import controller.ControllerInterface;
-import controller.DisconnectedController;
 import controller.SocketNodeController;
+import controller.NodeControllerCommunicator;
 import exceptions.ConnectionErrorException;
 import exceptions.NodeIdAlreadyExistsException;
 import exceptions.TimerExpiredException;
@@ -40,12 +39,12 @@ public class Node implements NodeInterface, Serializable {
     private transient volatile boolean stable = true;
     private transient volatile String ipController;
     private transient volatile int portController;
-    private transient volatile ControllerInterface controller;
+    private transient volatile NodeControllerCommunicator controller;
 
     /**
      * General constructor that initializes all the Node's attributes
      *
-     * @param ipAddress  ipAddress of node
+     * @param ipAddress ipAddress of node
      * @param socketPort socketPort on which the node will get incoming connections
      */
     public Node(String ipAddress, int socketPort) {
@@ -76,9 +75,9 @@ public class Node implements NodeInterface, Serializable {
     /**
      * Constructor called by main, before the create or join is performed
      *
-     * @param ipAddress      ipAddress of node
-     * @param socketPort     socketPort on which the node will get incoming connections
-     * @param ipController   ipAddress of controller
+     * @param ipAddress ipAddress of node
+     * @param socketPort socketPort on which the node will get incoming connections
+     * @param ipController ipAddress of controller
      * @param portController socketPort of controller
      */
     public Node(String ipAddress, int socketPort, String ipController, int portController) {
@@ -107,7 +106,7 @@ public class Node implements NodeInterface, Serializable {
         startSocketListener(socketPort);
         createFingerTable();
         socketManager = new SocketManager(this);
-        controller = new SocketNodeController(ipController, portController).openController(this);
+        controller = new SocketNodeController(ipController, portController).openController(nodeId);
         controller.connected();
         Executors.newCachedThreadPool().submit(new UpdateNode(this));
     }
@@ -150,7 +149,7 @@ public class Node implements NodeInterface, Serializable {
         if (successorNode.getNodeId().equals(nodeId)) //se find successor ritorna un nodo con lo stesso tuo id significa che esiste già un nodo con il tuo id
             throw new NodeIdAlreadyExistsException();
         nodeTemp.close();
-        controller = new SocketNodeController(ipController, portController).openController(this);
+        controller = new SocketNodeController(ipController, portController).openController(nodeId);
         controller.connected();
 
         successorList.set(0, socketManager.createConnection(successorNode)); //creates a new connection
@@ -406,7 +405,7 @@ public class Node implements NodeInterface, Serializable {
                 return nodeInterface;
         if (id.equals(predecessor.getNodeId()))
             return predecessor;
-        else {
+        else{
             NodeInterface returnNode = findSuccessor(id);
             if (returnNode == null)
                 throw new TimerExpiredException();
@@ -517,14 +516,6 @@ public class Node implements NodeInterface, Serializable {
         for (int i = 0; i < dimFingerTable; i++) //se il nodo disconnesso è uno della finger lo metto = this
             if (fingerTable.get(i).getNodeId().equals(disconnectedId))
                 fingerTable.replace(i, this);
-    }
-
-    /**
-     * Method called by SocketNodeController when the controller has been disconnected.
-     * Sets instead of the previous controller a DisconnectedController
-     */
-    public synchronized void disconnectedController() {
-        this.controller = new DisconnectedController();
     }
 
     /**

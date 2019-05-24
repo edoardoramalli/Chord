@@ -24,7 +24,7 @@ public class SocketController implements Runnable, Serializable {
      * @param controller Controller singleton
      * @param nodeSocket socket of incoming connection, from which we create the input and output stream
      */
-    public SocketController(Controller controller, Socket nodeSocket) {
+    public SocketController(Controller controller, Socket nodeSocket){
         this.controller = new ControllerCommunicator(controller, this);
         try {
             this.socketInput = new ObjectInputStream(nodeSocket.getInputStream());
@@ -40,9 +40,9 @@ public class SocketController implements Runnable, Serializable {
      */
     @Override
     public void run() {
-        while (connected) {
+        while (connected){
             ControllerMessage message = getMessage();
-            if (!connected)
+            if(!connected)
                 break;
             Executors.newCachedThreadPool().execute(() -> {
                 try {
@@ -57,7 +57,6 @@ public class SocketController implements Runnable, Serializable {
     /**
      * Receives the message from the node,
      * and when the other node has disconnected calls the nodeDisconnected method of ControllerCommunicator
-     *
      * @return the received message
      */
     private ControllerMessage getMessage() {
@@ -75,7 +74,6 @@ public class SocketController implements Runnable, Serializable {
 
     /**
      * Sends the NodeMessage to the node
-     *
      * @param message message to send
      * @throws IOException if an I/O error occurs
      */
