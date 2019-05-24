@@ -40,8 +40,6 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
      * in milliseconds
      */
     private static final int TIMEOUT = 3000;
-    private static final int TIMEOUTNOTIFY = 3000;
-    private static final int TIMEOUTFINDSUCCESSOR = 3000;
 
     /**
      * Creates the lock object
@@ -129,7 +127,7 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
                 }
             });
 
-            f.get(TIMEOUTNOTIFY, TimeUnit.MILLISECONDS);
+            f.get(TIMEOUT, TimeUnit.MILLISECONDS);
         } catch (final TimeoutException e) {
             out.println("Timer scaduto NOTIFY");
             throw new TimerExpiredException();
@@ -244,7 +242,7 @@ public class NodeCommunicator implements NodeInterface, Serializable, MessageHan
                 }
             });
 
-            f.get(TIMEOUTFINDSUCCESSOR, TimeUnit.MILLISECONDS);
+            f.get(TIMEOUT, TimeUnit.MILLISECONDS);
         } catch (final TimeoutException e) {
             out.println("Timer scaduto FIND SUCCESSOR");
             throw new TimerExpiredException();

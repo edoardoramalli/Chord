@@ -3,7 +3,7 @@ package controller.message;
 import java.io.IOException;
 
 /**
- * Interface implemented by NodeStatisticsController, responsible of handling the messages from Statistics
+ * Interface implemented by NodeControllerCommunicator, responsible of handling the messages from Controller
  */
 public interface NodeMessageHandler {
     /**

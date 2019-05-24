@@ -1,7 +1,7 @@
 package start;
 
-import controller.Statistics;
-import controller.SocketStatistics;
+import controller.Controller;
+import controller.SocketController;
 import exceptions.ConnectionErrorException;
 import exceptions.NodeIdAlreadyExistsException;
 import exceptions.TimerExpiredException;
@@ -102,12 +102,12 @@ public class Main {
 
         switch (type) {
             case 0:
-                Statistics statistics = Statistics.getStatistics();
+                Controller controller = Controller.getController();
                 try (ServerSocket listener = new ServerSocket(localPort)) {
                     out.println("The Controller server is running on Port " + localPort + " ...");
                     while (true) {
                         Socket nodeSocket = listener.accept();
-                        Executors.newCachedThreadPool().submit(new SocketStatistics(statistics, nodeSocket));
+                        Executors.newCachedThreadPool().submit(new SocketController(controller, nodeSocket));
                     }
                 } catch (IOException e){
                     throw new UnexpectedBehaviourException();
